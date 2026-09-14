@@ -1,0 +1,219 @@
+/* =====================================================================
+   EKeysWeb — Design tokens, fonts, reset, layout primitives
+   Imported first on every page.
+   ===================================================================== */
+
+/* Web fonts are now loaded via <link rel="preload"> + stylesheet in HTML
+   to avoid the FOIT/FOUT font-swap jitter when navigating between pages. */
+
+/* Hide any element that has data-i18n until the runtime marks the document
+   ready. This prevents a flash of the English fallback text on first paint
+   when the stored language is Chinese. We use visibility (not display) so
+   the elements still occupy space and the layout doesn't shift when JS
+   swaps them in. */
+:root:not([data-lang-ready="true"]) [data-i18n] {
+  visibility: hidden;
+}
+
+/* Fallback @font-face overrides — align the local fallback metrics to the
+   Google fonts we ship, so swapping from fallback -> real font causes the
+   smallest possible layout shift in headings + body copy. */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107%;
+  ascent-override: 90%;
+}
+@font-face {
+  font-family: "JetBrains Mono Fallback";
+  src: local("Consolas");
+  size-adjust: 95%;
+  ascent-override: 95%;
+}
+@font-face {
+  font-family: "Bebas Neue Fallback";
+  src: local("Impact");
+  size-adjust: 95%;
+  ascent-override: 95%;
+  letter-spacing: -0.04em;
+}
+
+/* ---- Design Tokens ------------------------------------------------- */
+:root {
+  /* type */
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --font-sans:
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-display: "Bebas Neue", "JetBrains Mono", sans-serif;
+  /* 中文专用栈：优先系统中文（PingFang SC / 微软雅黑 / Noto Sans SC），
+     400 字重在任何浅色背景下都清晰不虚。 */
+  --font-zh: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Source Han Sans SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+
+  /* light theme (default) */
+  --bg: #f4f3ee;
+  --bg-elev: #ffffff;
+  --bg-invert: #0a0a0a;
+  --fg: #0a0a0a;
+  --fg-muted: #5b5b58;
+  --fg-faint: #8c8c88;
+  --border: #0a0a0a;
+  --border-soft: #d8d6cf;
+  --accent: #ff3b00;
+  --accent-soft: #ffece5;
+  --grid: rgba(10, 10, 10, 0.06);
+
+  /* terminal-style code block (light theme = dark terminal) */
+  --code-bg: #0a0a0a;
+  --code-fg: #f4f3ee;
+  --code-border: #0a0a0a;
+  --code-border-soft: #2a2a2a;
+  --code-muted: #6e6e6a;
+  --code-line-hover: rgba(255, 255, 255, 0.05);
+  --code-dot-red: #ff5f56;
+  --code-dot-yellow: #ffbd2e;
+  --code-dot-green: #27c93f;
+  --code-prompt: #ff7a4d;
+
+  --radius: 0px; /* brutalist */
+  --radius-pill: 999px;
+  --max-w: 1280px;
+  --gutter: 24px;
+  --header-h: 64px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0a;
+  --bg-elev: #141414;
+  --bg-invert: #f4f3ee;
+  --fg: #f4f3ee;
+  --fg-muted: #9c9c98;
+  --fg-faint: #5b5b58;
+  --border: #f4f3ee;
+  --border-soft: #2a2a2a;
+  --accent: #ff5722;
+  --accent-soft: #2a1407;
+  --grid: rgba(244, 243, 238, 0.05);
+
+  /* terminal-style code block (dark theme keeps a dark terminal —
+     slightly lifted from --bg so it reads as a distinct surface) */
+  --code-bg: #141414;
+  --code-fg: #f4f3ee;
+  --code-border: #2a2a2a;
+  --code-border-soft: #2a2a2a;
+  --code-muted: #6e6e6a;
+  --code-line-hover: rgba(255, 255, 255, 0.05);
+  --code-dot-red: #ff5f56;
+  --code-dot-yellow: #ffbd2e;
+  --code-dot-green: #27c93f;
+  --code-prompt: #ff7a4d;
+}
+
+/* ---- Reset --------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+html {
+  scroll-behavior: smooth;
+  /* Sticky header offset so anchor links (#overview etc.) don't sit under it. */
+  scroll-padding-top: calc(var(--header-h) + 16px);
+}
+body {
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: -1px -1px;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease;
+}
+
+/* 不再全局设置 -webkit-font-smoothing。
+   原因：在 Windows + 浅色背景 + 中文字体（PingFang SC / 微软雅黑）
+   场景下，强制 antialiased 会关闭次像素抗锯齿，导致中文字符明显发虚。
+   让浏览器使用各自平台默认的字体平滑策略：
+   - macOS/iOS 默认 subpixel-antialiased
+   - Windows 默认 subpixel-antialiased（ClearType）
+   - Linux 多数为灰度
+   现代中文字体（PingFang / 微软雅黑 / Noto Sans SC）自带完善的 hinting，
+   默认渲染就已经足够清晰。 */
+
+/* 中文语言下，body 使用中文无衬线字体栈（PingFang SC / 微软雅黑 / Noto Sans SC），
+   这些字体的 400 字重在浅色背景下清晰不发虚。 */
+:root[lang="zh-CN"] body {
+  font-family: var(--font-zh);
+}
+
+/* 中文语言下：所有显式声明 font-mono 的元素（包括按钮、ticker、页脚、
+   header nav、表格正文、docs 段落等）也注入中文栈，避免中文字符回退到
+   JetBrains Mono 之后落到浏览器默认等宽中文字体导致发虚。
+   栈顺序保证：英文/数字仍由 JetBrains Mono 渲染（靠前的中文字体不含西文
+   字形或回退优先级），中文则由 PingFang SC / 微软雅黑等系统中文渲染。 */
+:root[lang="zh-CN"] {
+  --font-mono: "JetBrains Mono", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Source Han Sans SC", "Noto Sans SC", ui-monospace,
+    "SF Mono", Consolas, monospace;
+}
+img {
+  max-width: 100%;
+  display: block;
+}
+a {
+  color: inherit;
+  text-decoration: none;
+}
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+::selection {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+/* ---- Layout primitives -------------------------------------------- */
+.container {
+  width: 100%;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+.section {
+  padding: 96px 0;
+  position: relative;
+}
+.section--tight {
+  padding: 56px 0;
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.eyebrow::before {
+  content: "";
+  width: 24px;
+  height: 1px;
+  background: var(--fg);
+}

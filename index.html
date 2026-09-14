@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#f4f3ee" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <title>EKeys · Macropad for people who build</title>
+    <meta
+      name="description"
+      content="EKeys — an open-source 11-key ESP32-S3 macropad with rotary encoder, LCD, RGB and dual USB/BLE HID."
+    />
+
+    <!-- DNS + TCP preconnect to Google Fonts; cuts ~100–300ms off first paint. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Load only the weights we actually use. Bebas Neue + Inter + JetBrains Mono
+      were previously loaded with four extra weights per family (300/700 etc.)
+      that no rule references — trim the request.
+      `display=swap` keeps the fallback visible instead of blocking paint.
+    -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap"
+      />
+    </noscript>
+
+    <style>
+      /* Inline critical above-the-fold CSS — eliminates the first-paint flash
+         of an unstyled body while the Vite bundle parses. Tokens are the
+         minimum needed to render the header + body background correctly. */
+      :root {
+        color-scheme: light dark;
+        --bg: #f4f3ee;
+        --bg-invert: #0a0a0a;
+        --fg: #0a0a0a;
+        --fg-muted: #5b5b58;
+        --fg-faint: #8c8c88;
+        --border: #0a0a0a;
+        --border-soft: #d8d6cf;
+        --accent: #ff3b00;
+        --grid: rgba(10, 10, 10, 0.06);
+        --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+        --font-sans:
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", "Noto Sans SC", sans-serif;
+        --font-display: "Bebas Neue", "JetBrains Mono", sans-serif;
+        --max-w: 1280px;
+        --gutter: 24px;
+        --header-h: 64px;
+      }
+      [data-theme="dark"] {
+        --bg: #0a0a0a;
+        --bg-invert: #f4f3ee;
+        --fg: #f4f3ee;
+        --fg-muted: #9c9c98;
+        --fg-faint: #5b5b58;
+        --border: #f4f3ee;
+        --border-soft: #2a2a2a;
+        --accent: #ff5722;
+        --grid: rgba(244, 243, 238, 0.05);
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        font-family: var(--font-mono);
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+        text-rendering: optimizeLegibility;
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+        background-size: 32px 32px;
+        background-position: -1px -1px;
+        transition:
+          background 0.3s ease,
+          color 0.3s ease;
+      }
+
+      /* Boot skeleton: shown until React mounts, so the user never sees a
+         blank white rectangle between first paint and hydration. */
+      #boot {
+        position: fixed;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        background: var(--bg);
+        z-index: 100;
+        transition: opacity 0.25s ease;
+      }
+      #boot.is-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      #boot .boot-mark {
+        font-family: var(--font-display);
+        font-size: 56px;
+        letter-spacing: 0.04em;
+        color: var(--fg);
+        animation: bootPulse 1.4s ease-in-out infinite;
+      }
+      @keyframes bootPulse {
+        0%,
+        100% {
+          opacity: 0.35;
+        }
+        50% {
+          opacity: 1;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot .boot-mark {
+          animation: none;
+          opacity: 0.7;
+        }
+      }
+    </style>
+
+    <script>
+      // 在 CSS 加载前同步设置主题与语言，避免深色 / 英文兜底文本闪现
+      (function () {
+        try {
+          var t = localStorage.getItem("ek_theme");
+          if (t !== "light" && t !== "dark") {
+            t =
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+
+          var l = localStorage.getItem("ek_lang");
+          if (l !== "en" && l !== "zh") {
+            l = (navigator.language || "en").toLowerCase().startsWith("zh")
+              ? "zh"
+              : "en";
+          }
+          document.documentElement.setAttribute("data-lang", l);
+          document.documentElement.setAttribute(
+            "lang",
+            l === "zh" ? "zh-CN" : "en",
+          );
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="boot" aria-hidden="true">
+      <div class="boot-mark">E</div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

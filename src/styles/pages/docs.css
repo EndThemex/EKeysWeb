@@ -1,0 +1,204 @@
+/* =====================================================================
+   EKeysWeb — Docs / Get started page (docs.html)
+   Docs two-column layout + body typography
+   ===================================================================== */
+
+.hero .eyebrow {
+  font-size: 14px;
+}
+.hero__lede {
+  font-size: 20px;
+  line-height: 1.7;
+}
+.docs-nav .eyebrow {
+  font-size: 14px;
+}
+
+.docs {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 48px;
+  border-top: 1px solid var(--border);
+  padding-top: 48px;
+}
+.docs-nav {
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  align-self: start;
+}
+.docs-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.docs-nav li {
+  border-bottom: 1px solid var(--border-soft);
+}
+.docs-nav a {
+  display: block;
+  padding: 10px 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  color: var(--fg-muted);
+}
+.docs-nav a:hover {
+  color: var(--accent);
+}
+.docs-body h3 {
+  font-family: var(--font-display);
+  font-size: 44px;
+  margin: 48px 0 16px;
+  letter-spacing: 0;
+}
+.docs-body h3:first-child {
+  margin-top: 0;
+}
+.docs-body p,
+.docs-body li {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  line-height: 1.8;
+  color: var(--fg-muted);
+}
+.docs-body code {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  padding: 1px 6px;
+  font-size: 15px;
+  color: var(--fg);
+}
+.docs-body pre {
+  background: var(--bg-invert);
+  color: var(--bg);
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ---- Code block (terminal-style) --------------------------------- */
+.codeblock {
+  margin: 20px 0 32px;
+  border: 1px solid var(--code-border);
+  background: var(--code-bg);
+  color: var(--code-fg);
+  font-family: var(--font-mono);
+  position: relative;
+  transition: border-color 0.2s ease;
+}
+.codeblock:hover {
+  border-color: var(--accent);
+}
+.codeblock__bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--code-border-soft);
+  background: var(--code-bg);
+}
+.codeblock__dots {
+  display: inline-flex;
+  gap: 6px;
+}
+.codeblock__dots i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--code-border-soft);
+  display: inline-block;
+}
+.codeblock__dots i:nth-child(1) {
+  background: var(--code-dot-red);
+}
+.codeblock__dots i:nth-child(2) {
+  background: var(--code-dot-yellow);
+}
+.codeblock__dots i:nth-child(3) {
+  background: var(--code-dot-green);
+}
+.codeblock__label {
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--code-muted);
+  flex: 1;
+  text-align: center;
+}
+.codeblock__copy {
+  appearance: none;
+  background: transparent;
+  border: 1px solid var(--code-border-soft);
+  color: var(--code-fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.codeblock__copy:hover {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+}
+.codeblock__pre {
+  margin: 0;
+  padding: 14px 0;
+  overflow-x: auto;
+  font-size: 15px;
+  line-height: 1.7;
+  background: transparent;
+  color: inherit;
+}
+.codeblock__pre code {
+  display: block;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+.codeblock__line {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  align-items: baseline;
+  padding: 0 14px;
+}
+.codeblock__line:hover {
+  background: var(--code-line-hover);
+}
+.codeblock__lineno {
+  text-align: right;
+  padding-right: 14px;
+  color: var(--code-muted);
+  user-select: none;
+  font-size: 13px;
+}
+.codeblock__line-body {
+  white-space: pre;
+  overflow-x: auto;
+}
+.codeblock__prompt {
+  color: var(--code-prompt);
+  margin-right: 10px;
+  user-select: none;
+  font-weight: 500;
+}
+[data-theme="dark"] .docs-body pre {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+@media (max-width: 960px) {
+  .docs {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 600px) {
+  .docs-nav {
+    position: static;
+  }
+}

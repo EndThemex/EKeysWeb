@@ -1,0 +1,163 @@
+/* =====================================================================
+   EKeysWeb — Specs page (specs.html)
+   Specs tabs/table + diagram blocks
+   ===================================================================== */
+
+.specs-wrap {
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+}
+.specs-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.specs-tabs button {
+  background: transparent;
+  border: 0;
+  border-right: 1px solid var(--border);
+  padding: 16px 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+.specs-tabs button.is-active {
+  background: var(--fg);
+  color: var(--bg);
+}
+.specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 13px;
+}
+.specs-table tr {
+  border-bottom: 1px solid var(--border-soft);
+}
+.specs-table tr:last-child {
+  border-bottom: 0;
+}
+.specs-table th,
+.specs-table td {
+  padding: 14px 24px;
+  text-align: left;
+  font-weight: 400;
+}
+.specs-table th {
+  color: var(--fg-faint);
+  width: 220px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.specs-table td code {
+  background: var(--bg-invert);
+  color: var(--bg);
+  padding: 2px 8px;
+  font-size: 12px;
+}
+[data-theme="dark"] .specs-table td code {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ---- Spec layout: two columns ------------------------------------ */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+}
+.diagram {
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  padding: 24px;
+  position: relative;
+}
+.diagram--centered {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+}
+.diagram__label {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  z-index: 1;
+}
+.diagram__pre {
+  margin: 0;
+  background: transparent;
+  color: var(--fg);
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: pre;
+  overflow-x: auto;
+}
+.diagram__svg {
+  width: 80%;
+  height: auto;
+  display: block;
+}
+
+/* ---- Pinout grid -------------------------------------------------- */
+.pinout {
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+.pinout > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: background-color 0.15s ease;
+}
+.pinout > div:hover {
+  background: var(--bg-elev);
+}
+.pin-fn {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+}
+.pin-name {
+  color: var(--fg);
+  font-weight: 500;
+}
+.pin-gpio {
+  color: var(--fg-muted);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+@media (max-width: 960px) {
+  .two-col {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .pinout {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .pinout {
+    grid-template-columns: 1fr;
+  }
+  .pinout > div {
+    grid-template-columns: auto 1fr auto;
+  }
+}

@@ -1,0 +1,82 @@
+/* =====================================================================
+   EKeysWeb — Docs / Get started page (docs.html)
+   Docs two-column layout + body typography
+   ===================================================================== */
+
+.docs {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 48px;
+  border-top: 1px solid var(--border);
+  padding-top: 48px;
+}
+.docs-nav {
+  position: sticky;
+  top: calc(var(--header-h) + 24px);
+  align-self: start;
+}
+.docs-nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+}
+.docs-nav li {
+  border-bottom: 1px solid var(--border-soft);
+}
+.docs-nav a {
+  display: block;
+  padding: 10px 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.docs-nav a:hover {
+  color: var(--accent);
+}
+.docs-body h3 {
+  font-family: var(--font-display);
+  font-size: 36px;
+  margin: 48px 0 16px;
+  letter-spacing: 0;
+}
+.docs-body h3:first-child {
+  margin-top: 0;
+}
+.docs-body p,
+.docs-body li {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--fg-muted);
+}
+.docs-body code {
+  background: var(--bg-elev);
+  border: 1px solid var(--border-soft);
+  padding: 1px 6px;
+  font-size: 12px;
+  color: var(--fg);
+}
+.docs-body pre {
+  background: var(--bg-invert);
+  color: var(--bg);
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 12px;
+  line-height: 1.6;
+}
+[data-theme="dark"] .docs-body pre {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+@media (max-width: 960px) {
+  .docs {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+}
+@media (max-width: 600px) {
+  .docs-nav {
+    position: static;
+  }
+}

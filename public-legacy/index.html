@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title data-i18n="site.title.home">EKeys · Macropad for people who build</title>
+    <meta
+      name="description"
+      data-i18n="site.description"
+      content="EKeys — an open-source 11-key ESP32-S3 macropad with rotary encoder, LCD, RGB and dual USB/BLE HID."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap"
+    />
+    <script>
+      // 在 CSS 加载前同步设置主题与语言，避免深色 / 英文兜底文本闪现
+      (function () {
+        try {
+          var t = localStorage.getItem("ek_theme");
+          if (t !== "light" && t !== "dark") {
+            t =
+              window.matchMedia &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          }
+          document.documentElement.setAttribute("data-theme", t);
+
+          var l = localStorage.getItem("ek_lang");
+          if (l !== "en" && l !== "zh") {
+            l = (navigator.language || "en").toLowerCase().startsWith("zh")
+              ? "zh"
+              : "en";
+          }
+          document.documentElement.setAttribute("data-lang", l);
+          document.documentElement.setAttribute(
+            "lang",
+            l === "zh" ? "zh-CN" : "en",
+          );
+        } catch (_) {}
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

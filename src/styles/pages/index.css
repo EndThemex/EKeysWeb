@@ -1,0 +1,466 @@
+/* =====================================================================
+   EKeysWeb — Home page (index.html)
+   Hero + device preview + features + profiles + marquee + scroll-cue + CTA
+   ===================================================================== */
+
+/* ---- Section primitives ------------------------------------------ */
+.section--bordered {
+  border-top: 1px solid var(--border);
+}
+.section__head--tight {
+  margin-bottom: 32px;
+}
+
+/* ---- Hero ---------------------------------------------------------- */
+.hero {
+  padding: 80px 0 64px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+.hero__grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 64px;
+  align-items: end;
+}
+.hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(72px, 12vw, 180px);
+  line-height: 1;
+  letter-spacing: 0;
+  margin: 24px 0 40px;
+  color: var(--fg);
+}
+.hero__title em {
+  font-style: normal;
+  color: var(--accent);
+}
+/* CJK glyphs need more vertical room than Latin caps. Pull the font-size down
+   a touch so a typical Chinese title doesn't wrap to a third line on narrow
+   viewports, and bump line-height + outer margins so the two <br>-separated
+   lines never overlap. */
+[data-lang="zh"] .hero__title {
+  font-size: clamp(48px, 9vw, 132px);
+  line-height: 1.3;
+  margin: 8px 0 28px;
+}
+/* Equal vertical gap above line 1 and below line 2 of the CJK hero title.
+   Apply the same inline-block + top margin to BOTH spans so the spacing
+   between the two lines matches the spacing from surrounding elements. */
+[data-lang="zh"] .hero__title > span {
+  display: inline-block;
+}
+[data-lang="zh"] .hero__title > span + br + span {
+  margin-top: 0.25em;
+  font-size: 0.6em;
+}
+/* Section headings, docs headings, profile titles and the bottom CTA all use
+   the same display font; CJK glyphs need a hair more vertical room there too. */
+[data-lang="zh"] .section__head h2,
+[data-lang="zh"] .docs-body h3,
+[data-lang="zh"] .profile__title,
+[data-lang="zh"] .feature__title,
+[data-lang="zh"] .cta__title {
+  line-height: 1.15;
+}
+/* Keep two-line profile cards from collapsing the description in Chinese */
+[data-lang="zh"] .profile__title {
+  min-height: 2.3em;
+}
+.hero__lede {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  max-width: 540px;
+  margin-bottom: 32px;
+}
+/* Wider lede used on inner pages (Features/Specs/Docs) where copy spans the
+   full width instead of a 540px column. */
+.hero__lede--wide {
+  max-width: 720px;
+}
+.hero__cta-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.hero__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+.hero__meta div {
+  padding: 16px 0;
+  border-right: 1px solid var(--border);
+}
+.hero__meta div:last-child {
+  border-right: 0;
+}
+.hero__meta dt {
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--fg-faint);
+  margin-bottom: 4px;
+}
+.hero__meta dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+/* device preview */
+.hero__device {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  background: var(--bg-invert);
+  border: 1px solid var(--border);
+  padding: 32px;
+  overflow: hidden;
+}
+.hero__device::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(244, 243, 238, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(244, 243, 238, 0.06) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+.hero__device-tag {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--bg);
+  background: var(--fg);
+  padding: 4px 8px;
+  text-transform: uppercase;
+  z-index: 2;
+}
+[data-theme="dark"] .hero__device-tag {
+  background: var(--fg);
+  color: var(--bg);
+}
+.hero__device::after {
+  content: "PWR · ON";
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--bg);
+  z-index: 2;
+}
+
+.macropad {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 10px;
+  z-index: 1;
+}
+.macropad__key {
+  background: var(--bg-elev);
+  color: var(--fg);
+  border: 1px solid var(--bg-elev);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  position: relative;
+}
+.macropad__key::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed rgba(10, 10, 10, 0.25);
+}
+.macropad__key.is-encoder {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.macropad__key.is-encoder::after {
+  display: none;
+}
+
+/* ---- Section heads ------------------------------------------------- */
+.section__head {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 64px;
+  margin-bottom: 64px;
+  align-items: start;
+}
+.section__head h2 {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: 0.95;
+  margin: 0;
+  letter-spacing: 0;
+}
+.section__head p {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--fg-muted);
+  margin: 0;
+  max-width: 540px;
+}
+
+/* ---- Feature grid ------------------------------------------------- */
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+.feature {
+  padding: 32px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: relative;
+}
+.feature__num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--fg-faint);
+  margin-bottom: 24px;
+}
+.feature__title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0;
+  margin: 0 0 12px;
+}
+.feature__desc {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fg-muted);
+  margin: 0 0 16px;
+}
+.feature__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.tag {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  text-transform: uppercase;
+}
+
+/* ---- Profiles / use cases ----------------------------------------- */
+.profiles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+.profile {
+  border-right: 1px solid var(--border);
+  padding: 28px 24px;
+  position: relative;
+  cursor: pointer;
+}
+.profile:last-child {
+  border-right: 0;
+}
+.profile:hover {
+  background: var(--bg-invert);
+}
+.profile:hover,
+.profile:hover .profile__title,
+.profile:hover .profile__meta,
+.profile:hover .profile__icon {
+  color: var(--bg);
+}
+.profile:hover .profile__icon {
+  border-color: var(--bg);
+}
+.profile__icon {
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  margin-bottom: 24px;
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+.profile__title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  margin: 0 0 8px;
+}
+.profile__desc {
+  font-size: 12px;
+  color: var(--fg-muted);
+  margin: 0 0 16px;
+  line-height: 1.6;
+}
+.profile:hover .profile__desc {
+  color: var(--bg);
+  opacity: 0.7;
+}
+.profile__meta {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--fg-faint);
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ---- Marquee block (homepage only) -------------------------------- */
+.marquee-block {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 48px 0;
+  overflow: hidden;
+}
+.marquee-block__title {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--fg-faint);
+  margin-bottom: 24px;
+  text-transform: uppercase;
+}
+.marquee-block__row {
+  display: flex;
+  gap: 64px;
+  font-family: var(--font-display);
+  font-size: clamp(48px, 8vw, 120px);
+  line-height: 0.9;
+  white-space: nowrap;
+  animation: ticker 35s linear infinite;
+}
+.marquee-block__row span:nth-child(even) {
+  color: var(--accent);
+}
+
+/* ---- Bottom CTA (homepage only) ----------------------------------- */
+.cta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+.cta__copy {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+.cta__title {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 6vw, 64px);
+  line-height: 0.95;
+  margin: 12px 0 8px;
+  letter-spacing: 0;
+}
+.cta__subtitle {
+  color: var(--fg-muted);
+  max-width: 540px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.cta__btn {
+  flex-shrink: 0;
+}
+
+/* ---- Scroll cue (homepage only) ----------------------------------- */
+.scroll-cue {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  display: grid;
+  place-items: center;
+  font-size: 16px;
+  background: var(--bg);
+  color: var(--fg);
+  z-index: 40;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.scroll-cue.is-visible {
+  opacity: 1;
+}
+.scroll-cue:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ---- Hero responsive --------------------------------------------- */
+@media (max-width: 960px) {
+  .hero__grid {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .section__head {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .profiles {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .profile {
+    border-right: 1px solid var(--border);
+  }
+  .profile:nth-child(2n) {
+    border-right: 0;
+  }
+  .hero {
+    padding: 48px 0 32px;
+  }
+  .cta {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 24px;
+  }
+}
+@media (max-width: 600px) {
+  .features {
+    grid-template-columns: 1fr;
+  }
+  .profiles {
+    grid-template-columns: 1fr;
+  }
+  .profile {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero__meta {
+    grid-template-columns: 1fr;
+  }
+  .hero__meta div {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hero__meta div:last-child {
+    border-bottom: 0;
+  }
+}

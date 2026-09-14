@@ -1,0 +1,27 @@
+/* =====================================================================
+   EKeysWeb — Global responsive overrides
+   Page-specific styles handle their own internal grid breakpoints
+   where needed; this file owns cross-page layout shifts.
+   ===================================================================== */
+
+@media (max-width: 960px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .section {
+    padding: 64px 0;
+  }
+  /* Hide the standalone GitHub CTA — the nav drawer carries it instead. */
+  .site-header__cta {
+    display: none;
+  }
+}
+@media (max-width: 600px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+  }
+  .site-footer__bottom {
+    flex-direction: column;
+    gap: 8px;
+  }
+}

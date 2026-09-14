@@ -1,0 +1,13 @@
+/* 聚合所有 CSS，保持与原静态站点完全一致的视觉表现 */
+@import "./tokens.css";
+@import "./header.css";
+@import "./buttons.css";
+@import "./ticker.css";
+@import "./footer.css";
+@import "./animations.css";
+@import "./pages/index.css";
+@import "./pages/features.css";
+@import "./pages/docs.css";
+@import "./pages/specs.css";
+@import "./pages/app.css";
+@import "./responsive.css";

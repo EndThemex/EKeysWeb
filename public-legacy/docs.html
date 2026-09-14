@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Docs · EKeys</title>
+  <meta name="description" content="Documentation for EKeys — overview, build, protocol, desktop app, roadmap." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <script>
+    /* 在 CSS 加载前同步设置主题与语言，避免深色 / 英文兜底文本闪现 */
+    (function () {
+      try {
+        var t = localStorage.getItem("ek_theme");
+        if (t !== "light" && t !== "dark") {
+          t =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+
+        var l = localStorage.getItem("ek_lang");
+        if (l !== "en" && l !== "zh") {
+          l =
+            (navigator.language || "en").toLowerCase().startsWith("zh")
+              ? "zh"
+              : "en";
+        }
+        document.documentElement.setAttribute(
+          "lang",
+          l === "zh" ? "zh-CN" : "en",
+        );
+        document.documentElement.setAttribute("data-lang", l);
+      } catch (_) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+    <link rel="stylesheet" href="assets/css/header.css" />
+    <link rel="stylesheet" href="assets/css/buttons.css" />
+    <link rel="stylesheet" href="assets/css/ticker.css" />
+    <link rel="stylesheet" href="assets/css/footer.css" />
+    <link rel="stylesheet" href="assets/css/pages/docs.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a href="index.html" class="brand" aria-label="EKeys home">
+        <span class="brand__mark">E</span>
+        <span>
+          <span class="brand__name">EKEYS</span>
+          <span class="brand__sub">// 11-key macro pad</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html" data-i18n="nav.home">Home</a>
+        <a href="features.html" data-i18n="nav.features">Features</a>
+        <a href="specs.html" data-i18n="nav.specs">Specs</a>
+        <a href="docs.html" class="is-active" data-i18n="nav.docs">Get started</a>
+      </nav>
+      <div class="toolbar">
+        <button id="langToggle" class="btn-icon" aria-label="Switch language">中</button>
+        <button id="themeToggle" class="btn-icon" aria-label="Toggle theme">☾</button>
+        <a href="docs.html" class="btn btn--ghost" data-i18n="nav.github">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow" data-i18n="docs.title">Get started</span>
+      <h1 class="hero__title" style="font-size:clamp(56px,9vw,140px);" data-i18n="docs.title">Get started</h1>
+      <p class="hero__lede" style="max-width:720px;" data-i18n="docs.lede">New to EKeys? Start here. You don’t need to be an engineer — these guides walk you through everything, from unboxing to your first custom scene.</p>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+    </div>
+  </div>
+
+  <!-- ============ DOCS BODY ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="docs">
+        <aside class="docs-nav">
+          <span class="eyebrow">// Index</span>
+          <ul>
+            <li><a href="#overview" data-i18n="docs.nav.overview">What is EKeys?</a></li>
+            <li><a href="#build" data-i18n="docs.nav.build">Set it up</a></li>
+            <li><a href="#protocol" data-i18n="docs.nav.protocol">For tinkerers</a></li>
+            <li><a href="#app" data-i18n="docs.nav.app">Companion app</a></li>
+            <li><a href="#roadmap" data-i18n="docs.nav.roadmap">What’s coming</a></li>
+          </ul>
+        </aside>
+
+        <div class="docs-body">
+          <h3 id="overview" data-i18n="docs.h.overview">What is EKeys?</h3>
+          <p data-i18n="docs.p.overview">EKeys is a small 11-key pad that lives next to your keyboard. It has a knob, a tiny screen, soft-glow lights and connects to your computer over USB-C or Bluetooth. It runs open-source firmware, so you can change how it works whenever you want.</p>
+
+          <h3 id="build" data-i18n="docs.h.build">Set it up</h3>
+          <p data-i18n="docs.p.build">If you bought a pre-built EKeys, just plug it in — it works out of the box. Building one yourself? These five commands will flash the firmware and load the default scenes.</p>
+          <pre><code data-i18n="docs.code.build">pio run -e esp32-s3-wroom-1-n16r8
+pio run -e esp32-s3-wroom-1-n16r8 -t upload
+pio run -e esp32-s3-wroom-1-n16r8 -t uploadfs
+pio device monitor -b 115200</code></pre>
+
+          <h3 id="protocol" data-i18n="docs.h.protocol">For tinkerers</h3>
+          <p data-i18n="docs.p.protocol">Want to build your own app that talks to EKeys? It uses a simple JSON message format over USB or Wi-Fi. Send a frame like <code>{"cmd":3,"data":{...}}</code> and the device replies. Every command is documented, and the device can be discovered on your network automatically.</p>
+
+          <h3 id="app" data-i18n="docs.h.app">Companion app</h3>
+          <p data-i18n="docs.p.app">The companion app (called EKeysApp) lets you rearrange keys, change scenes and update firmware with a friendly interface. It runs on Windows, macOS and Linux. Your settings are saved automatically — no manual file editing.</p>
+
+          <h3 id="roadmap" data-i18n="docs.h.roadmap">What’s coming</h3>
+          <p data-i18n="docs.p.roadmap">We’re constantly adding small features based on what the community asks for. The short-term plan: smarter lighting scenes, longer battery life, more voice languages, and a marketplace where people can share their favorite layouts.</p>
+
+          <h3>// Companion apps</h3>
+          <p>Two free, open-source apps come with EKeys:</p>
+          <ul>
+            <li><code>EKeys/</code> — the firmware that runs on the device itself.</li>
+            <li><code>EKeysApp/</code> — a desktop app for Windows, macOS and Linux that lets you rearrange the keys, change scenes and update firmware.</li>
+          </ul>
+          <p>This website is a friendly tour — when you’re ready to dig deeper, the full READMEs in each project are the next step.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__grid">
+        <div class="site-footer__brand">
+          <div class="brand" style="margin-bottom:16px;">
+            <span class="brand__mark">E</span>
+            <span class="brand__name">EKEYS</span>
+          </div>
+          <p data-i18n="footer.tagline">A pocket-sized keyboard for people who love making things — and love their desk tidy.</p>
+        </div>
+        <div>
+          <h4 data-i18n="footer.product">Product</h4>
+          <ul>
+            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="features.html" data-i18n="nav.features">Features</a></li>
+            <li><a href="specs.html" data-i18n="nav.specs">Specs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.resources">Learn</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.docs">Get started</a></li>
+            <li><a href="docs.html#protocol" data-i18n="docs.nav.protocol">For tinkerers</a></li>
+            <li><a href="docs.html#build" data-i18n="docs.nav.build">Set it up</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.community">Community</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.github">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="site-footer__bottom">
+        <span data-i18n="footer.copy">© 2026 EKeys project</span>
+        <span data-i18n="footer.build">v0.1.0 · static web</span>
+      </div>
+    </div>
+  </footer>
+
+  <button id="scrollCue" class="scroll-cue" aria-label="Back to top">↑</button>
+  <script src="assets/js/i18n.js"></script>
+</body>
+</html>

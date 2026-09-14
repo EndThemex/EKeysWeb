@@ -1,0 +1,44 @@
+/* =====================================================================
+   EKeysWeb — Ticker (shared between pages)
+   ===================================================================== */
+
+.ticker {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: var(--fg);
+  color: var(--bg);
+  overflow: hidden;
+  padding: 12px 0;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+}
+.ticker__track {
+  display: flex;
+  gap: 48px;
+  white-space: nowrap;
+  animation: ticker 28s linear infinite;
+}
+.ticker__track span {
+  display: inline-flex;
+  align-items: center;
+}
+.ticker__track span::before {
+  content: "◆";
+  margin-right: 16px;
+  color: var(--accent);
+}
+/* Pause when the user prefers reduced motion or when the ticker is hovered,
+   so reading the marquee text is possible. */
+.ticker:hover .ticker__track,
+.marquee-block:hover .marquee-block__row {
+  animation-play-state: paused;
+}
+@keyframes ticker {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}

@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Specs · EKeys</title>
+  <meta name="description" content="EKeys hardware specifications — MCU, pin map, peripherals, electrical limits." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <script>
+    /* 在 CSS 加载前同步设置主题与语言，避免深色 / 英文兜底文本闪现 */
+    (function () {
+      try {
+        var t = localStorage.getItem("ek_theme");
+        if (t !== "light" && t !== "dark") {
+          t =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+
+        var l = localStorage.getItem("ek_lang");
+        if (l !== "en" && l !== "zh") {
+          l =
+            (navigator.language || "en").toLowerCase().startsWith("zh")
+              ? "zh"
+              : "en";
+        }
+        document.documentElement.setAttribute(
+          "lang",
+          l === "zh" ? "zh-CN" : "en",
+        );
+        document.documentElement.setAttribute("data-lang", l);
+      } catch (_) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+    <link rel="stylesheet" href="assets/css/header.css" />
+    <link rel="stylesheet" href="assets/css/buttons.css" />
+    <link rel="stylesheet" href="assets/css/ticker.css" />
+    <link rel="stylesheet" href="assets/css/footer.css" />
+    <link rel="stylesheet" href="assets/css/pages/specs.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
+  <style>
+    .pinout {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+    }
+    .pinout > div {
+      padding: 20px 24px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .pinout > div:nth-child(2n) { border-right: 0; }
+    .pinout .pin-name { color: var(--fg); }
+    .pinout .pin-gpio { color: var(--fg-muted); }
+    .pinout .pin-fn { color: var(--accent); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a href="index.html" class="brand" aria-label="EKeys home">
+        <span class="brand__mark">E</span>
+        <span>
+          <span class="brand__name">EKEYS</span>
+          <span class="brand__sub">// 11-key macro pad</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html" data-i18n="nav.home">Home</a>
+        <a href="features.html" data-i18n="nav.features">Features</a>
+        <a href="specs.html" class="is-active" data-i18n="nav.specs">Specs</a>
+        <a href="docs.html" data-i18n="nav.docs">Get started</a>
+      </nav>
+      <div class="toolbar">
+        <button id="langToggle" class="btn-icon" aria-label="Switch language">中</button>
+        <button id="themeToggle" class="btn-icon" aria-label="Toggle theme">☾</button>
+        <a href="docs.html" class="btn btn--ghost" data-i18n="nav.github">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow" data-i18n="specs.eyebrow">03 — The bits inside</span>
+      <h1 class="hero__title" style="font-size:clamp(56px,9vw,140px);" data-i18n="nav.specs">Specs</h1>
+      <p class="hero__lede" style="max-width:720px;" data-i18n="specs.subtitle">A quick look at the parts that make EKeys tick — the same list we ship with every firmware release.</p>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+    </div>
+  </div>
+
+  <!-- ============ SPECS TABS ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="specs-wrap">
+        <div class="specs-tabs" data-specs-tabs>
+          <button class="is-active" data-target="main" data-i18n="specs.tab.main">Main board</button>
+          <button data-target="io" data-i18n="specs.tab.io">Keys & ports</button>
+          <button data-target="rf" data-i18n="specs.tab.rf">Wireless & audio</button>
+        </div>
+
+        <!-- Main board -->
+        <table class="specs-table" data-specs-panel="main">
+          <tbody>
+            <tr><th data-i18n="specs.row.mcu">Main MCU</th>             <td data-i18n="specs.row.mcu.v">ESP32-S3 dual-core · 240 MHz</td></tr>
+            <tr><th data-i18n="specs.row.memory">Memory</th>             <td data-i18n="specs.row.memory.v">16 MB flash · 8 MB PSRAM</td></tr>
+            <tr><th data-i18n="specs.row.display">Display</th>           <td data-i18n="specs.row.display.v">Strip LCD · 428 × 142 · 16.7 M colors</td></tr>
+            <tr><th data-i18n="specs.row.lights">Lights</th>             <td data-i18n="specs.row.lights.v">11 per-key RGB · soft-glow under-caps</td></tr>
+            <tr><th data-i18n="specs.row.encoder">Rotary knob</th>       <td data-i18n="specs.row.encoder.v">Spin · click · double-click</td></tr>
+            <tr><th data-i18n="specs.row.voice">Voice key</th>           <td data-i18n="specs.row.voice.v">One-key speech-to-text</td></tr>
+          </tbody>
+        </table>
+
+        <!-- I/O map -->
+        <table class="specs-table" data-specs-panel="io" hidden>
+          <tbody>
+            <tr><th data-i18n="specs.row.usb">USB</th>                   <td data-i18n="specs.row.usb.v">USB-C · plug-and-play · no driver needed</td></tr>
+            <tr><th data-i18n="specs.row.wireless">Wireless</th>          <td data-i18n="specs.row.wireless.v">Bluetooth 5.0 · pairs with phone, tablet, laptop</td></tr>
+            <tr><th data-i18n="specs.row.wifi">Wi-Fi</th>                <td data-i18n="specs.row.wifi.v">2.4 GHz · for time, weather and status on the screen</td></tr>
+            <tr><th data-i18n="specs.row.update">Updates</th>            <td data-i18n="specs.row.update.v">Over-the-air · safe rollback on error</td></tr>
+            <tr><th data-i18n="specs.row.app">Companion app</th>         <td data-i18n="specs.row.app.v">Windows / macOS / Linux · drag-and-drop layout editor</td></tr>
+          </tbody>
+        </table>
+
+        <!-- Audio / light -->
+        <table class="specs-table" data-specs-panel="rf" hidden>
+          <tbody>
+            <tr><th data-i18n="specs.row.audio.out">Speaker</th>         <td data-i18n="specs.row.audio.out.v">Built-in 3 W mono · click & feedback sounds</td></tr>
+            <tr><th data-i18n="specs.row.audio.in">Microphone</th>       <td data-i18n="specs.row.audio.in.v">Built-in · for voice key & future features</td></tr>
+            <tr><th data-i18n="specs.row.display">Display</th>           <td data-i18n="specs.row.display.v">Strip LCD · 428 × 142 · 16.7 M colors</td></tr>
+            <tr><th data-i18n="specs.row.lights">Lights</th>             <td data-i18n="specs.row.lights.v">11 per-key RGB · soft-glow under-caps</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DIMENSIONS / DIAGRAM ============ -->
+  <section class="section" style="border-top:1px solid var(--border);">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <span class="eyebrow" data-i18n="specs.size.eyebrow">// Size & shape</span>
+          <h2 data-i18n="specs.size.title">Small enough to live anywhere.</h2>
+        </div>
+        <p data-i18n="specs.size.desc">About the size of a deck of cards. USB-C on the back, soft-touch feet on the bottom, and a little weight to stop it sliding around.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="diagram" style="aspect-ratio:4/3; display:grid; place-items:center;">
+          <span class="diagram__label" data-i18n="specs.size.fig.top">FIG · 03 — TOP</span>
+          <svg viewBox="0 0 400 240" style="width:80%; height:auto;" aria-label="Top view">
+            <rect x="20" y="20" width="360" height="200" fill="none" stroke="currentColor" stroke-width="2"/>
+            <g fill="none" stroke="currentColor" stroke-width="1">
+              <rect x="40"  y="50" width="60" height="50"/>
+              <rect x="110" y="50" width="60" height="50"/>
+              <rect x="180" y="50" width="60" height="50"/>
+              <rect x="250" y="50" width="60" height="50"/>
+              <rect x="40"  y="110" width="60" height="50"/>
+              <rect x="110" y="110" width="60" height="50"/>
+              <rect x="180" y="110" width="60" height="50"/>
+              <rect x="250" y="110" width="60" height="50"/>
+            </g>
+            <circle cx="320" cy="195" r="14" fill="var(--accent)"/>
+            <text x="320" y="199" text-anchor="middle" font-size="10" font-family="monospace" fill="white" font-weight="700" data-i18n="specs.size.label.knob">KNOB</text>
+          </svg>
+        </div>
+        <div class="diagram" style="aspect-ratio:4/3; display:grid; place-items:center;">
+          <span class="diagram__label" data-i18n="specs.size.fig.back">FIG · 04 — BACK</span>
+          <svg viewBox="0 0 400 240" style="width:80%; height:auto;" aria-label="Rear view">
+            <rect x="20" y="20" width="360" height="200" fill="none" stroke="currentColor" stroke-width="2"/>
+            <rect x="320" y="100" width="40" height="20" fill="currentColor"/>
+            <text x="340" y="135" text-anchor="middle" font-size="9" font-family="monospace" fill="currentColor" data-i18n="specs.size.label.usbc">USB-C</text>
+            <g stroke="currentColor" stroke-width="1" fill="none">
+              <line x1="40" y1="40"  x2="120" y2="40"/>
+              <line x1="40" y1="55"  x2="200" y2="55"/>
+              <line x1="40" y1="70"  x2="160" y2="70"/>
+              <line x1="40" y1="85"  x2="240" y2="85"/>
+              <line x1="40" y1="100" x2="180" y2="100"/>
+              <line x1="40" y1="115" x2="220" y2="115"/>
+            </g>
+            <text x="125" y="200" font-size="11" font-family="monospace" fill="currentColor" data-i18n="specs.size.label.vent">VENT HOLES</text>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__grid">
+        <div class="site-footer__brand">
+          <div class="brand" style="margin-bottom:16px;">
+            <span class="brand__mark">E</span>
+            <span class="brand__name">EKEYS</span>
+          </div>
+          <p data-i18n="footer.tagline">A pocket-sized keyboard for people who love making things — and love their desk tidy.</p>
+        </div>
+        <div>
+          <h4 data-i18n="footer.product">Product</h4>
+          <ul>
+            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="features.html" data-i18n="nav.features">Features</a></li>
+            <li><a href="specs.html" data-i18n="nav.specs">Specs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.resources">Learn</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.docs">Get started</a></li>
+            <li><a href="docs.html#protocol" data-i18n="docs.nav.protocol">For tinkerers</a></li>
+            <li><a href="docs.html#build" data-i18n="docs.nav.build">Set it up</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.community">Community</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.github">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="site-footer__bottom">
+        <span data-i18n="footer.copy">© 2026 EKeys project</span>
+        <span data-i18n="footer.build">v0.1.0 · static web</span>
+      </div>
+    </div>
+  </footer>
+
+  <button id="scrollCue" class="scroll-cue" aria-label="Back to top">↑</button>
+  <script src="assets/js/i18n.js"></script>
+</body>
+</html>

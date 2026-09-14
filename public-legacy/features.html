@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en" data-lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Features · EKeys</title>
+  <meta name="description" content="Every feature of EKeys — input, output, display, audio and networking." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" />
+  <script>
+    /* 在 CSS 加载前同步设置主题与语言，避免深色 / 英文兜底文本闪现 */
+    (function () {
+      try {
+        var t = localStorage.getItem("ek_theme");
+        if (t !== "light" && t !== "dark") {
+          t =
+            window.matchMedia &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        }
+        document.documentElement.setAttribute("data-theme", t);
+
+        var l = localStorage.getItem("ek_lang");
+        if (l !== "en" && l !== "zh") {
+          l =
+            (navigator.language || "en").toLowerCase().startsWith("zh")
+              ? "zh"
+              : "en";
+        }
+        document.documentElement.setAttribute(
+          "lang",
+          l === "zh" ? "zh-CN" : "en",
+        );
+        document.documentElement.setAttribute("data-lang", l);
+      } catch (_) {}
+    })();
+  </script>
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+    <link rel="stylesheet" href="assets/css/header.css" />
+    <link rel="stylesheet" href="assets/css/buttons.css" />
+    <link rel="stylesheet" href="assets/css/ticker.css" />
+    <link rel="stylesheet" href="assets/css/footer.css" />
+    <link rel="stylesheet" href="assets/css/pages/index.css" />
+    <link rel="stylesheet" href="assets/css/pages/features.css" />
+    <link rel="stylesheet" href="assets/css/responsive.css" />
+  <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="container site-header__inner">
+      <a href="index.html" class="brand" aria-label="EKeys home">
+        <span class="brand__mark">E</span>
+        <span>
+          <span class="brand__name">EKEYS</span>
+          <span class="brand__sub">// 11-key macro pad</span>
+        </span>
+      </a>
+      <nav class="nav" aria-label="Primary">
+        <a href="index.html" data-i18n="nav.home">Home</a>
+        <a href="features.html" class="is-active" data-i18n="nav.features">Features</a>
+        <a href="specs.html" data-i18n="nav.specs">Specs</a>
+        <a href="docs.html" data-i18n="nav.docs">Get started</a>
+      </nav>
+      <div class="toolbar">
+        <button id="langToggle" class="btn-icon" aria-label="Switch language">中</button>
+        <button id="themeToggle" class="btn-icon" aria-label="Toggle theme">☾</button>
+        <a href="docs.html" class="btn btn--ghost" data-i18n="nav.github">GitHub</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ PAGE HERO ============ -->
+  <section class="hero">
+    <div class="container">
+      <span class="eyebrow" data-i18n="section.features.eyebrow">01 — What it does</span>
+      <h1 class="hero__title" style="font-size:clamp(56px,9vw,140px);">
+        <span data-i18n="nav.features">Features</span>
+      </h1>
+      <p class="hero__lede" style="max-width:720px;" data-i18n="section.features.subtitle">Stop memorizing shortcuts. Stop digging through menus. EKeys puts the things you do most right under your fingertips, with a soft glow that tells you what each one will do.</p>
+    </div>
+  </section>
+
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker__track">
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+      <span data-i18n="ticker.line">◆ cut & paste in one tap ◆ soft glow under every key ◆ tell your computer what to do ◆ eight scenes for eight moods ◆ made for creators, by creators ◆ open source & hackable ◆</span>
+    </div>
+  </div>
+
+  <!-- ============ FEATURES DEEP DIVE ============ -->
+  <section class="section">
+    <div class="container">
+      <div class="features">
+        <article class="feature">
+          <div class="feature__num">// 01</div>
+          <h3 class="feature__title" data-i18n="feature.1.title">Just plug it in</h3>
+          <p class="feature__desc" data-i18n="feature.1.desc">A USB-C cable and you’re done. It also speaks Bluetooth, so your laptop, tablet and phone can stay in sync without any extra dongles.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.1.tags.0">USB-C</span>
+            <span class="tag" data-i18n="feature.1.tags.1">Bluetooth</span>
+            <span class="tag" data-i18n="feature.1.tags.2">Plug & play</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 02</div>
+          <h3 class="feature__title" data-i18n="feature.2.title">Keys that mean something</h3>
+          <p class="feature__desc" data-i18n="feature.2.desc">Eleven keys, each one assigned to the thing you do most — paste, screenshot, mute, scrub the timeline, switch tool, anything you want.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.2.tags.0">11 keys</span>
+            <span class="tag" data-i18n="feature.2.tags.1">shortcuts</span>
+            <span class="tag" data-i18n="feature.2.tags.2">macros</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 03</div>
+          <h3 class="feature__title" data-i18n="feature.3.title">A knob you’ll actually use</h3>
+          <p class="feature__desc" data-i18n="feature.3.desc">Spin to scroll, click to confirm, double-click to go back. It feels just right for volume, timeline scrubbing or zooming in your canvas.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.3.tags.0">rotate</span>
+            <span class="tag" data-i18n="feature.3.tags.1">click</span>
+            <span class="tag" data-i18n="feature.3.tags.2">feels good</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 04</div>
+          <h3 class="feature__title" data-i18n="feature.4.title">A tiny screen, packed with info</h3>
+          <p class="feature__desc" data-i18n="feature.4.desc">The slim strip display shows the scene you’re in, the time, your CPU temperature, or the title of the track playing — whatever matters right now.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.4.tags.0">color display</span>
+            <span class="tag" data-i18n="feature.4.tags.1">live info</span>
+            <span class="tag" data-i18n="feature.4.tags.2">glanceable</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 05</div>
+          <h3 class="feature__title" data-i18n="feature.5.title">Lights that listen</h3>
+          <p class="feature__desc" data-i18n="feature.5.desc">Eleven soft-glow LEDs that pulse with your music, breathe when you’re idle, or simply light up the key you’re about to press. Choose a vibe that fits your desk.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.5.tags.0">RGB</span>
+            <span class="tag" data-i18n="feature.5.tags.1">music sync</span>
+            <span class="tag" data-i18n="feature.5.tags.2">per-key</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 06</div>
+          <h3 class="feature__title" data-i18n="feature.6.title">Talk to it</h3>
+          <p class="feature__desc" data-i18n="feature.6.desc">Hold one key and speak. EKeys turns your words into commands — search the web, launch an app, or send a snippet to your clipboard.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.6.tags.0">voice control</span>
+            <span class="tag" data-i18n="feature.6.tags.1">speech-to-text</span>
+            <span class="tag" data-i18n="feature.6.tags.2">one tap</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 07</div>
+          <h3 class="feature__title" data-i18n="feature.7.title">No internet? No problem.</h3>
+          <p class="feature__desc" data-i18n="feature.7.desc">Everything important works offline. When you do connect, EKeys can sync the time, the weather and your computer’s status straight to the little screen.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.7.tags.0">offline</span>
+            <span class="tag" data-i18n="feature.7.tags.1">Wi-Fi ready</span>
+            <span class="tag" data-i18n="feature.7.tags.2">status sync</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 08</div>
+          <h3 class="feature__title" data-i18n="feature.8.title">Eight scenes, one pad</h3>
+          <p class="feature__desc" data-i18n="feature.8.desc">Editing video at noon, painting at 3pm, coding at night? One tap swaps the whole keyboard to that scene. Each scene remembers its own lights, labels and screen.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.8.tags.0">scenes</span>
+            <span class="tag" data-i18n="feature.8.tags.1">auto-switch</span>
+            <span class="tag" data-i18n="feature.8.tags.2">profiles</span>
+          </div>
+        </article>
+        <article class="feature">
+          <div class="feature__num">// 09</div>
+          <h3 class="feature__title" data-i18n="feature.9.title">Updates without the fuss</h3>
+          <p class="feature__desc" data-i18n="feature.9.desc">New versions arrive over the air. If anything goes wrong mid-update, your current setup stays safe — no bricking, no cables, no stress.</p>
+          <div class="feature__tags">
+            <span class="tag" data-i18n="feature.9.tags.0">over-the-air</span>
+            <span class="tag" data-i18n="feature.9.tags.1">safe updates</span>
+            <span class="tag" data-i18n="feature.9.tags.2">set & forget</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PIPELINE DIAGRAM ============ -->
+  <section class="section" style="border-top:1px solid var(--border);">
+    <div class="container">
+      <div class="section__head">
+        <div>
+          <span class="eyebrow">// How a tap becomes an action</span>
+          <h2>From your fingertip to the screen.</h2>
+        </div>
+        <p>Press a key and the signal hops through a few small stages before reaching your computer. Here’s a peek behind the curtain.</p>
+      </div>
+
+      <div class="two-col">
+        <div class="diagram">
+          <span class="diagram__label">FIG · 01</span>
+          <pre style="background:transparent; color:var(--fg); padding:0; font-family:var(--font-mono); font-size:13px; line-height:1.9;">
+[KEY MATRIX 3×4]
+      │  raw row signals
+      ▼
+[MatrixScanner]
+   debounce → key id 1..11
+      │
+      ▼
+[KeyResolver]
+   ├─ function_key
+   ├─ normal_key[]
+   └─ macros_key[]
+      │
+      ▼
+[KeyEventDispatcher]
+      │
+      ├─▶ [USB keyboard]  (USB-C cable)
+      └─▶ [Bluetooth keyboard]
+      │
+      ▼
+[Lights · Tiny screen · Logs]
+          </pre>
+        </div>
+        <div class="diagram">
+          <span class="diagram__label">FIG · 02</span>
+          <pre style="background:transparent; color:var(--fg); padding:0; font-family:var(--font-mono); font-size:13px; line-height:1.9;">
+[YOUR COMPUTER · EKeysApp]
+      │  USB-C cable (115200 baud)
+      │  or Wi-Fi (port 30000)
+      ▼
+[Serial Protocol]
+   one JSON message per line
+   bit 7 of cmd = reply
+   seq = 0      = device pushed it
+      │
+      ▼
+[Command Registry]
+   18 simple commands:
+   • change keymap
+   • tweak a setting
+   • switch scene
+   • show device info
+   • update firmware
+   • push PC status
+          </pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROFILES ============ -->
+  <section class="section" style="border-top:1px solid var(--border);">
+    <div class="container">
+      <div class="section__head" style="margin-bottom:32px;">
+        <div>
+          <span class="eyebrow" data-i18n="section.profiles.eyebrow">02 — Scenes</span>
+          <h2 data-i18n="section.profiles.title">One pad, many moments.</h2>
+        </div>
+        <p data-i18n="section.profiles.subtitle">Pick a scene and the keys, lights and screen rearrange themselves to match the work.</p>
+      </div>
+      <div class="profiles">
+        <div class="profile">
+          <div class="profile__icon">⌘</div>
+          <h3 class="profile__title" data-i18n="profile.default.title">Everyday</h3>
+          <p class="profile__desc" data-i18n="profile.default.desc">Cut, copy, paste, mute and screen capture — the small things that should always be one tap away.</p>
+          <div class="profile__meta"><span data-i18n="profile.default.keys">11 KEYS · EVERYDAY</span><span>01</span></div>
+        </div>
+        <div class="profile">
+          <div class="profile__icon">▶</div>
+          <h3 class="profile__title" data-i18n="profile.video.title">Video edit</h3>
+          <p class="profile__desc" data-i18n="profile.video.desc">Scrub the timeline, slice clips, drop markers, and ripple-delete the bad takes without leaving the keyboard.</p>
+          <div class="profile__meta"><span data-i18n="profile.video.keys">11 KEYS · VIDEO</span><span>02</span></div>
+        </div>
+        <div class="profile">
+          <div class="profile__icon">✎</div>
+          <h3 class="profile__title" data-i18n="profile.design.title">Design & paint</h3>
+          <p class="profile__desc" data-i18n="profile.design.desc">Zoom in, pick a color, switch layers. The knob feels just right for brushing across your canvas.</p>
+          <div class="profile__meta"><span data-i18n="profile.design.keys">11 KEYS · DESIGN</span><span>03</span></div>
+        </div>
+        <div class="profile">
+          <div class="profile__icon">&lt;/&gt;</div>
+          <h3 class="profile__title" data-i18n="profile.code.title">Code</h3>
+          <p class="profile__desc" data-i18n="profile.code.desc">Build, run, debug, format and refactor. Stop hunting for the menu — your fingers stay on the home row.</p>
+          <div class="profile__meta"><span data-i18n="profile.code.keys">11 KEYS · CODE</span><span>04</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="site-footer__grid">
+        <div class="site-footer__brand">
+          <div class="brand" style="margin-bottom:16px;">
+            <span class="brand__mark">E</span>
+            <span class="brand__name">EKEYS</span>
+          </div>
+          <p data-i18n="footer.tagline">A pocket-sized keyboard for people who love making things — and love their desk tidy.</p>
+        </div>
+        <div>
+          <h4 data-i18n="footer.product">Product</h4>
+          <ul>
+            <li><a href="index.html" data-i18n="nav.home">Home</a></li>
+            <li><a href="features.html" data-i18n="nav.features">Features</a></li>
+            <li><a href="specs.html" data-i18n="nav.specs">Specs</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.resources">Learn</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.docs">Get started</a></li>
+            <li><a href="docs.html#protocol" data-i18n="docs.nav.protocol">For tinkerers</a></li>
+            <li><a href="docs.html#build" data-i18n="docs.nav.build">Set it up</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 data-i18n="footer.community">Community</h4>
+          <ul>
+            <li><a href="docs.html" data-i18n="nav.github">GitHub</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="site-footer__bottom">
+        <span data-i18n="footer.copy">© 2026 EKeys project</span>
+        <span data-i18n="footer.build">v0.1.0 · static web</span>
+      </div>
+    </div>
+  </footer>
+
+  <button id="scrollCue" class="scroll-cue" aria-label="Back to top">↑</button>
+  <script src="assets/js/i18n.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+/* =====================================================================
+   EKeysWeb — Features page (features.html)
+   Inherits section__head, .feature, .tag and section spacing from
+   shared styles. Only page-specific tweaks live here.
+   ===================================================================== */
+
+/* features.html uses the same hero shell as index but with a single
+   column and a smaller clamp. The local inline style on the title
+   already handles font-size; nothing additional is required today,
+   but this file exists so future feature-page tweaks stay scoped. */

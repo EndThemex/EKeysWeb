@@ -1,0 +1,22 @@
+/* =====================================================================
+   EKeysWeb — Global responsive overrides
+   Page-specific styles handle their own internal grid breakpoints
+   where needed; this file owns cross-page layout shifts.
+   ===================================================================== */
+
+@media (max-width: 960px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .nav {
+    display: none;
+  }
+  .section {
+    padding: 64px 0;
+  }
+}
+@media (max-width: 600px) {
+  .site-footer__grid {
+    grid-template-columns: 1fr;
+  }
+}
