@@ -22,10 +22,12 @@ export const DICT: Record<Lang, Dict> = {
     "hero.cta.secondary": "how does it work?",
     "hero.meta.chip": "Brains",
     "hero.meta.keys": "Buttons",
+    "hero.meta.feel": "Feel",
     "hero.meta.link": "Plugs in via",
     "hero.meta.app": "Tinker with",
     "hero.meta.chip.v": "ESP32-S3 · 240 MHz",
-    "hero.meta.keys.v": "11 keys + 1 chunky knob",
+    "hero.meta.keys.v": "11 keys · hot-swappable",
+    "hero.meta.feel.v": "Switches you define",
     "hero.meta.link.v": "USB-C · Bluetooth",
     "hero.device.tag": "EKEYS / V0.1",
 
@@ -140,7 +142,7 @@ export const DICT: Record<Lang, Dict> = {
     "specs.size.eyebrow": "// size & shape",
     "specs.size.title": "small enough to live anywhere.",
     "specs.size.desc":
-      "About the size of a deck of cards. USB-C on the back, soft little feet underneath, and just enough weight to keep it from sliding off your desk.",
+      "About the size of your palm. USB-C on the back, magnetic riser base with custom height underneath, and just enough weight to keep it from sliding off your desk.",
     "specs.size.fig.top": "FIG · 03 — TOP",
     "specs.size.fig.back": "FIG · 04 — BACK",
     "specs.size.label.knob": "KNOB",
@@ -433,7 +435,7 @@ export const DICT: Record<Lang, Dict> = {
     "nav.docs": "上手玩",
     "nav.github": "GitHub",
 
-    "hero.eyebrow": "巴掌大的小玩件，骨子里野得很",
+    "hero.eyebrow": "巴掌大的小玩件，本事可不小",
     "hero.title.1": "来认识下 EKEYS",
     "hero.title.2": "桌面上的新宠",
     "hero.lede":
@@ -442,10 +444,12 @@ export const DICT: Record<Lang, Dict> = {
     "hero.cta.secondary": "它是怎么工作的？",
     "hero.meta.chip": "主芯片",
     "hero.meta.keys": "按键",
+    "hero.meta.feel": "手感",
     "hero.meta.link": "连接方式",
     "hero.meta.app": "调参靠",
     "hero.meta.chip.v": "ESP32-S3 · 240 MHz",
-    "hero.meta.keys.v": "11 个键 + 1 颗敦实旋钮",
+    "hero.meta.keys.v": "11 个键 · 热拔插",
+    "hero.meta.feel.v": "键轴手感自己定",
     "hero.meta.link.v": "USB-C · 蓝牙",
     "hero.device.tag": "EKEYS / V0.1",
 
@@ -558,7 +562,7 @@ export const DICT: Record<Lang, Dict> = {
     "specs.size.eyebrow": "// 尺寸外观",
     "specs.size.title": "够小，放哪都不占地。",
     "specs.size.desc":
-      "差不多一副扑克牌大小。背面是 USB-C 接口，底下藏着软胶小脚垫，重量刚好不会乱滑。",
+      "差不多巴掌大小。背面是 USB-C 接口，底下是支持自定义高度的磁吸增高底座，重量刚好不会乱滑。",
     "specs.size.fig.top": "图 · 03 — 正面",
     "specs.size.fig.back": "图 · 04 — 背面",
     "specs.size.label.knob": "旋钮",

@@ -26,7 +26,7 @@
 }
 .hero__title {
   font-family: var(--font-display);
-  font-size: clamp(72px, 12vw, 180px);
+  font-size: clamp(60px, 10vw, 156px);
   line-height: 1;
   letter-spacing: 0;
   margin: 24px 0 40px;
@@ -117,10 +117,9 @@
 /* device preview */
 .hero__device {
   position: relative;
-  aspect-ratio: 4 / 3;
   background: var(--bg-invert);
   border: 1px solid var(--border);
-  padding: 32px;
+  padding: 40px 32px;
   overflow: hidden;
 }
 .hero__device::before {
@@ -163,11 +162,50 @@
   position: relative;
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  z-index: 1;
+}
+.macropad__screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 428 / 124;
+  background: var(--fg);
+  color: var(--bg);
+  border: 1px solid var(--fg);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  margin: 0 auto;
+}
+.macropad__screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(10, 10, 10, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 10, 10, 0.08) 1px, transparent 1px);
+  background-size: 8px 8px;
+  pointer-events: none;
+}
+.macropad__screen-label {
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  z-index: 1;
+}
+.macropad__keys {
+  flex: 1;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 10px;
-  z-index: 1;
+  place-content: center;
+  min-height: 0;
+  min-width: 0;
 }
 .macropad__key {
   background: var(--bg-elev);
@@ -178,6 +216,9 @@
   display: grid;
   place-items: center;
   position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  height: auto;
 }
 .macropad__key::after {
   content: "";
@@ -185,14 +226,29 @@
   inset: 4px;
   border: 1px dashed rgba(10, 10, 10, 0.25);
 }
-.macropad__key.is-encoder {
+.macropad__key--encoder {
   background: var(--accent);
   color: var(--bg);
   border-color: var(--accent);
   font-weight: 700;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.28),
+    inset 0 0 0 6px rgba(0, 0, 0, 0.18);
 }
-.macropad__key.is-encoder::after {
+.macropad__key--encoder::after {
   display: none;
+}
+.macropad__encoder-dot {
+  position: absolute;
+  width: 14%;
+  height: 30%;
+  border-radius: 4px;
+  background: var(--bg);
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: block;
 }
 
 /* ---- Section heads ------------------------------------------------- */

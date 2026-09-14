@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useI18n } from "../i18n/useI18n.tsx";
 import Ticker from "../components/Ticker";
+import HeroDevice from "../components/HeroDevice";
 import { FEATURES, PROFILES } from "../data/content";
 
 /**
@@ -40,28 +41,17 @@ export default function HomePage() {
                 <dd>{t("hero.meta.keys.v")}</dd>
               </div>
               <div>
+                <dt>{t("hero.meta.feel")}</dt>
+                <dd>{t("hero.meta.feel.v")}</dd>
+              </div>
+              <div>
                 <dt>{t("hero.meta.link")}</dt>
                 <dd>{t("hero.meta.link.v")}</dd>
               </div>
             </dl>
           </div>
 
-          <div className="hero__device" aria-hidden="true" data-reveal>
-            <span className="hero__device-tag">{t("hero.device.tag")}</span>
-            <div className="macropad">
-              {Array.from({ length: 11 }).map((_, i) => {
-                const label = String(i + 1).padStart(2, "0");
-                if (i === 3) {
-                  return (
-                    <div key={i} className="macropad__key is-encoder">
-                      ◐
-                    </div>
-                  );
-                }
-                return <div key={i} className="macropad__key">{label}</div>;
-              })}
-            </div>
-          </div>
+          <HeroDevice />
         </div>
       </section>
 
