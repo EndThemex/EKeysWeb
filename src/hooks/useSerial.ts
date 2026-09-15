@@ -1,23 +1,33 @@
 /**
  * useSerial — 通过 Web Serial API 连接 EKeys USB CDC 串口，
- * 并按行解析 JSON 协议帧（参见 EKeys/docs/desktop-app-protocol.md）。
+ * 并按行解析 JSON 协议帧（参见 docs/web-config-design.md §3）。
  *
  * 注意：
  * - 需要 Chrome / Edge 桌面版，且页面必须运行在 HTTPS 或 localhost；
  * - TinyUSB CDC 依赖 DTR，浏览器在 port.open() 时默认拉高 DTR/RTS；
- * - 串口同时承载日志和协议帧：仅以 `{` 开头的行进入解析器；
+ * - 串口同时承载日志和协议帧：仅以 `{` 开头的行进入 JSON 解析器，
+ *   其它行通过 onLogLine 上抛（供 useDeviceLog 渲染）；
  * - close() 必须先释放 reader / writer，否则 port.close() 会抛
- *   "Cannot close port, read or write operation in progress"。
+ *   "Cannot close port, read or write operation in progress";
+ * - 读取循环异常（USB 拔出 / reader 抛错）通过 onError 上抛
+ *   `{ kind: "deviceLost" }`，让 useEKeysDevice 把 phase 切回 idle。
  */
+
 export type SerialFrame = Record<string, unknown>;
 
 export type FrameCallback = (frame: SerialFrame) => void;
+export type LogLineCallback = (line: string) => void;
+export type ErrorCallback = (err: { kind: string; message: string }) => void;
 
 export interface EKeysSerial {
   /** 写入一行 JSON 协议帧（自动追加 `\n`）。 */
   write: (line: string) => Promise<void>;
   /** 订阅解析出的协议帧，返回取消订阅函数。 */
   onFrame: (cb: FrameCallback) => () => void;
+  /** 订阅串口日志行（非 JSON 行）。 */
+  onLogLine: (cb: LogLineCallback) => () => void;
+  /** 订阅底层错误（reader 异常 / port 关闭事件）。 */
+  onError: (cb: ErrorCallback) => () => void;
   /**
    * 彻底关闭串口。会取消读取循环、释放 reader/writer 锁、关闭 port。
    * 调用方可重复调用，后续调用是 no-op。
@@ -47,17 +57,26 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
   };
 
   const port = await nav.serial.requestPort({ filters: [...EKEYS_USB_FILTERS] });
-  await port.open({ baudRate: 115200 });
+  await port.open({ baudRate: 115200, bufferSize: 4096 });
 
   const decoder = new TextDecoder("utf-8");
   const encoder = new TextEncoder();
-  const callbacks: FrameCallback[] = [];
+  const frameCallbacks: FrameCallback[] = [];
+  const logCallbacks: LogLineCallback[] = [];
+  const errorCallbacks: ErrorCallback[] = [];
   let buffer = "";
   let closed = false;
+  let fatalEmitted = false;
 
   // 必须保留 reader / writer 引用，关闭时释放锁
   const reader = port.readable!.getReader();
   const writer = port.writable!.getWriter();
+
+  function emitError(err: { kind: string; message: string }) {
+    if (fatalEmitted) return;
+    fatalEmitted = true;
+    errorCallbacks.forEach((cb) => cb(err));
+  }
 
   // 异步读取循环：按 \n 切帧，过滤日志，仅向订阅者分发 JSON 帧
   const readLoop = (async () => {
@@ -76,17 +95,25 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
             if (trimmed.startsWith("{")) {
               try {
                 const obj = JSON.parse(trimmed) as SerialFrame;
-                callbacks.forEach((cb) => cb(obj));
+                frameCallbacks.forEach((cb) => cb(obj));
               } catch {
-                /* 忽略坏 JSON */
+                /* 忽略坏 JSON：当作日志行转发 */
+                logCallbacks.forEach((cb) => cb(line));
               }
+            } else if (trimmed.length > 0) {
+              logCallbacks.forEach((cb) => cb(line));
             }
             idx = buffer.indexOf("\n");
           }
         }
       }
-    } catch {
-      /* 流被关闭 */
+      // 正常退出：reader done —— 通常意味着设备拔出
+      emitError({ kind: "deviceLost", message: "serial stream closed" });
+    } catch (e) {
+      emitError({
+        kind: "deviceLost",
+        message: e instanceof Error ? e.message : String(e),
+      });
     }
   })();
 
@@ -137,10 +164,24 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
       await writer.write(encoder.encode(line));
     },
     onFrame(cb) {
-      callbacks.push(cb);
+      frameCallbacks.push(cb);
       return () => {
-        const i = callbacks.indexOf(cb);
-        if (i >= 0) callbacks.splice(i, 1);
+        const i = frameCallbacks.indexOf(cb);
+        if (i >= 0) frameCallbacks.splice(i, 1);
+      };
+    },
+    onLogLine(cb) {
+      logCallbacks.push(cb);
+      return () => {
+        const i = logCallbacks.indexOf(cb);
+        if (i >= 0) logCallbacks.splice(i, 1);
+      };
+    },
+    onError(cb) {
+      errorCallbacks.push(cb);
+      return () => {
+        const i = errorCallbacks.indexOf(cb);
+        if (i >= 0) errorCallbacks.splice(i, 1);
       };
     },
     close,
@@ -152,7 +193,7 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
 
 /** 浏览器原生 SerialPort 类型的最少子集，用于避开 lib.dom 缺失的问题。 */
 type SerialPort = {
-  open: (opts: { baudRate: number }) => Promise<void>;
+  open: (opts: { baudRate: number; bufferSize?: number }) => Promise<void>;
   close: () => Promise<void>;
   readable: ReadableStream<Uint8Array> | null;
   writable: WritableStream<Uint8Array> | null;

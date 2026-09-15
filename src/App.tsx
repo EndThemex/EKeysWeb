@@ -8,7 +8,13 @@ import FeaturesPage from "./pages/FeaturesPage";
 import SpecsPage from "./pages/SpecsPage";
 import DocsPage from "./pages/DocsPage";
 import AppPage from "./pages/AppPage";
-import ConfigPage from "./pages/ConfigPage";
+import { ConfigLayout } from "./components/ConfigLayout";
+import { SettingsPanel } from "./components/SettingsPanel";
+import { KeymapPanel } from "./components/KeymapPanel";
+import { LightingPanel } from "./components/LightingPanel";
+import { VoicePanel } from "./components/VoicePanel";
+import { AboutPanel } from "./components/AboutPanel";
+import { LogPanel } from "./components/LogPanel";
 import { useReveal } from "./hooks/useReveal";
 import { useDocumentMeta } from "./hooks/useDocumentMeta";
 
@@ -28,15 +34,11 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
   useScrollOnRouteChange();
   useDocumentMeta();
 
-  // Callback ref re-runs the reveal observer whenever <main> is remounted
-  // (i.e. on every route change).
   const mainRef = useReveal();
   const location = useLocation();
 
   useEffect(() => {
     if (!onMounted) return;
-    // requestAnimationFrame: wait for first paint so the skeleton doesn't
-    // disappear before any real pixels are on screen.
     const id = window.requestAnimationFrame(() => onMounted());
     return () => window.cancelAnimationFrame(id);
   }, [onMounted]);
@@ -51,7 +53,17 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
           <Route path="/specs" element={<SpecsPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/app" element={<AppPage />} />
-          <Route path="/config" element={<ConfigPage />} />
+
+          {/* Config 区：二级 Tab */}
+          <Route path="/config" element={<ConfigLayout />}>
+            <Route index element={<SettingsPanel />} />
+            <Route path="keymap" element={<KeymapPanel />} />
+            <Route path="lighting" element={<LightingPanel />} />
+            <Route path="voice" element={<VoicePanel />} />
+            <Route path="log" element={<LogPanel />} />
+            <Route path="about" element={<AboutPanel />} />
+          </Route>
+
           <Route path="*" element={<HomePage />} />
         </Routes>
       </main>

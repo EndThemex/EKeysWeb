@@ -88,7 +88,7 @@ function ErrorBanner({ error, t }: { error: DeviceError; t: (k: string) => strin
         <strong className="config-panel__error-title">{headline}</strong>
         <details className="config-panel__error-detail">
           <summary>{t("config.error.detail")}</summary>
-          <code>{error.message}</code>
+          <code>{String(error.message ?? "")}</code>
         </details>
       </div>
     </div>
