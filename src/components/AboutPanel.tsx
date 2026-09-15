@@ -6,7 +6,7 @@
  */
 
 import { useI18n } from "../i18n/useI18n.tsx";
-import { useEKeysDevice } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { PROTOCOL_VERSION } from "../protocol";
 import {
   ConnectButton,
@@ -25,7 +25,7 @@ export function AboutPanel() {
     snapshot,
     connect,
     disconnect,
-  } = useEKeysDevice();
+  } = useDeviceSession();
 
   const info = snapshot.info;
   const version = snapshot.version;

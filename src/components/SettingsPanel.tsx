@@ -12,11 +12,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useI18n } from "../i18n/useI18n.tsx";
-import {
-  useEKeysDevice,
-  type DeviceInfo,
-  type ProfileState,
-} from "../hooks/useEKeysDevice";
+import type { DeviceInfo, ProfileState } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useDeviceDraft } from "../hooks/useDeviceDraft";
 import {
   FieldMask,
@@ -74,7 +71,7 @@ export function SettingsPanel() {
     disconnect,
     sendCmd,
     onPush,
-  } = useEKeysDevice();
+  } = useDeviceSession();
 
   const draftHook = useDeviceDraft(snapshot.config);
 

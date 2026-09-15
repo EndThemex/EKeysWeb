@@ -19,7 +19,7 @@ import {
   SwitchRow,
   TextRow,
 } from "./settings/controls";
-import { useEKeysDevice } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useDeviceDraft } from "../hooks/useDeviceDraft";
 import {
   FieldMask,
@@ -41,7 +41,7 @@ export function VoicePanel() {
     disconnect,
     sendCmd,
     onPush,
-  } = useEKeysDevice();
+  } = useDeviceSession();
 
   const draftHook = useDeviceDraft(snapshot.config);
 

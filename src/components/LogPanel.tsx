@@ -15,7 +15,7 @@ import {
   PanelHead,
   StatusPill,
 } from "./settings/controls";
-import { useEKeysDevice } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import {
   useDeviceLog,
   type LogChannel,
@@ -38,7 +38,7 @@ export function LogPanel() {
     onLogLine,
     onPush,
     onError,
-  } = useEKeysDevice();
+  } = useDeviceSession();
   const log = useDeviceLog();
 
   /* 把所有 TX / RX / Firmware / App 事件都吸到环形缓冲 */

@@ -16,7 +16,7 @@ import {
   SliderRow,
   StatusPill,
 } from "./settings/controls";
-import { useEKeysDevice } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useDeviceDraft } from "../hooks/useDeviceDraft";
 import {
   FieldMask,
@@ -65,7 +65,7 @@ export function LightingPanel() {
     disconnect,
     sendCmd,
     onPush,
-  } = useEKeysDevice();
+  } = useDeviceSession();
 
   const draftHook = useDeviceDraft(snapshot.config);
 

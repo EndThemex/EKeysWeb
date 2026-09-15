@@ -29,10 +29,8 @@ import { KeyGrid } from "./KeymapEditor/KeyGrid";
 import { KeyBindingPicker } from "./KeymapEditor/KeyBindingPicker";
 import { LayerSelector } from "./KeymapEditor/LayerSelector";
 import { ProfileSwitcher } from "./KeymapEditor/ProfileSwitcher";
-import {
-  useEKeysDevice,
-  type DeviceSnapshot,
-} from "../hooks/useEKeysDevice";
+import type { DeviceSnapshot } from "../hooks/useEKeysDevice";
+import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useKeymap } from "../hooks/useKeymap";
 import {
   CMD,
@@ -63,7 +61,7 @@ export function KeymapPanel() {
     disconnect,
     sendCmd,
     onPush,
-  } = useEKeysDevice();
+  } = useDeviceSession();
 
   /* ---------- KeymapData 本地状态 ---------- */
   const initial = useMemo<KeymapData | null>(() => {

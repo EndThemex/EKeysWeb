@@ -5,9 +5,11 @@
    Imported once from index.css.
    ===================================================================== */
 
-/* ---- Page-enter: fade + slight rise on mount -------------------------
-   Triggered by re-mounting <main key={pathname}> on route change, so
-   each navigation feels intentional rather than abrupt. */
+/* ---- Page-enter: fade + slight rise on top-level route change ---------
+   由 App.tsx 中的 usePageEnterOnTopRouteChange 控制：仅在一级路由
+   切换（/、/features、/specs、/docs、/app、/config/*）时挂上
+   .page--enter。配置页内部 Tab 切换（同 /config/*）不会重新触发，
+   避免连接 / 心跳 / 草稿丢失。 */
 @keyframes pageEnter {
   from {
     opacity: 0;
@@ -18,7 +20,7 @@
     transform: translate3d(0, 0, 0);
   }
 }
-main {
+main.app-root.page--enter {
   animation: pageEnter 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
