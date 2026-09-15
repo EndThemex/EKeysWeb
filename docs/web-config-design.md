@@ -340,8 +340,9 @@ export function maskSensitive(s: DeviceSettings): DeviceSettings;
 
 完整复用 [`protocol-usage.md` §9.3](https://github.com/EndThemex/EKeysApp/blob/main/docs/protocol-usage.md) 的映射规则：
 
-- **映射基准**：active profile 的 layer 0（Base），跳过 encoder 槽；
-- **编号**：(row, col) 升序 → `physical = 1..11`；
+- **映射基准**：active profile 的 layer 0（Base），跳过旋钮槽（`row 0, col 3`，即第一行第四个位置）；
+- **物理布局**：3 行 × 4 列，`(row=0, col=3)` 为旋钮（不可绑定，仅展示），其余 11 个位置为可绑定按键；
+- **编号**：按 `(row, col)` 升序跳过旋钮槽 → `physical = 1..11`（即 `(0,0)=1 … (0,2)=3 → (1,0)=4 … (1,3)=7 → (2,0)=8 … (2,3)=11`）；
 - **编码**：`Keyboard(code)` → `normal = "0xNN"`（固件 `KeyNameTable` 可还原）；`Media / Mouse / Macro / LayerSwitch / Encoder` → 尽力编码为 `function`；
 - **回读限制**：固件 `macro` 是 `+` 序列，App 的 `Macro` 是带延时步进模型，**无法无损还原** → 回读为"未绑定"，UI 必须提示用户重新编辑。
 
@@ -724,7 +725,7 @@ const payload = {
 ```
 src/components/KeymapEditor/
 ├── KeymapEditor.tsx        # 顶层：进入页面 GET + 当前 layer 选择 + 保存 / 放弃
-├── KeyGrid.tsx             # 11 键矩阵（3×4 + 跳过 encoder）
+├── KeyGrid.tsx             # 12 槽矩阵（3 行 × 4 列），第一行第四列固定为旋钮（不可绑定），其余 11 个为可绑定按键
 ├── KeyBindingPicker.tsx    # 弹窗：键盘 / 鼠标 / 多媒体 / 宏 / 层切换
 ├── LayerSelector.tsx       # 4 层选择（Base / Fn / Shift / 自定义）
 └── ProfileSwitcher.tsx     # 与 Settings Tab 的 active_keymap_profile 联动
@@ -740,7 +741,8 @@ export interface KeymapData {
 }
 
 export interface LayerBinding {
-  // 11 个物理键（跳过 encoder 槽）
+  // 12 个物理槽：3 行 × 4 列，其中 (row=0, col=3) 为旋钮（不参与绑定、显示为只读），
+  // 其余 11 个槽按 (row, col) 升序对应 physical = 1..11
   slots: KeyAction[];
 }
 

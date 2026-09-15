@@ -1,11 +1,11 @@
 /**
- * KeyGrid — 11 键可视化栅格（3×4 跳过 encoder）。
+ * KeyGrid — 11 键可视化栅格（3×4，第一行第四列固定为旋钮）。
  *
  * 物理布局（与设计文档 §10 / EKeysApp panel_keymap 对齐）：
  *
- *  [ 1 ] [ 2 ] [ 3 ] [ 4 ]
- *  [ 5 ] [ 6 ] [ 7 ] [ 8 ]
- *  [ 9 ] [10 ] [ 11 ] [ENC]
+ *  [ 1 ] [ 2 ] [ 3 ] [ENC]
+ *  [ 4 ] [ 5 ] [ 6 ] [ 7 ]
+ *  [ 8 ] [ 9 ] [10 ] [11 ]
  *
  * - 选中：accent 高亮 + 描边
  * - dirty：琥珀色左下小点（来自 draft ≠ snapshot）
@@ -23,24 +23,31 @@ import {
 } from "../../protocol";
 import { actionToFirmware } from "../../protocol/keymap";
 
-/** 物理键 → (row, col)；encoder 占 (2, 3)，不参与映射。 */
+/**
+ * 物理键 → (row, col)；encoder 占 (0, 3)（第一行第四个位置），
+ * 跳过该槽后按 (row, col) 升序编号 1..11。
+ */
 const LAYOUT: ReadonlyArray<{ slot: number; row: number; col: number; label: string }> = [
   { slot: 0, row: 0, col: 0, label: "1" },
   { slot: 1, row: 0, col: 1, label: "2" },
   { slot: 2, row: 0, col: 2, label: "3" },
-  { slot: 3, row: 0, col: 3, label: "4" },
-  { slot: 4, row: 1, col: 0, label: "5" },
-  { slot: 5, row: 1, col: 1, label: "6" },
-  { slot: 6, row: 1, col: 2, label: "7" },
-  { slot: 7, row: 1, col: 3, label: "8" },
-  { slot: 8, row: 2, col: 0, label: "9" },
-  { slot: 9, row: 2, col: 1, label: "10" },
-  { slot: 10, row: 2, col: 2, label: "11" },
-  // (2, 3) → encoder 占位
+  // (0, 3) → encoder 占位，下方单独渲染
+  { slot: 3, row: 1, col: 0, label: "4" },
+  { slot: 4, row: 1, col: 1, label: "5" },
+  { slot: 5, row: 1, col: 2, label: "6" },
+  { slot: 6, row: 1, col: 3, label: "7" },
+  { slot: 7, row: 2, col: 0, label: "8" },
+  { slot: 8, row: 2, col: 1, label: "9" },
+  { slot: 9, row: 2, col: 2, label: "10" },
+  { slot: 10, row: 2, col: 3, label: "11" },
 ];
 
 const ROWS = 3;
 const COLS = 4;
+/** encoder 所在的列索引（第一行第四列）。 */
+const ENCODER_COL = 3;
+/** encoder 所在的行索引。 */
+const ENCODER_ROW = 0;
 
 export function KeyGrid({
   draft,
@@ -79,7 +86,25 @@ export function KeyGrid({
         role="grid"
         aria-label={t("keymap.title")}
       >
-        {LAYOUT.map((cell) => {
+        {/* 按 (row, col) 升序遍历 3×4 网格：(0,3) 为旋钮，其余为可绑定键 */}
+        {Array.from({ length: ROWS * COLS }, (_, idx) => {
+          const row = Math.floor(idx / COLS);
+          const col = idx % COLS;
+          if (row === ENCODER_ROW && col === ENCODER_COL) {
+            return (
+              <div
+                key="encoder"
+                className="keymap-key keymap-key--encoder"
+                aria-label="Encoder"
+                role="gridcell"
+              >
+                <span className="keymap-key__num mono">ENC</span>
+                <span className="keymap-key__label">—</span>
+              </div>
+            );
+          }
+          const cell = LAYOUT.find((c) => c.row === row && c.col === col);
+          if (!cell) return null;
           const slotIdx = cell.slot;
           const action = slotArr[slotIdx] ?? ({ kind: "unbound" } as KeyAction);
           const dirty = dirtySet.has(slotIdx + 1);
@@ -107,11 +132,6 @@ export function KeyGrid({
             </button>
           );
         })}
-        {/* encoder 占位 */}
-        <div className="keymap-key keymap-key--encoder" aria-hidden="true">
-          <span className="keymap-key__num mono">ENC</span>
-          <span className="keymap-key__label">—</span>
-        </div>
       </div>
       <div className="keymap-board__actions">
         <button
