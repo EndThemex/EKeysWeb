@@ -192,7 +192,8 @@
 .macropad__screen-label {
   position: relative;
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 24px;
+  color: var(--accent);
   letter-spacing: 0.2em;
   text-transform: uppercase;
   z-index: 1;
@@ -202,7 +203,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 10px;
+  gap: 20px;
   place-content: center;
   min-height: 0;
   min-width: 0;
@@ -211,6 +212,7 @@
   background: var(--bg-elev);
   color: var(--fg);
   border: 1px solid var(--bg-elev);
+  border-radius: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
   display: grid;
