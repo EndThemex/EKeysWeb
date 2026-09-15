@@ -8,6 +8,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import SpecsPage from "./pages/SpecsPage";
 import DocsPage from "./pages/DocsPage";
 import AppPage from "./pages/AppPage";
+import ConfigPage from "./pages/ConfigPage";
 import { useReveal } from "./hooks/useReveal";
 import { useDocumentMeta } from "./hooks/useDocumentMeta";
 
@@ -50,6 +51,7 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
           <Route path="/specs" element={<SpecsPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/app" element={<AppPage />} />
+          <Route path="/config" element={<ConfigPage />} />
           <Route path="*" element={<HomePage />} />
         </Routes>
       </main>

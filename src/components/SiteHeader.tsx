@@ -44,6 +44,9 @@ export default function SiteHeader() {
           <NavLink to="/docs" className={({ isActive }) => (isActive ? "is-active" : "")}>
             {t("nav.docs")}
           </NavLink>
+          <NavLink to="/config" className={({ isActive }) => (isActive ? "is-active" : "")}>
+            {t("nav.config")}
+          </NavLink>
         </nav>
 
         <div className="toolbar">

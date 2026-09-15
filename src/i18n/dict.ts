@@ -12,6 +12,7 @@ export const DICT: Record<Lang, Dict> = {
     "nav.specs": "Specs",
     "nav.docs": "Docs",
     "nav.github": "GitHub",
+    "nav.config": "Config",
 
     "hero.eyebrow": "an 11-key macropad, open source",
     "hero.title.1": "EKEYS",
@@ -35,6 +36,7 @@ export const DICT: Record<Lang, Dict> = {
     "site.title.features": "Features · EKeys",
     "site.title.specs": "Specs · EKeys",
     "site.title.docs": "Docs · EKeys",
+    "site.title.config": "Config · EKeys",
     "site.description":
       "EKeys is an 11-key macropad with a rotary encoder, a color LCD strip, per-key RGB, offline voice input and open-source firmware.",
 
@@ -431,6 +433,79 @@ export const DICT: Record<Lang, Dict> = {
       "The device downloads the file, verifies it, and reboots into the new partition",
       "A failure at any step leaves the running firmware untouched",
     ],
+
+    /* ---------------- Web Serial config panel ---------------- */
+    "config.eyebrow": "// direct from the device",
+    "config.title": "EKeys configuration reader",
+    "config.lede":
+      "Plug your EKeys in over USB-C, click Connect, and this page pulls the live device info, the full settings snapshot and the active profile over the same line protocol the desktop app uses.",
+    "config.connect": "Connect keyboard",
+    "config.disconnect": "Disconnect",
+    "config.busy": "Connecting…",
+    "config.hint":
+      "Uses the Web Serial API and needs Chrome or Edge on the desktop. The page must be served over HTTPS or opened from localhost. The first connect will prompt you to pick the USB CDC device.",
+    "config.error.unsupported":
+      "This browser does not support the Web Serial API. Please use a recent desktop Chrome or Edge.",
+    "config.error.userCancelled":
+      "Device selection was cancelled. Click Connect again to pick the USB CDC port.",
+    "config.error.portBusy":
+      "Could not open the serial port. It may already be open in another tab or app, or it was unplugged during the handshake.",
+    "config.error.noPort":
+      "No matching USB CDC device was found. Check the USB-C cable and that no other program has claimed the port.",
+    "config.error.writeFailed":
+      "The serial stream was closed unexpectedly. The device may have been unplugged during the read.",
+    "config.error.timeout":
+      "The device did not reply in time. Check that the firmware is running and that this is an EKeys USB CDC port.",
+    "config.error.protocol":
+      "The device returned an error for the last request. See the raw message below.",
+    "config.error.unknown":
+      "Could not connect. See the raw message below.",
+    "config.error.detail": "Details",
+    "config.busyDisconnect": "Disconnecting…",
+
+    "status.idle": "Not connected",
+    "status.connecting": "Connecting…",
+    "status.connected": "Connected",
+    "status.connectedHint": "live data from your EKeys",
+    "status.disconnecting": "Disconnecting…",
+
+    "config.card.info": "Device",
+    "config.card.config": "Current settings",
+    "config.card.profile": "Active profile",
+
+    "config.section.connection": "connection",
+    "config.section.display": "display & light",
+    "config.section.audio": "audio & power",
+    "config.section.voice": "voice & profile",
+    "config.profile.icon": "custom icon",
+    "config.profile.iconPath": "icon path",
+
+    "config.field.name": "Name",
+    "config.field.id": "Device ID",
+    "config.field.firmware": "Firmware",
+    "config.field.configVersion": "Config version",
+    "config.field.workMode": "Work mode",
+    "config.field.wifi": "Wi-Fi",
+    "config.field.connectHost": "Connect host",
+    "config.field.tftBrightness": "TFT brightness",
+    "config.field.rgbBrightness": "RGB brightness",
+    "config.field.rgbMode": "RGB mode",
+    "config.field.volume": "Volume",
+    "config.field.audio": "Audio",
+    "config.field.power": "Power mode",
+    "config.field.voice": "Voice",
+    "config.field.voiceKey": "trigger key",
+    "config.field.activeProfile": "Active profile",
+    "config.field.activeIndex": "Active index",
+    "config.field.profileNumber": "Number",
+    "config.field.profileName": "Name",
+    "config.field.hasIcon": "Custom icon",
+
+    "config.value.on": "on",
+    "config.value.off": "off",
+    "config.value.yes": "yes",
+    "config.value.no": "no",
+    "config.value.hasIcon": "custom icon",
   },
 
   zh: {
@@ -439,6 +514,7 @@ export const DICT: Record<Lang, Dict> = {
     "nav.specs": "参数",
     "nav.docs": "文档",
     "nav.github": "GitHub",
+    "nav.config": "配置",
 
     "hero.eyebrow": "11 键宏键盘，开源固件",
     "hero.title.1": "EKEYS",
@@ -462,6 +538,7 @@ export const DICT: Record<Lang, Dict> = {
     "site.title.features": "功能 · EKeys",
     "site.title.specs": "参数 · EKeys",
     "site.title.docs": "文档 · EKeys",
+    "site.title.config": "配置 · EKeys",
     "site.description":
       "EKeys 是一款 11 键宏键盘,带旋转编码器、窄条彩色 LCD、每键 RGB、离线语音转文字和开源固件。",
 
@@ -857,5 +934,78 @@ export const DICT: Record<Lang, Dict> = {
       "设备下载文件、校验通过后重启进入新分区",
       "任何一步失败，正在跑的固件都保持不变",
     ],
+
+    /* ---------------- Web Serial 配置面板 ---------------- */
+    "config.eyebrow": "// 直接来自设备",
+    "config.title": "EKeys 配置读取",
+    "config.lede":
+      "用 USB-C 接上 EKeys、点击「连接」，本页会用桌面 App 同一套行协议从设备拉取实时信息、全量设置快照和当前 Profile。",
+    "config.connect": "连接键盘",
+    "config.disconnect": "断开",
+    "config.busy": "连接中…",
+    "config.hint":
+      "依赖 Web Serial API，需使用桌面版 Chrome / Edge。页面必须以 HTTPS 或 localhost 访问，首次连接会弹窗让你选择 USB CDC 设备。",
+    "config.error.unsupported":
+      "当前浏览器不支持 Web Serial API。请使用较新版本的桌面版 Chrome 或 Edge。",
+    "config.error.userCancelled":
+      "已取消设备选择。再次点击「连接」即可重新选择 USB CDC 串口。",
+    "config.error.portBusy":
+      "无法打开串口。可能已经被其它标签页/程序占用，或者在握手过程中被拔掉了。",
+    "config.error.noPort":
+      "未找到匹配的 USB CDC 设备。请检查 USB-C 数据线，并确认没有其它程序占用该串口。",
+    "config.error.writeFailed":
+      "串口连接意外中断，设备可能在读取过程中被拔掉。",
+    "config.error.timeout":
+      "设备未在规定时间内回复。请确认固件正在运行、且这是 EKeys 的 USB CDC 端口。",
+    "config.error.protocol":
+      "设备对最近一次请求返回了错误，详见下方原始信息。",
+    "config.error.unknown":
+      "连接失败，详见下方原始信息。",
+    "config.error.detail": "详细信息",
+    "config.busyDisconnect": "断开中…",
+
+    "status.idle": "未连接",
+    "status.connecting": "正在连接…",
+    "status.connected": "已连接",
+    "status.connectedHint": "实时读取设备数据中",
+    "status.disconnecting": "正在断开…",
+
+    "config.card.info": "设备信息",
+    "config.card.config": "当前设置",
+    "config.card.profile": "当前 Profile",
+
+    "config.section.connection": "连接",
+    "config.section.display": "显示与灯效",
+    "config.section.audio": "音频与电源",
+    "config.section.voice": "语音与 Profile",
+    "config.profile.icon": "自定义图标",
+    "config.profile.iconPath": "图标路径",
+
+    "config.field.name": "名称",
+    "config.field.id": "设备 ID",
+    "config.field.firmware": "固件版本",
+    "config.field.configVersion": "配置结构版本",
+    "config.field.workMode": "工作模式",
+    "config.field.wifi": "Wi-Fi",
+    "config.field.connectHost": "连接桌面 App",
+    "config.field.tftBrightness": "TFT 亮度",
+    "config.field.rgbBrightness": "RGB 亮度",
+    "config.field.rgbMode": "RGB 模式",
+    "config.field.volume": "音量",
+    "config.field.audio": "音频",
+    "config.field.power": "电源模式",
+    "config.field.voice": "语音",
+    "config.field.voiceKey": "触发键",
+    "config.field.activeProfile": "当前 Profile",
+    "config.field.activeIndex": "激活索引",
+    "config.field.profileNumber": "编号",
+    "config.field.profileName": "名称",
+    "config.field.hasIcon": "自定义图标",
+
+    "config.value.on": "开",
+    "config.value.off": "关",
+    "config.value.yes": "是",
+    "config.value.no": "否",
+    "config.value.hasIcon": "已设图标",
   },
 };

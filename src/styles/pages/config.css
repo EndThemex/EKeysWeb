@@ -1,0 +1,572 @@
+/* ConfigPage — Web Serial 设备连接与只读配置面板 */
+
+.page--config {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 72px 24px 96px;
+}
+
+.config-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.config-panel__head h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(28px, 4vw, 40px);
+  letter-spacing: -0.01em;
+}
+
+.config-panel__lede {
+  color: var(--text-muted, #9aa3b2);
+  max-width: 56ch;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.config-panel .card {
+  background: var(--surface-1, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
+  border-radius: 16px;
+  padding: 24px 28px;
+  margin-bottom: 18px;
+}
+
+.config-panel .card h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9aa3b2);
+}
+
+/* ============================================================
+   Snapshot 布局：连接后展示设备 / 设置 / Profile 三块内容。
+   - .snapshot 用 CSS Grid 在桌面端两列布局，左列放「设备 + Profile」，
+     右列放「设置」。设置内部再用 subgrid 分成 2×2 的主题区块。
+   - 移动端单列堆叠。
+   ============================================================ */
+.snapshot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  grid-template-areas:
+    "device settings"
+    "profile settings";
+  gap: 16px;
+  margin-top: 4px;
+}
+
+.snapshot__device {
+  grid-area: device;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: start;
+  padding: 22px 24px;
+}
+
+.snapshot__device-main {
+  min-width: 0;
+}
+
+.snapshot__device-name {
+  margin: 8px 0 6px;
+  font-size: clamp(20px, 2.4vw, 24px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+.snapshot__device-id {
+  font-size: 12px;
+  color: var(--text-muted, #9aa3b2);
+  word-break: break-all;
+}
+
+.snapshot__device-meta {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 6px 20px;
+  align-self: end;
+  padding: 12px 14px;
+  background: var(--surface-2, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 10px;
+  font-size: 12px;
+  min-width: 0;
+}
+
+.snapshot__meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.snapshot__meta-label {
+  color: var(--text-muted, #9aa3b2);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.snapshot__meta-value {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+/* Settings card: 内部 2×2 subgrid */
+.snapshot__settings {
+  grid-area: settings;
+  padding: 22px 24px;
+}
+
+.snapshot__settings-head {
+  margin-bottom: 18px;
+}
+
+.snapshot__sections {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px 24px;
+}
+
+.snapshot__section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.snapshot__section-title {
+  margin: 0 0 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border-1, rgba(255, 255, 255, 0.12));
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg-muted, #5b5b58);
+  font-weight: 600;
+}
+
+.snapshot__grid {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 8px 14px;
+  margin: 0;
+}
+
+.snapshot__grid dt {
+  color: var(--text-muted, #9aa3b2);
+  font-size: 13px;
+}
+
+.snapshot__grid dd {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 4px;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 0;
+}
+
+.snapshot__grid dd > .chip {
+  /* 让 chip 在 dd 列布局里仍然作为一行水平容器展示 */
+  display: inline-flex;
+}
+
+.snapshot__sub {
+  font-size: 12px;
+  color: var(--text-muted, #9aa3b2);
+  font-weight: 400;
+  word-break: break-word;
+}
+
+.snapshot__sub--accent {
+  color: var(--accent, #ff3b00);
+  font-weight: 500;
+}
+
+/* Profile card: 大标题 + meta 行 */
+.snapshot__profile {
+  grid-area: profile;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px 24px;
+}
+
+.snapshot__profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.snapshot__profile-id {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.snapshot__profile-name {
+  font-size: clamp(18px, 2.2vw, 22px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  word-break: break-word;
+}
+
+/* 序号 + 名字 合并的 chip：单背景单圆角，视觉上是一组。 */
+.chip--profile {
+  background: var(--accent-soft, rgba(255, 59, 0, 0.08));
+  border-color: rgba(255, 59, 0, 0.32);
+  color: var(--fg, #0a0a0a);
+  padding: 6px 12px 6px 8px;
+  font-size: 13px;
+  align-items: center;
+  gap: 0;
+  max-width: 100%;
+  min-width: 100px;
+}
+
+.chip--profile .chip__prefix {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent, #ff3b00);
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 59, 0, 0.1);
+  flex: 0 0 auto;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.chip--profile .chip__divider {
+  width: 1px;
+  height: 18px;
+  background: rgba(255, 59, 0, 0.32);
+  flex: 0 0 auto;
+}
+
+.chip--profile .snapshot__profile-name {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+/* 在 settings 卡片的小行内复用时，与 chip 基础字号保持一致 */
+.snapshot__grid .chip--profile .snapshot__profile-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* 合并 chip 内的可选标记（如「自定义图标」），靠右，紧凑。 */
+.chip--profile .chip__suffix-tag {
+  flex: 0 0 auto;
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba(255, 59, 0, 0.12);
+  color: var(--accent, #ff3b00);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.snapshot__profile-meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px 14px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-1, rgba(255, 255, 255, 0.1));
+}
+
+.snapshot__profile-meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.snapshot__profile-meta dt {
+  color: var(--text-muted, #9aa3b2);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.snapshot__profile-meta dd {
+  margin: 0;
+  font-size: 13px;
+}
+
+.snapshot__profile-path {
+  grid-column: 1 / -1;
+}
+
+.snapshot__profile-path dd {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  word-break: break-all;
+  color: var(--text-muted, #9aa3b2);
+}
+
+/* ============================================================
+   Chip 组件：布尔 / 模式 / 数字 三种样式。
+   全部走设计 token，亮 / 暗主题自适应。
+   ============================================================ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border: 1px solid transparent;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+
+.chip__suffix {
+  margin-left: 2px;
+  font-weight: 500;
+  opacity: 0.7;
+  font-size: 0.92em;
+}
+
+.chip--on {
+  background: rgba(34, 197, 94, 0.14);
+  border-color: rgba(34, 197, 94, 0.42);
+  color: #16a34a;
+}
+
+[data-theme="dark"] .chip--on {
+  background: rgba(74, 222, 128, 0.14);
+  border-color: rgba(74, 222, 128, 0.42);
+  color: #6ee7b7;
+}
+
+.chip--off {
+  background: rgba(120, 120, 120, 0.12);
+  border-color: rgba(120, 120, 120, 0.28);
+  color: #6b6b66;
+}
+
+[data-theme="dark"] .chip--off {
+  background: rgba(160, 160, 160, 0.08);
+  border-color: rgba(160, 160, 160, 0.28);
+  color: #9c9c98;
+}
+
+.chip--mode {
+  background: var(--accent-soft, rgba(255, 59, 0, 0.08));
+  border-color: rgba(255, 59, 0, 0.32);
+  color: var(--accent, #ff3b00);
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.chip--num {
+  background: var(--surface-2, rgba(255, 255, 255, 0.04));
+  border-color: var(--border-1, rgba(255, 255, 255, 0.1));
+  color: var(--fg, #0a0a0a);
+  font-family: var(--font-mono);
+}
+
+[dir="rtl"] .chip--num,
+[dir="rtl"] .chip--mode {
+  direction: ltr;
+  display: inline-flex;
+}
+
+.config-panel__error {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  color: #fecaca;
+  background: rgba(248, 113, 113, 0.12);
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  border-left: 4px solid #f87171;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin: 0 0 18px;
+  box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.06);
+}
+
+.config-panel__error-icon {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(248, 113, 113, 0.22);
+  color: #fca5a5;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.config-panel__error-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.config-panel__error-title {
+  display: block;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+  color: #fee2e2;
+}
+
+.config-panel__error-detail {
+  margin-top: 6px;
+}
+
+.config-panel__error-detail summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-muted, #9aa3b2);
+  user-select: none;
+}
+
+.config-panel__error-detail code {
+  display: block;
+  margin-top: 6px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 8px;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* 连接状态横幅：始终可见，按 phase 着色 */
+.config-panel__status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  margin: 0 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.config-panel__status-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.04);
+}
+
+.config-panel__status--idle {
+  color: #9aa3b2;
+  background: rgba(154, 163, 178, 0.08);
+  border-color: rgba(154, 163, 178, 0.24);
+}
+
+.config-panel__status--busy {
+  color: #fcd34d;
+  background: rgba(252, 211, 77, 0.1);
+  border-color: rgba(252, 211, 77, 0.36);
+}
+
+.config-panel__status--busy .config-panel__status-dot {
+  animation: config-panel__pulse 1.2s ease-in-out infinite;
+}
+
+.config-panel__status--ok {
+  color: #6ee7b7;
+  background: rgba(110, 231, 183, 0.1);
+  border-color: rgba(110, 231, 183, 0.4);
+  box-shadow: 0 0 0 4px rgba(110, 231, 183, 0.06);
+}
+
+.config-panel__status--ok .config-panel__status-dot {
+  box-shadow: 0 0 0 4px rgba(110, 231, 183, 0.25);
+}
+
+.config-panel__status-label {
+  flex: 0 0 auto;
+}
+
+.config-panel__status-hint {
+  margin-left: auto;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--text-muted, #9aa3b2);
+  letter-spacing: 0;
+}
+
+@keyframes config-panel__pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.85); }
+}
+
+.config-panel .hint {
+  margin-top: 28px;
+  color: var(--text-muted, #9aa3b2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+@media (max-width: 860px) {
+  .snapshot {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "device"
+      "settings"
+      "profile";
+  }
+}
+
+@media (max-width: 640px) {
+  .snapshot__device {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .snapshot__device-meta {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .snapshot__sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .snapshot__grid {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .snapshot__profile-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
