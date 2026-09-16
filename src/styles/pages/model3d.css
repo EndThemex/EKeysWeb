@@ -23,14 +23,29 @@
 
 .model3d-hero__stage {
   position: relative;
-  background: var(--bg-elev);
+  background:
+    radial-gradient(
+      ellipse at 50% 60%,
+      rgba(255, 87, 34, 0.04) 0%,
+      transparent 60%
+    ),
+    var(--bg-elev);
   border: 1px solid var(--border);
   min-height: 540px;
   overflow: hidden;
+  /* 暗角效果, 让中心键盘更聚焦 */
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.04);
 }
 
 [data-theme="dark"] .model3d-hero__stage {
-  background: var(--bg);
+  background:
+    radial-gradient(
+      ellipse at 50% 60%,
+      rgba(255, 138, 91, 0.06) 0%,
+      transparent 60%
+    ),
+    var(--bg);
+  box-shadow: inset 0 0 120px rgba(0, 0, 0, 0.4);
 }
 
 /* ----- Keyboard3D component ---- */
@@ -48,6 +63,65 @@
 .kbd3d__canvas canvas:active {
   cursor: grabbing;
 }
+
+/* 视角预设切换按钮 — 底部居中浮动条 */
+.kbd3d__views {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0;
+  background: rgba(10, 10, 10, 0.55);
+  border: 1px solid rgba(244, 243, 238, 0.18);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 3;
+  pointer-events: auto;
+}
+:root:not([data-theme="dark"]) .kbd3d__views {
+  background: rgba(255, 255, 255, 0.78);
+  border-color: rgba(10, 10, 10, 0.18);
+}
+.kbd3d__view-btn {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid rgba(244, 243, 238, 0.12);
+  background: transparent;
+  color: rgba(244, 243, 238, 0.85);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease;
+}
+.kbd3d__view-btn:last-child {
+  border-right: 0;
+}
+:root:not([data-theme="dark"]) .kbd3d__view-btn {
+  color: rgba(10, 10, 10, 0.7);
+  border-right-color: rgba(10, 10, 10, 0.1);
+}
+.kbd3d__view-btn:hover {
+  background: rgba(244, 243, 238, 0.08);
+  color: #f4f3ee;
+}
+:root:not([data-theme="dark"]) .kbd3d__view-btn:hover {
+  background: rgba(10, 10, 10, 0.06);
+  color: #0a0a0a;
+}
+.kbd3d__view-btn--active {
+  background: var(--accent);
+  color: #fff !important;
+}
+.kbd3d__view-btn--active:hover {
+  background: var(--accent);
+}
+
 .kbd3d__hint {
   position: absolute;
   top: 16px;
@@ -203,5 +277,17 @@
   }
   .kbd3d__legend-row {
     flex-direction: row-reverse;
+  }
+  /* 小屏: 视角按钮移到右上, legend 移到底部, 避免互相遮挡 */
+  .kbd3d__views {
+    bottom: auto;
+    top: 12px;
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .kbd3d__view-btn {
+    padding: 6px 10px;
+    font-size: 9px;
   }
 }
