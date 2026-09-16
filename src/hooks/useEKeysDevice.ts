@@ -184,6 +184,8 @@ export function useEKeysDevice() {
   const errSubs = useRef<Set<(err: { kind: string; message: string }) => void>>(
     new Set(),
   );
+  // TX 订阅者：每条 sendCmd 写出去后回调 (cmd, data) → 给 LogPanel 做记录
+  const txSubs = useRef<Set<(cmd: number, data?: object) => void>>(new Set());
 
   /* ---------- 帧分发 ---------- */
   useEffect(() => {
@@ -424,9 +426,16 @@ export function useEKeysDevice() {
             finish(() => resolve(frame as T));
           });
 
-          s.write(payload).catch((e) => {
-            finish(() => reject(classify(e, "writeFailed")));
-          });
+          let writeOk = false;
+          s.write(payload)
+            .then(() => {
+              writeOk = true;
+              txSubs.current.forEach((cb) => cb(cmd, data));
+            })
+            .catch((e) => {
+              if (writeOk) return;
+              finish(() => reject(classify(e, "writeFailed")));
+            });
         });
       };
       // 串行化：等上一条 cmd 全部完成（包括 catch）再发下一条
@@ -666,6 +675,16 @@ export function useEKeysDevice() {
     [],
   );
 
+  const onTx = useCallback(
+    (handler: (cmd: number, data?: object) => void): (() => void) => {
+      txSubs.current.add(handler);
+      return () => {
+        txSubs.current.delete(handler);
+      };
+    },
+    [],
+  );
+
   const onLogLine = useCallback(
     (handler: (line: string) => void): (() => void) => {
       // 已绑定的转发链在 useEffect 中通过 serial.onLogLine 完成；
@@ -716,6 +735,7 @@ export function useEKeysDevice() {
     disconnect,
     sendCmd,
     onPush,
+    onTx,
     onLogLine,
     onError,
   };

@@ -166,6 +166,18 @@ export function emptyKeymapData(): KeymapData {
  * KeyAction ↔ FirmwareKeyEntry 编码
  * ============================================================ */
 
+/**
+ * USB HID usage id → 友好显示名。
+ * 命中 a-z / 0-9 / Enter / Backspace / Space / Tab / Esc → 返回对应字符串；
+ * 否则返回 `null`（调用方决定是否回退为 `0xNN`）。
+ */
+export function hidLabel(code: number): string | null {
+  if (code in HID_ALPHA) return HID_ALPHA[code];
+  if (code in HID_DIGIT) return HID_DIGIT[code];
+  if (code in HID_SPECIAL) return HID_SPECIAL[code];
+  return null;
+}
+
 /** USB HID usage id → 单字符名（a-z）。不在表内返回 null。 */
 const HID_ALPHA: Record<number, string> = {
   0x04: "a", 0x05: "b", 0x06: "c", 0x07: "d", 0x08: "e", 0x09: "f",
@@ -182,13 +194,6 @@ const HID_SPECIAL: Record<number, string> = {
   0x28: "Enter", 0x2a: "Backspace", 0x2c: "Space",
   0x2b: "Tab", 0x29: "Esc",
 };
-
-function hidLabel(code: number): string | null {
-  if (code in HID_ALPHA) return HID_ALPHA[code];
-  if (code in HID_DIGIT) return HID_DIGIT[code];
-  if (code in HID_SPECIAL) return HID_SPECIAL[code];
-  return null;
-}
 
 /**
  * 把 KeyAction 编码为固件可解析的 {normal, function} 字符串。

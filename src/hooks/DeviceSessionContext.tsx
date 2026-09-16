@@ -31,6 +31,7 @@ export interface DeviceSession {
     timeoutMs?: number,
   ) => Promise<T>;
   onPush: (handler: (frame: import("./useSerial").SerialFrame) => void) => () => void;
+  onTx: (handler: (cmd: number, data?: object) => void) => () => void;
   onLogLine: (handler: (line: string) => void) => () => void;
   onError: (handler: (err: DeviceError) => void) => () => void;
 }

@@ -345,7 +345,7 @@ export const DICT: Record<Lang, Dict> = {
     "app.panel.log.desc":
       "Three colored streams (protocol TX, protocol RX, firmware output, app output) shown in a single scrollable view. Filter by source and level, search by text, follow the tail.",
     "app.panel.log.bullets":
-      "Protocol TX (blue), RX (green), firmware (gray), app (white)\nFilter by category and minimum level, plus full-text search\nAuto-follow tail; click to pause\n5000-entry ring buffer",
+      "Protocol TX (blue), RX (green), firmware (gray), app (amber)\nFilter by category and minimum level, plus full-text search\nAuto-follow tail; click to pause\n2000-entry ring buffer",
     "app.panel.log.tags": ["4 streams", "search", "ring buffer"],
 
     "app.panel.firmware.title": "Firmware update",
@@ -615,6 +615,8 @@ export const DICT: Record<Lang, Dict> = {
     "config.tab.keymap": "Keymap",
     "config.tab.lighting": "Lighting",
     "config.tab.voice": "Voice",
+    "config.tab.audio": "Audio Pad",
+    "config.tab.ota": "OTA",
     "config.tab.log": "Log",
     "config.tab.about": "About",
 
@@ -748,6 +750,57 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.firmwareLoss": "Firmware cannot round-trip this binding; reset to unbound after read.",
     "keymap.hintFooter":
       "Apply sends the whole 11-key table for layer 0 (0x06 KEYMAP_SET). Renaming the active profile goes through 0x15 PROFILE_NAME_SET; custom icons are uploaded via 0x11 PROFILE_ICON_SET (≤ 32 KB).",
+
+    /* ---------------- Audio Pad Tab (M4) ---------------- */
+    "audio.eyebrow": "// sound board",
+    "audio.title": "Audio pad",
+    "audio.lede":
+      "Upload mp3 / wav clips (≤ {max}) and bind them to the 11 keys. Try-play is available from the file list.",
+    "audio.card.files": "files",
+    "audio.card.pads": "11-key bindings",
+    "audio.button.upload": "Upload clip",
+    "audio.button.refresh": "Refresh",
+    "audio.button.stop": "Stop all",
+    "audio.button.cancel": "Cancel",
+    "audio.button.tryPlay": "Try-play",
+    "audio.button.delete": "Delete",
+    "audio.button.playByKey": "Play by key",
+    "audio.button.bind": "Bind",
+    "audio.hintUpload": "Single file ≤ {max}; mp3 or wav; letters / digits / underscore only.",
+    "audio.usageFree": "free",
+    "audio.filesEmpty": "No clips yet. Upload one to begin.",
+    "audio.padsHint":
+      "Pick a clip from the dropdown to bind the key; pick the empty option to unbind.",
+    "audio.bind.unbind": "— unbind —",
+    "audio.hint.bindHint":
+      "Bind goes through 0x17 set; try-play goes through 0x17 play.",
+    "audio.confirmDelete": "Delete {name}? The file will be removed and any bindings cleared.",
+    "audio.errorAction": "Audio action failed",
+    "audio.hintFooter":
+      "Upload is split into 1 KB chunks (1024 B → 1368 base64 chars, below the firmware kMaxB64Len of 1400). Filenames are sanitized to ^[a-z0-9_]{1,20}\\.(mp3|wav)$.",
+
+    /* ---------------- OTA Tab (M4 stub) ---------------- */
+    "ota.eyebrow": "// firmware",
+    "ota.title": "OTA update",
+    "ota.lede":
+      "Read-only firmware info for now. The actual .bin download flow will land in a follow-up — it depends on the device's ROM bootloader behavior.",
+    "ota.card.info": "current firmware",
+    "ota.card.update": "future update flow",
+    "ota.field.version": "version",
+    "ota.field.buildDate": "build date",
+    "ota.field.buildTime": "build time",
+    "ota.value.unknown": "—",
+    "ota.button.refresh": "Refresh",
+    "ota.refreshing": "Refreshing…",
+    "ota.errorFetch": "Failed to fetch firmware info",
+    "ota.updateHint":
+      "Planned pipeline: Web Crypto MD5 → 0x0b notify → 0x14 reset into ROM download → Web Serial write .bin.",
+    "ota.roadmap.deviceInfo": "✓ Read 0x0b FIRMWARE_INFO (current build)",
+    "ota.roadmap.md5": "○ Compute MD5 via SubtleCrypto",
+    "ota.roadmap.reset": "○ Send 0x14 to enter ROM download",
+    "ota.roadmap.flash": "○ Stream .bin to the bootloader",
+    "ota.updateWarn":
+      "Until the ROM download channel is verified end-to-end, please run OTA through the desktop app.",
   },
 
   zh: {
@@ -1089,7 +1142,7 @@ export const DICT: Record<Lang, Dict> = {
     "app.panel.log.desc":
       "4 条带颜色的流（协议 TX、协议 RX、固件输出、App 输出）整合到同一可滚动视图。按来源和级别过滤、按文本搜索、跟随尾部。",
     "app.panel.log.bullets":
-      "协议 TX（蓝）、RX（绿）、固件（灰）、App（白）\n按类别 + 最低级别 + 自由文本搜索\n自动跟随尾部，点击暂停\n5000 条环形缓冲",
+      "协议 TX（蓝）、RX（绿）、固件（灰）、App（琥珀）\n按类别 + 最低级别 + 自由文本搜索\n自动跟随尾部，点击暂停\n2000 条环形缓冲",
     "app.panel.log.tags": ["4 条流", "搜索", "环形缓冲"],
 
     "app.panel.firmware.title": "固件升级",
@@ -1355,6 +1408,8 @@ export const DICT: Record<Lang, Dict> = {
     "config.tab.keymap": "键位",
     "config.tab.lighting": "灯效",
     "config.tab.voice": "语音",
+    "config.tab.audio": "音效板",
+    "config.tab.ota": "OTA",
     "config.tab.log": "日志",
     "config.tab.about": "关于",
 
@@ -1486,5 +1541,54 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.firmwareLoss": "固件无法回读该绑定，已重置为未绑定。",
     "keymap.hintFooter":
       "「应用」会把 layer 0 整表下发（0x06 KEYMAP_SET）。重命名当前 Profile 走 0x15；自定义图标通过 0x11 上传（≤ 32 KB）。",
+
+    /* ---------------- Audio Pad Tab (M4) ---------------- */
+    "audio.eyebrow": "// 音效板",
+    "audio.title": "音效板",
+    "audio.lede":
+      "上传 mp3 / wav 音频（≤ {max}）并绑定到 11 个键。文件列表行尾可试播。",
+    "audio.card.files": "文件",
+    "audio.card.pads": "11 键绑定",
+    "audio.button.upload": "上传音频",
+    "audio.button.refresh": "刷新",
+    "audio.button.stop": "全部停止",
+    "audio.button.cancel": "取消",
+    "audio.button.tryPlay": "试播",
+    "audio.button.delete": "删除",
+    "audio.button.playByKey": "按键播放",
+    "audio.button.bind": "绑定",
+    "audio.hintUpload": "单文件 ≤ {max}；格式 mp3 或 wav；文件名仅允许字母 / 数字 / 下划线。",
+    "audio.usageFree": "剩余",
+    "audio.filesEmpty": "还没有音频文件，上传一个开始吧。",
+    "audio.padsHint": "从下拉选一个音频绑定到该键；选空表示解绑。",
+    "audio.bind.unbind": "— 解绑 —",
+    "audio.hint.bindHint": "绑定走 0x17 set，试播走 0x17 play。",
+    "audio.confirmDelete": "确认删除 {name}？文件将移除，所有绑定会被清空。",
+    "audio.errorAction": "音效操作失败",
+    "audio.hintFooter":
+      "上传按 1 KB 分块（1024 B → 1368 base64 字符，低于固件 kMaxB64Len = 1400）。文件名被规范化为 ^[a-z0-9_]{1,20}\\.(mp3|wav)$。",
+
+    /* ---------------- OTA Tab (M4 stub) ---------------- */
+    "ota.eyebrow": "// 固件",
+    "ota.title": "OTA 升级",
+    "ota.lede":
+      "本期仅展示 0x0b 固件信息。真正的 .bin 下载流程等固件 ROM 下载通道确认后再接入。",
+    "ota.card.info": "当前固件",
+    "ota.card.update": "升级流程（规划）",
+    "ota.field.version": "版本",
+    "ota.field.buildDate": "构建日期",
+    "ota.field.buildTime": "构建时间",
+    "ota.value.unknown": "—",
+    "ota.button.refresh": "刷新",
+    "ota.refreshing": "刷新中…",
+    "ota.errorFetch": "读取固件信息失败",
+    "ota.updateHint":
+      "规划链路：Web Crypto MD5 → 0x0b 通知 → 0x14 复位进 ROM 下载模式 → Web Serial 写 .bin。",
+    "ota.roadmap.deviceInfo": "✓ 已读取 0x0b FIRMWARE_INFO（当前构建）",
+    "ota.roadmap.md5": "○ 通过 SubtleCrypto 计算 MD5",
+    "ota.roadmap.reset": "○ 发 0x14 进入 ROM 下载",
+    "ota.roadmap.flash": "○ 把 .bin 流式写入 bootloader",
+    "ota.updateWarn":
+      "ROM 下载通道尚未端到端验证前，请继续用桌面端完成 OTA。",
   },
 };

@@ -9,11 +9,12 @@
 
 import { useI18n } from "../../i18n/useI18n.tsx";
 import { NumberRow, SelectRow, TextRow } from "../settings/controls";
-import type {
-  KeyAction,
-  LayerSwitchAction,
-  MacroAction,
-  MouseAction,
+import {
+  hidLabel,
+  type KeyAction,
+  type LayerSwitchAction,
+  type MacroAction,
+  type MouseAction,
 } from "../../protocol";
 
 export type BindingKind = KeyAction["kind"];
@@ -118,7 +119,7 @@ export function KeyBindingPicker({
           />
           <TextRow
             label={t("keymap.encoded")}
-            value={`0x${action.code.toString(16).padStart(2, "0")}`}
+            value={hidLabel(action.code) ?? `0x${action.code.toString(16).padStart(2, "0")}`}
             onChange={() => {
               /* 单向展示 */
             }}

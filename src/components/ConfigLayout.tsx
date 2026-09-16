@@ -19,6 +19,8 @@ const TABS = [
   { to: "/config/keymap", label: "config.tab.keymap" },
   { to: "/config/lighting", label: "config.tab.lighting" },
   { to: "/config/voice", label: "config.tab.voice" },
+  { to: "/config/audio", label: "config.tab.audio" },
+  { to: "/config/ota", label: "config.tab.ota" },
   { to: "/config/log", label: "config.tab.log" },
   { to: "/config/about", label: "config.tab.about" },
 ] as const;

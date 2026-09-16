@@ -711,36 +711,38 @@
   font-family: var(--font-sans, system-ui);
 }
 
-.log-table {
+.log-vlist {
+  position: relative;
   width: 100%;
-  border-collapse: collapse;
-  table-layout: fixed;
 }
 
-.log-table th {
-  position: sticky;
-  top: 0;
-  background: var(--bg-elev, #ffffff);
-  color: var(--text-muted, #9aa3b2);
+.log-vlist__header {
+  display: grid;
+  grid-template-columns: 100px 90px 80px 1fr;
+  gap: 0;
+  padding: 8px 12px;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  padding: 8px 12px;
-  text-align: left;
+  color: var(--text-muted, #9aa3b2);
+  background: var(--bg-elev, #ffffff);
   border-bottom: 1px solid var(--border-1, rgba(255, 255, 255, 0.1));
+  position: sticky;
+  top: 0;
   z-index: 1;
 }
 
-.log-table__th-time { width: 100px; }
-.log-table__th-channel { width: 90px; }
-.log-table__th-level { width: 80px; }
-
-.log-row td {
-  padding: 5px 12px;
+.log-row {
+  display: grid;
+  grid-template-columns: 100px 90px 80px 1fr;
+  align-items: center;
+  gap: 0;
+  padding: 0 12px;
   border-bottom: 1px dashed rgba(255, 255, 255, 0.04);
-  vertical-align: top;
-  word-break: break-word;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  box-sizing: border-box;
 }
 
 .log-row__time { color: var(--text-muted, #9aa3b2); font-size: 11px; }
@@ -755,7 +757,13 @@
 .log-row--warn .log-row__level { color: #fcd34d; }
 .log-row--error .log-row__level { color: #f87171; }
 
-.log-row__text { font-size: 12px; white-space: pre-wrap; }
+.log-row__text {
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 @media (max-width: 860px) {
   .settings-panel__grid { grid-template-columns: minmax(0, 1fr); }
@@ -1120,4 +1128,217 @@
 
 @media (max-width: 480px) {
   .keymap-grid { aspect-ratio: 1 / 1; }
+}
+
+/* ============================================================
+   AudioPadPanel (M4)
+   ============================================================ */
+
+.audio-usage {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.audio-usage__bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.audio-usage__bar-fill {
+  height: 100%;
+  background: var(--accent, #ff3b00);
+  transition: width 0.2s ease;
+}
+
+.audio-usage__meta {
+  font-size: 12px;
+  color: var(--fg-muted, #5b5b58);
+}
+
+.audio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.audio-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+}
+
+.audio-progress__head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--fg-muted, #5b5b58);
+}
+
+.audio-progress__bar {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.audio-progress__bar-fill {
+  height: 100%;
+  background: var(--accent, #ff3b00);
+  transition: width 0.2s ease;
+}
+
+.audio-files {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.audio-files__empty {
+  padding: 8px 0;
+}
+
+.audio-files__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.audio-files__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.audio-files__name {
+  font-size: 13px;
+  color: var(--fg, #0a0a0a);
+}
+
+.audio-files__size {
+  color: var(--fg-muted, #5b5b58);
+}
+
+.audio-files__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.audio-files__delete {
+  color: #c53030;
+}
+
+.audio-pads {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.audio-pads__row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+}
+
+.audio-pads__key {
+  font-weight: 700;
+  color: var(--accent, #ff3b00);
+}
+
+.audio-pads__file {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.audio-pads__actions {
+  display: flex;
+  gap: 4px;
+}
+
+.audio-pads__selector {
+  grid-column: 1 / -1;
+  margin-top: 4px;
+}
+
+.audio-pads__select {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* ============================================================
+   OtaPanel (M4 stub)
+   ============================================================ */
+
+.ota-card--pending {
+  border-style: dashed;
+}
+
+.ota-info {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ota-info__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 4px 0;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.06);
+}
+
+.ota-info__label {
+  color: var(--fg-muted, #5b5b58);
+  font-size: 12px;
+}
+
+.ota-info__value {
+  font-size: 14px;
+}
+
+.ota-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.ota-roadmap {
+  list-style: none;
+  margin: 8px 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--fg-muted, #5b5b58);
+}
+
+.ota-roadmap__dot {
+  display: inline-block;
+  width: 1em;
+  color: var(--accent, #ff3b00);
+  margin-right: 6px;
 }

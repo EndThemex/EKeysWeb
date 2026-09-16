@@ -13,6 +13,8 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { KeymapPanel } from "./components/KeymapPanel";
 import { LightingPanel } from "./components/LightingPanel";
 import { VoicePanel } from "./components/VoicePanel";
+import { AudioPadPanel } from "./components/AudioPadPanel";
+import { OtaPanel } from "./components/OtaPanel";
 import { AboutPanel } from "./components/AboutPanel";
 import { LogPanel } from "./components/LogPanel";
 import { useReveal } from "./hooks/useReveal";
@@ -91,6 +93,8 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
             <Route path="keymap" element={<KeymapPanel />} />
             <Route path="lighting" element={<LightingPanel />} />
             <Route path="voice" element={<VoicePanel />} />
+            <Route path="audio" element={<AudioPadPanel />} />
+            <Route path="ota" element={<OtaPanel />} />
             <Route path="log" element={<LogPanel />} />
             <Route path="about" element={<AboutPanel />} />
           </Route>

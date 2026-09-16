@@ -39,6 +39,7 @@ export {
   diffKeymap,
   syncProfileFromSettings,
   clampProfile,
+  hidLabel,
 } from "./keymap";
 export type {
   KeyAction,
@@ -55,6 +56,46 @@ export type {
   ProfileNameReq,
   ProfileIconReq,
 } from "./keymap";
+
+export {
+  AUDIO_FILE_OP,
+  AUDIO_PAD_OP,
+  AUDIO_FILE_MAX_BYTES,
+  AUDIO_NAME_PATTERN,
+  AUDIO_EXTS,
+  AUDIO_CHUNK_BYTES,
+  sanitizeAudioFileName,
+  isAllowedAudioExt,
+  indexBindingsByKey,
+  emptyPadBindings,
+  audioFileReq,
+  audioPadReq,
+} from "./audio";
+export type {
+  AudioFileOp,
+  AudioPadOp,
+  AudioExt,
+  AudioFileInfo,
+  AudioListResp,
+  AudioBeginResp,
+  AudioDataResp,
+  AudioEndResp,
+  AudioDeleteResp,
+  AudioPadBinding,
+  AudioPadGetResp,
+  AudioFileReq,
+  AudioFileListReq,
+  AudioFileBeginReq,
+  AudioFileDataReq,
+  AudioFileEndReq,
+  AudioFileAbortReq,
+  AudioFileDeleteReq,
+  AudioPadReq,
+  AudioPadGetReq,
+  AudioPadSetReq,
+  AudioPadPlayReq,
+  AudioPadStopReq,
+} from "./audio";
 
 /** 当前 Web 端实现的协议版本。 */
 export const PROTOCOL_VERSION = 1;

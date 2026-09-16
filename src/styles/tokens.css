@@ -181,6 +181,15 @@ button {
   font-family: inherit;
   cursor: pointer;
 }
+/* Native <select> dropdown options inherit the OS/browser default styling
+   for the popup list, which is typically a light background. In dark theme
+   that combines with our white --fg text and renders white-on-white.
+   Force option backgrounds and colors to follow our tokens so the popup
+   stays readable regardless of OS theme. */
+option {
+  background: var(--bg-elev);
+  color: var(--fg);
+}
 ::selection {
   background: var(--accent);
   color: var(--bg);

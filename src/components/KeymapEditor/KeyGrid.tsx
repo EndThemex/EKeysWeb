@@ -16,6 +16,7 @@
 
 import { useI18n } from "../../i18n/useI18n.tsx";
 import {
+  hidLabel,
   LAYER_BASE,
   PHYSICAL_KEY_COUNT,
   type KeyAction,
@@ -155,17 +156,9 @@ function describeAction(
     case "unbound":
       return t("keymap.key.unbound");
     case "keyboard": {
-      const c = a.code;
-      if (c >= 0x04 && c <= 0x1d) {
-        return String.fromCharCode("a".charCodeAt(0) + (c - 0x04)).toUpperCase();
-      }
-      if (c >= 0x1e && c <= 0x27) {
-        return String(c - 0x1e + 1);
-      }
-      if (c === 0x28) return "Enter";
-      if (c === 0x2a) return "Backspace";
-      if (c === 0x2c) return "Space";
-      return `0x${c.toString(16).padStart(2, "0")}`;
+      const friendly = hidLabel(a.code);
+      if (friendly) return friendly;
+      return `0x${a.code.toString(16).padStart(2, "0")}`;
     }
     case "media":
       return t("keymap.bind.media");
