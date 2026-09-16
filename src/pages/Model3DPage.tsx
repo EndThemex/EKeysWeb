@@ -10,6 +10,55 @@ import { useI18n } from "../i18n/useI18n.tsx";
  *   - 正面：上部 428:124 LCD 屏，下部 3 行 × 4 列按键矩阵
  *   - 第一行第四列(右上)为旋钮(Encoder)
  */
+type SpecCard = {
+  num: string;
+  titleKey: string;
+  rows: { labelKey: string; valueKey: string }[];
+};
+
+const SPEC_CARDS: SpecCard[] = [
+  {
+    num: "01",
+    titleKey: "model3d.specs.01.title",
+    rows: [
+      { labelKey: "model3d.specs.01.label.0", valueKey: "model3d.specs.01.value.0" },
+      { labelKey: "model3d.specs.01.label.1", valueKey: "model3d.specs.01.value.1" },
+      { labelKey: "model3d.specs.01.label.2", valueKey: "model3d.specs.01.value.2" },
+      { labelKey: "model3d.specs.01.label.3", valueKey: "model3d.specs.01.value.3" },
+    ],
+  },
+  {
+    num: "02",
+    titleKey: "model3d.specs.02.title",
+    rows: [
+      { labelKey: "model3d.specs.02.label.0", valueKey: "model3d.specs.02.value.0" },
+      { labelKey: "model3d.specs.02.label.1", valueKey: "model3d.specs.02.value.1" },
+      { labelKey: "model3d.specs.02.label.2", valueKey: "model3d.specs.02.value.2" },
+      { labelKey: "model3d.specs.02.label.3", valueKey: "model3d.specs.02.value.3" },
+    ],
+  },
+  {
+    num: "03",
+    titleKey: "model3d.specs.03.title",
+    rows: [
+      { labelKey: "model3d.specs.03.label.0", valueKey: "model3d.specs.03.value.0" },
+      { labelKey: "model3d.specs.03.label.1", valueKey: "model3d.specs.03.value.1" },
+      { labelKey: "model3d.specs.03.label.2", valueKey: "model3d.specs.03.value.2" },
+      { labelKey: "model3d.specs.03.label.3", valueKey: "model3d.specs.03.value.3" },
+    ],
+  },
+  {
+    num: "04",
+    titleKey: "model3d.specs.04.title",
+    rows: [
+      { labelKey: "model3d.specs.04.label.0", valueKey: "model3d.specs.04.value.0" },
+      { labelKey: "model3d.specs.04.label.1", valueKey: "model3d.specs.04.value.1" },
+      { labelKey: "model3d.specs.04.label.2", valueKey: "model3d.specs.04.value.2" },
+      { labelKey: "model3d.specs.04.label.3", valueKey: "model3d.specs.04.value.3" },
+    ],
+  },
+];
+
 export default function Model3DPage() {
   const { t } = useI18n();
 
@@ -19,27 +68,27 @@ export default function Model3DPage() {
         <div className="container">
           <div className="model3d-hero" data-reveal>
             <div className="model3d-hero__copy">
-              <span className="eyebrow">3D · LIVE PREVIEW</span>
+              <span className="eyebrow">{t("model3d.hero.eyebrow")}</span>
               <h1
                 className="hero__title"
                 style={{ fontSize: "clamp(48px, 8vw, 120px)" }}
               >
-                EKeys
+                {t("model3d.hero.title.1")}
                 <br />
-                <span style={{ color: "var(--accent)" }}>3D Model</span>
+                <span style={{ color: "var(--accent)" }}>
+                  {t("model3d.hero.title.2")}
+                </span>
               </h1>
-              <p className="hero__lede hero__lede--wide">
-                基于 Three.js 构建的实时 3D 模型。键盘整体
-                <strong> 80 × 93 × 18 cm</strong>
-                ，正面顶部为 428 : 124 比例的 LCD 屏幕，下方为 3 × 4
-                按键矩阵，右上角为旋钮。
-              </p>
+              <p
+                className="hero__lede hero__lede--wide"
+                dangerouslySetInnerHTML={{ __html: t("model3d.hero.lede") }}
+              />
               <div className="hero__cta-row">
                 <Link to="/" className="btn">
-                  ← BACK HOME
+                  {t("model3d.hero.cta.secondary")}
                 </Link>
                 <a href="#specs" className="btn btn--primary">
-                  VIEW SPECS
+                  {t("model3d.hero.cta.primary")}
                 </a>
               </div>
             </div>
@@ -54,104 +103,34 @@ export default function Model3DPage() {
         <div className="container">
           <div className="section__head" data-reveal>
             <div>
-              <span className="eyebrow">DIMENSIONS</span>
-              <h2>Build Sheet</h2>
+              <span className="eyebrow">{t("model3d.specs.eyebrow")}</span>
+              <h2>{t("model3d.specs.title")}</h2>
             </div>
-            <p>
-              键盘外壳厚度 18 cm, 包含面板凹陷 / 屏幕边框 / 按键柱体 / 旋钮
-              凸出, 整体重心居中, 落地稳定。
-            </p>
+            <p>{t("model3d.specs.lede")}</p>
           </div>
 
           <div className="model3d-specs">
-            <article className="model3d-spec" data-reveal>
-              <div className="model3d-spec__num">01</div>
-              <h3 className="model3d-spec__title">Chassis</h3>
-              <ul className="model3d-spec__list">
-                <li>
-                  <span>WIDTH</span>
-                  <strong>80 cm</strong>
-                </li>
-                <li>
-                  <span>HEIGHT</span>
-                  <strong>93 cm</strong>
-                </li>
-                <li>
-                  <span>DEPTH</span>
-                  <strong>18 cm</strong>
-                </li>
-                <li>
-                  <span>BEVEL</span>
-                  <strong>0.6 cm</strong>
-                </li>
-              </ul>
-            </article>
-            <article className="model3d-spec" data-reveal>
-              <div className="model3d-spec__num">02</div>
-              <h3 className="model3d-spec__title">LCD Panel</h3>
-              <ul className="model3d-spec__list">
-                <li>
-                  <span>RATIO</span>
-                  <strong>428 : 124</strong>
-                </li>
-                <li>
-                  <span>SIZE</span>
-                  <strong>72 × 20.9 cm</strong>
-                </li>
-                <li>
-                  <span>DEPTH</span>
-                  <strong>0.4 cm</strong>
-                </li>
-                <li>
-                  <span>EMISSIVE</span>
-                  <strong>0.7–0.85</strong>
-                </li>
-              </ul>
-            </article>
-            <article className="model3d-spec" data-reveal>
-              <div className="model3d-spec__num">03</div>
-              <h3 className="model3d-spec__title">Key Matrix</h3>
-              <ul className="model3d-spec__list">
-                <li>
-                  <span>GRID</span>
-                  <strong>3 × 4</strong>
-                </li>
-                <li>
-                  <span>KEY SIZE</span>
-                  <strong>~15.95 × 23.27 cm</strong>
-                </li>
-                <li>
-                  <span>GAP</span>
-                  <strong>2.2 cm</strong>
-                </li>
-                <li>
-                  <span>TRAVEL</span>
-                  <strong>3.5 cm</strong>
-                </li>
-              </ul>
-            </article>
-            <article className="model3d-spec model3d-spec--accent" data-reveal>
-              <div className="model3d-spec__num">04</div>
-              <h3 className="model3d-spec__title">Encoder (R1·C4)</h3>
-              <ul className="model3d-spec__list">
-                <li>
-                  <span>RADIUS</span>
-                  <strong>~8.17 cm</strong>
-                </li>
-                <li>
-                  <span>HEIGHT</span>
-                  <strong>6 cm</strong>
-                </li>
-                <li>
-                  <span>KNURL</span>
-                  <strong>28 facets</strong>
-                </li>
-                <li>
-                  <span>INDICATOR</span>
-                  <strong>white LED line</strong>
-                </li>
-              </ul>
-            </article>
+            {SPEC_CARDS.map((card, idx) => (
+              <article
+                key={card.num}
+                className={
+                  "model3d-spec" +
+                  (idx === SPEC_CARDS.length - 1 ? " model3d-spec--accent" : "")
+                }
+                data-reveal
+              >
+                <div className="model3d-spec__num">{card.num}</div>
+                <h3 className="model3d-spec__title">{t(card.titleKey)}</h3>
+                <ul className="model3d-spec__list">
+                  {card.rows.map((row) => (
+                    <li key={row.labelKey}>
+                      <span>{t(row.labelKey)}</span>
+                      <strong>{t(row.valueKey)}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
           </div>
         </div>
       </section>

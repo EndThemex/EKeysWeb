@@ -152,6 +152,35 @@ function makeScreenTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+// ---------- 旋钮旋转提示箭头 (Mesh, 不 billboard) ----------
+function makeArrowMesh(direction: -1 | 1): THREE.Mesh {
+  // 用 Shape 画三角形箭头, 中心锚点在 (0,0); direction: -1=左箭头, +1=右箭头
+  const shape = new THREE.Shape();
+  const w = 1.0; // 半宽
+  const h = 0.7; // 半高
+  if (direction < 0) {
+    // ◀: 顶点朝左
+    shape.moveTo(-w, 0);
+    shape.lineTo(w * 0.4, h);
+    shape.lineTo(w * 0.4, -h);
+    shape.lineTo(-w, 0);
+  } else {
+    // ▶: 顶点朝右
+    shape.moveTo(w, 0);
+    shape.lineTo(-w * 0.4, h);
+    shape.lineTo(-w * 0.4, -h);
+    shape.lineTo(w, 0);
+  }
+  const geo = new THREE.ShapeGeometry(shape);
+  const mat = new THREE.MeshBasicMaterial({
+    color: 0xff8a5b,
+    transparent: true,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
 // ---------- 按键标签纹理 ----------
 const labelCanvasCache: Record<string, THREE.CanvasTexture> = {};
 function makeLabelTexture(
@@ -314,6 +343,10 @@ function buildScene(
   renderer.domElement.style.width = "100%";
   renderer.domElement.style.height = "100%";
 
+  // ---- 闭包状态 (供后续动画/交互使用) ----------------------------
+  let knobGroupSpin: THREE.Group | null = null;
+  const knobArrows: THREE.Mesh[] = [];
+
   // ---- Scene & Camera -------------------------------------------
   const scene = new THREE.Scene();
   // 用渐变天空做背景 — 顶部冷色, 底部暖色, 让任何朝向的键盘都能从背景里跳出来
@@ -344,13 +377,15 @@ function buildScene(
     2000,
   );
   camera.position.set(120, 120, 180);
+  // 仰角: 正值时相机抬升到水平面以上, 从下方往上看键盘底面
   camera.lookAt(0, 20, 0);
 
   // ---- Lighting --------------------------------------------------
   scene.add(new THREE.AmbientLight(0xffffff, 0.55));
 
-  const keyLight = new THREE.DirectionalLight(0xffffff, 1.0);
-  keyLight.position.set(80, 140, 120);
+  const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  // 主光: 位于相机同侧 (右上前方), 正对键盘, 让键帽 / 屏幕面被均匀照亮
+  keyLight.position.set(80, 160, 200);
   keyLight.castShadow = true;
   keyLight.shadow.mapSize.set(1024, 1024);
   keyLight.shadow.camera.left = -120;
@@ -362,12 +397,14 @@ function buildScene(
   keyLight.shadow.bias = -0.0005;
   scene.add(keyLight);
 
-  const rimLight = new THREE.DirectionalLight(0xff8a5b, 0.6);
-  rimLight.position.set(-100, 60, -80);
+  const rimLight = new THREE.DirectionalLight(0xff8a5b, 0.55);
+  // 轮廓光: 背后上方, 给顶面 / 后侧边缘加暖色镶边
+  rimLight.position.set(-90, 140, -100);
   scene.add(rimLight);
 
   const fillLight = new THREE.DirectionalLight(0x88aaff, 0.3);
-  fillLight.position.set(-60, -40, 100);
+  // 补光: 相机对侧 (左前), 给键盘左侧阴影面柔和冷色补光
+  fillLight.position.set(-90, 100, 140);
   scene.add(fillLight);
 
   // ---- 整体舞台 (键盘 + 展台统一 Y 偏移) --------------------
@@ -407,11 +444,6 @@ function buildScene(
   keyboard.position.y = KEYBOARD_D / 2 + 0.3 + 30;
   stage.add(keyboard);
 
-  // ---- 坐标轴 (红=X, 绿=Y, 蓝=Z) ---------------------------------
-  const axes = new THREE.AxesHelper(30); // 长度 30cm
-  axes.position.set(-KEYBOARD_W / 2 + 4, -KEYBOARD_H / 2 + 4, KEYBOARD_D / 2 + 0.4);
-  keyboard.add(axes);
-
   // 外壳 — 圆角 box
   const shellShape = new THREE.Shape();
   const sw = KEYBOARD_W;
@@ -438,9 +470,10 @@ function buildScene(
   shellGeo.translate(0, 0, -KEYBOARD_D / 2 - 0.3);
 
   const shellMat = new THREE.MeshStandardMaterial({
-    color: isDark ? 0x2a2c34 : 0xe8e3d6,
-    roughness: 0.5,
-    metalness: 0.25,
+    // 深色主题: 略带蓝调的中性金属黑, 高金属度 + 低粗糙度呈现金属反光
+    color: isDark ? 0x1c1f26 : 0xe8e3d6,
+    roughness: 0.28,
+    metalness: 0.75,
   });
   const shell = new THREE.Mesh(shellGeo, shellMat);
   shell.castShadow = true;
@@ -514,9 +547,10 @@ function buildScene(
   // 按键槽 — 在面板上挖一个下沉平台, 让键帽看起来嵌在槽里
   const slotGeo = new THREE.BoxGeometry(KEYS_AREA_W + 0.4, KEYS_AREA_H + 0.4, 0.4);
   const slotMat = new THREE.MeshStandardMaterial({
-    color: isDark ? 0x14161e : 0x2b2c33,
-    roughness: 0.75,
-    metalness: 0.15,
+    // 深色主题键槽: 比外壳更深的金属黑, 凹槽反光被压暗, 键帽亮色跳出来
+    color: isDark ? 0x0a0c10 : 0x2b2c33,
+    roughness: 0.45,
+    metalness: 0.65,
   });
   const slot = new THREE.Mesh(slotGeo, slotMat);
   slot.position.set(0, 0, -0.1);
@@ -525,10 +559,11 @@ function buildScene(
 
   const keys: KeyInfo[] = [];
   const keyMat = new THREE.MeshStandardMaterial({
-    // 键帽: 鲜艳对比, 深色模式下奶白, 浅色模式下深炭色, 强烈反差
-    color: isDark ? 0xf2eee3 : 0x1f2027,
-    roughness: 0.45,
-    metalness: 0.1,
+    // 键帽: 灰白塑料质感 — 低 metalness / 较高 roughness, 没有金属高光,
+    // 浅色主题更亮的灰白, 深色主题中灰白
+    color: isDark ? 0xc8c4ba : 0xe8e3d6,
+    roughness: 0.75,
+    metalness: 0.0,
   });
 
   for (let row = 0; row < ROWS; row++) {
@@ -551,9 +586,10 @@ function buildScene(
             48,
           ),
           new THREE.MeshStandardMaterial({
-            color: isDark ? 0x0e0e0e : 0xe5e2da,
-            roughness: 0.5,
-            metalness: 0.4,
+            // 旋钮底座: 深色主题金属黑, 与键槽形成金属高光层次
+            color: isDark ? 0x16181d : 0xe5e2da,
+            roughness: 0.3,
+            metalness: 0.75,
           }),
         );
         baseRing.rotation.x = Math.PI / 2;
@@ -602,12 +638,13 @@ function buildScene(
           metalness: 0.2,
         });
         const indicator = new THREE.Mesh(
-          new THREE.BoxGeometry(0.6, KNOB_RADIUS * 1.6, 0.3),
+          // 长度限制在旋钮直径以内 (略小于 KNOB_RADIUS*1.8)
+          new THREE.BoxGeometry(0.6, KNOB_RADIUS * 0.7, 0.3),
           indicatorMat,
         );
         indicator.position.set(
           0,
-          KNOB_RADIUS * 0.55,
+          KNOB_RADIUS * 0.61, // 中心靠近旋钮轴, 配合缩短的长度保证不超出外缘
           0.7 + KNOB_HEIGHT + 1.1,
         );
         knobGroup.add(indicator);
@@ -634,6 +671,7 @@ function buildScene(
         }
 
         keysGroup.add(knobGroup);
+        knobGroupSpin = knobGroup;
         keys.push({
           mesh: knobTop,
           baseZ: knobTop.position.z,
@@ -649,7 +687,34 @@ function buildScene(
         const labelSprite = new THREE.Sprite(labelMat);
         labelSprite.scale.set(KEY_W * 0.7, KEY_W * 0.7, 1);
         labelSprite.position.set(x, y - KEY_H * 0.42, 0.1);
+        labelSprite.visible = false; // 隐藏按键上的文字
         keysGroup.add(labelSprite);
+
+        // ---- 旋钮两侧旋转提示 (◀ 左 / ▶ 右) --------------------
+        // 箭头作为真实 Mesh (不是 Sprite), rotation.z 不被相机抵消;
+        // 挂在 keysGroup 而非 knobGroup, 避免跟着旋钮旋转;
+        // 动画循环里同步旋钮按压时的 Z 位移, 让箭头视觉上贴住旋钮。
+        const arrowSize = KEY_W * 0.22;
+        const arrowOffsetX = KNOB_RADIUS + 1.2;
+        const arrowY = y;       // keysGroup 局部 Y, 与 ENC label 对齐
+        const arrowZ = KNOB_HEIGHT + 1.9;
+        const leftArrow = makeArrowMesh(-1);
+        leftArrow.scale.set(arrowSize, arrowSize, 1);
+        leftArrow.position.set(x - arrowOffsetX, arrowY, arrowZ);
+        leftArrow.userData.knobArrowDir = -1;
+        leftArrow.userData.knobArrowBaseX = leftArrow.position.x;
+        leftArrow.userData.knobArrowBaseZ = arrowZ;
+        keysGroup.add(leftArrow);
+        knobArrows.push(leftArrow);
+
+        const rightArrow = makeArrowMesh(1);
+        rightArrow.scale.set(arrowSize, arrowSize, 1);
+        rightArrow.position.set(x + arrowOffsetX, arrowY, arrowZ);
+        rightArrow.userData.knobArrowDir = 1;
+        rightArrow.userData.knobArrowBaseX = rightArrow.position.x;
+        rightArrow.userData.knobArrowBaseZ = arrowZ;
+        keysGroup.add(rightArrow);
+        knobArrows.push(rightArrow);
       } else {
         // ---- 使用 STL 键帽 -------------------------------
         // 我们的键帽几何: 顶面 +Z 朝外, 底面在 z=0, XY 居中。
@@ -682,6 +747,7 @@ function buildScene(
         const scale = Math.min(KEY_W, KEY_H) * 0.5;
         labelSprite.scale.set(scale, scale, 1);
         labelSprite.position.set(x, y, capH + 0.3);
+        labelSprite.visible = false; // 隐藏按键上的文字
         keysGroup.add(labelSprite);
       }
     }
@@ -784,6 +850,8 @@ function buildScene(
       pressableTargets.push(k.mesh);
     }
   });
+  // 旋钮两侧的旋转提示箭头也算点击目标
+  knobArrows.forEach((a) => pressableTargets.push(a));
 
   function pressKey(k: KeyInfo) {
     if (k.isPressed) return;
@@ -817,20 +885,31 @@ function buildScene(
     const hits = raycaster.intersectObjects(pressableTargets, true);
     if (hits.length === 0) return;
     const obj = hits[0].object;
+
+    // 先看是不是点中了旋钮两侧的箭头
+    const arrow = knobArrows.find((a) => obj === a);
+    if (arrow) {
+      // Three.js rotation.z 正值 = 从面板外往里看的逆时针;
+      // ▶ 在右侧, 用户期望旋钮顺时针, 所以取反方向
+      const dir = -((arrow.userData.knobArrowDir as number) ?? 1);
+      encoderSpinTarget += Math.PI * 0.25 * dir;
+      // 箭头按压反馈: 短暂外推一下再回弹
+      arrow.userData.pressedT = 1;
+      return;
+    }
+
     const k = keys.find((kk) =>
       kk.isEncoder ? obj.parent === kk.mesh.parent : obj === kk.mesh,
     );
     if (k) {
       pressKey(k);
       setTimeout(() => releaseKey(k!), 180);
-      if (k.isEncoder) {
-        encoderSpinTarget += Math.PI * 0.25;
-      }
+      // 旋钮本体点击不再旋转, 旋转改为点箭头触发
     }
   }
   dom.addEventListener("click", onClick);
 
-  // ---- 旋钮自转 & 入场动画 -----------------------------
+  // 旋钮自转 & 入场动画 -----------------------------
   let encoderSpin = 0;
   let encoderSpinTarget = 0;
   let introT = 0;
@@ -874,14 +953,35 @@ function buildScene(
     screenMat.emissiveIntensity = 0.7 + Math.sin(t * 1.4) * 0.08;
 
     encoderSpin += (encoderSpinTarget - encoderSpin) * 0.1;
-    if (knobMain) {
-      knobMain.rotation.z = encoderSpin;
+    // 旋钮 group 位于 world Z 轴指向屏幕外, 绕 Z 转 = 绕旋钮自身轴
+    if (knobGroupSpin) {
+      knobGroupSpin.rotation.z = encoderSpin;
     }
+
+    // 箭头不参与旋转, 只跟随旋钮按压的 Z 位移; 同时按压回弹外推
+    knobArrows.forEach((arrow) => {
+      // 跟随旋钮 group 当前 Z (按压时下沉)
+      const knobZ = knobGroupSpin ? knobGroupSpin.position.z : 0;
+      const baseZ = (arrow.userData.knobArrowBaseZ as number) ?? arrow.position.z;
+      arrow.position.z = baseZ + (knobZ - 0); // 旋钮默认 Z=0
+
+      const pressed = (arrow.userData.pressedT as number) ?? 0;
+      if (pressed > 0) {
+        const next = Math.max(0, pressed - dt * 4);
+        arrow.userData.pressedT = next;
+      }
+      const p = (arrow.userData.pressedT as number) ?? 0;
+      // 与 onClick 中保持一致, 反向后再外推
+      const dir = -((arrow.userData.knobArrowDir as number) ?? 1);
+      const baseX = (arrow.userData.knobArrowBaseX as number) ?? arrow.position.x;
+      // 选中方向外推 0.6cm, 然后弹回
+      arrow.position.x = baseX + dir * 0.6 * p;
+    });
 
     keys.forEach((k, i) => {
       if (k.isPressed) return;
       if (k.isEncoder) return;
-      const phase = i * 0.7;
+      const phase = i * 1.7;
       const float = Math.sin(t * 1.4 + phase) * 0.18;
       k.mesh.position.z = k.baseZ + float;
     });

@@ -20,6 +20,8 @@ export function useDocumentMeta(): void {
         ? "site.title.docs"
         : pathname.startsWith("/config")
         ? "site.title.config"
+        : pathname.startsWith("/model3d")
+        ? "site.title.model3d"
         : "site.title.home";
 
     document.title = t(titleKey);
