@@ -8,6 +8,7 @@ import FeaturesPage from "./pages/FeaturesPage";
 import SpecsPage from "./pages/SpecsPage";
 import DocsPage from "./pages/DocsPage";
 import AppPage from "./pages/AppPage";
+import Model3DPage from "./pages/Model3DPage";
 import { ConfigLayout } from "./components/ConfigLayout";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { KeymapPanel } from "./components/KeymapPanel";
@@ -86,6 +87,7 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
           <Route path="/specs" element={<SpecsPage />} />
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/app" element={<AppPage />} />
+          <Route path="/model3d" element={<Model3DPage />} />
 
           {/* Config 区：二级 Tab */}
           <Route path="/config" element={<ConfigLayout />}>

@@ -1,0 +1,207 @@
+/* =====================================================================
+   EKeysWeb — 3D Model preview page
+   ===================================================================== */
+
+.hero--model3d {
+  padding: 56px 0 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.model3d-hero {
+  display: grid;
+  grid-template-columns: 0.85fr 1.15fr;
+  gap: 48px;
+  align-items: stretch;
+  min-height: 70vh;
+}
+
+.model3d-hero__copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.model3d-hero__stage {
+  position: relative;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  min-height: 540px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .model3d-hero__stage {
+  background: var(--bg);
+}
+
+/* ----- Keyboard3D component ---- */
+.kbd3d {
+  position: absolute;
+  inset: 0;
+}
+.kbd3d__canvas {
+  position: absolute;
+  inset: 0;
+}
+.kbd3d__canvas canvas {
+  cursor: grab;
+}
+.kbd3d__canvas canvas:active {
+  cursor: grabbing;
+}
+.kbd3d__hint {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.78);
+  text-transform: uppercase;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  z-index: 2;
+}
+:root:not([data-theme="dark"]) .kbd3d__hint {
+  color: rgba(20, 20, 28, 0.78);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+.kbd3d__legend {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.kbd3d__legend-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.kbd3d__chip {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  padding: 3px 8px;
+  background: var(--accent);
+  color: #fff;
+  text-transform: uppercase;
+}
+.kbd3d__legend-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.85);
+  text-transform: uppercase;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  z-index: 2;
+}
+:root:not([data-theme="dark"]) .kbd3d__legend-label {
+  color: rgba(20, 20, 28, 0.85);
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.6);
+}
+
+/* ----- Specs cards ---- */
+.model3d-specs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+.model3d-spec {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 28px;
+  background: var(--bg);
+  position: relative;
+}
+.model3d-spec--accent {
+  background: var(--bg-invert);
+  color: var(--bg);
+}
+.model3d-spec__num {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  color: var(--fg-faint);
+  margin-bottom: 24px;
+}
+.model3d-spec--accent .model3d-spec__num {
+  color: var(--accent);
+}
+.model3d-spec__title {
+  font-family: var(--font-display);
+  font-size: 28px;
+  letter-spacing: 0;
+  margin: 0 0 16px;
+}
+.model3d-spec__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.model3d-spec__list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  border-bottom: 1px dashed currentColor;
+  padding-bottom: 4px;
+  opacity: 0.92;
+}
+.model3d-spec__list li:last-child {
+  border-bottom: none;
+}
+.model3d-spec__list span {
+  letter-spacing: 0.16em;
+  opacity: 0.6;
+}
+.model3d-spec__list strong {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 960px) {
+  .model3d-hero {
+    grid-template-columns: 1fr;
+    gap: 32px;
+    min-height: auto;
+  }
+  .model3d-hero__stage {
+    min-height: 420px;
+  }
+  .model3d-specs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 600px) {
+  .model3d-hero__stage {
+    min-height: 360px;
+  }
+  .model3d-specs {
+    grid-template-columns: 1fr;
+  }
+  .kbd3d__hint {
+    font-size: 9px;
+  }
+  .kbd3d__legend {
+    top: auto;
+    bottom: 16px;
+    right: 12px;
+  }
+  .kbd3d__legend-row {
+    flex-direction: row-reverse;
+  }
+}
