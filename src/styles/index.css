@@ -12,4 +12,6 @@
 @import "./pages/app.css";
 @import "./pages/config.css";
 @import "./pages/model3d.css";
+@import "./pages/showcase.css";
+@import "./pages/prototype.css";
 @import "./responsive.css";

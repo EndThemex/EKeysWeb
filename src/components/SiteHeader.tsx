@@ -44,6 +44,9 @@ export default function SiteHeader() {
           <NavLink to="/model3d" className={({ isActive }) => (isActive ? "is-active" : "")}>
             {t("nav.model3d")}
           </NavLink>
+          <NavLink to="/showcase" className={({ isActive }) => (isActive ? "is-active" : "")}>
+            {t("nav.showcase")}
+          </NavLink>
           <NavLink to="/docs" className={({ isActive }) => (isActive ? "is-active" : "")}>
             {t("nav.docs")}
           </NavLink>

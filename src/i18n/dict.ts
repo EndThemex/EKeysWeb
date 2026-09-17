@@ -88,6 +88,67 @@ export const DICT: Record<Lang, Dict> = {
     "model3d.specs.04.value.1": "6 cm",
     "model3d.specs.04.value.2": "28 facets",
     "model3d.specs.04.value.3": "white LED line",
+
+    /* ---------------- Showcase page (single-page product tour) ---------------- */
+    "nav.showcase": "Showcase",
+    "site.title.showcase": "Showcase · EKeys",
+    "site.title.prototype": "Prototype · EKeys",
+    "showcase.hero.eyebrow": "Single-page · product tour",
+    "showcase.hero.title.1": "EKeys",
+    "showcase.hero.title.2": "in five moves.",
+    "showcase.hero.lede":
+      "An auto-playing tour of the five things EKeys does best. The 3D model stays on stage and rotates between positions as the feature changes. Click the knob, or wait — both work.",
+    "showcase.hero.cta.primary": "open docs",
+    "showcase.hero.cta.secondary": "← back home",
+    "showcase.status.next": "Next",
+    "showcase.status.prev": "Prev",
+    "showcase.status.pause": "Pause",
+    "showcase.status.resume": "Resume",
+    "showcase.status.idle": "Click the knob to start",
+    "showcase.screen.hint": "Click the knob → next feature",
+    "showcase.feature.1.title": "8 profiles, one knob.",
+    "showcase.feature.1.lede":
+      "Each profile bundles a keymap, an RGB theme and a display label. Spin the knob to switch the entire personality of the keyboard on the fly.",
+    "showcase.feature.1.bullets": [
+      "8 storage slots in flash",
+      "keymap + RGB + theme + PC status",
+      "switch from the app, a key, or the LCD menu",
+    ],
+    "showcase.feature.2.title": "One key, three fates.",
+    "showcase.feature.2.lede":
+      "Every position on the 3 × 4 grid is bound by a three-channel resolver: a function key, a normal key sequence, or a multi-step macro. Add FUN1 / FUN2 for two more layers.",
+    "showcase.feature.2.bullets": [
+      "key / combo / multi-press / text / firmware-fn",
+      "FUN1 + FUN2 modifier layers",
+      "diff preview before sending",
+    ],
+    "showcase.feature.3.title": "11 LEDs, 9 moods.",
+    "showcase.feature.3.lede":
+      "One SK6812 LED per cap. Solid, breathing, rainbow, reactive, audio-reactive and more. Reactive mode lights the key under your finger as it travels.",
+    "showcase.feature.3.bullets": [
+      "9 built-in modes",
+      "click highlight (flash / ripple)",
+      "HSV picker + brightness slider",
+    ],
+    "showcase.feature.4.title": "Hold to talk.",
+    "showcase.feature.4.lede":
+      "Hold the assigned key, speak, release — the recognized text is typed at the cursor. Default engine is Tencent Cloud one-shot ASR. Secrets are stored on-device, masked in the UI.",
+    "showcase.feature.4.bullets": [
+      "Tencent Cloud one-shot ASR",
+      "typed at cursor via HID",
+      "auto-mute music screen",
+    ],
+    "showcase.feature.5.title": "Speaking the same protocol.",
+    "showcase.feature.5.lede":
+      "EKeysApp and the device talk a JSON line protocol over USB CDC (115200) and over Wi-Fi (TCP 30000 / UDP 30001). 23 commands cover everything from keymaps to OTA.",
+    "showcase.feature.5.bullets": [
+      "23 commands, line-delimited JSON",
+      "PC status / music / OTA / scenes",
+      "USB-C, BLE, 2.4G transports",
+    ],
+    "showcase.kbd.hint": "DRAG · ROTATE · CLICK · KNOB TO ADVANCE",
+    "showcase.footer.note":
+      "Click the knob (top-right of the keyboard) to advance. The tour auto-plays every 6 s and resets on any interaction.",
     "site.description":
       "EKeys is an 11-key macropad with a rotary encoder, a color LCD strip, per-key RGB, offline voice input and open-source firmware.",
 
@@ -936,6 +997,67 @@ export const DICT: Record<Lang, Dict> = {
     "model3d.specs.04.value.1": "6 cm",
     "model3d.specs.04.value.2": "28 棱",
     "model3d.specs.04.value.3": "白色 LED 灯条",
+
+    /* ---------------- Showcase 单页产品展示 ---------------- */
+    "nav.showcase": "展示",
+    "site.title.showcase": "展示 · EKeys",
+    "site.title.prototype": "原型 · EKeys",
+    "showcase.hero.eyebrow": "单页 · 产品走秀",
+    "showcase.hero.title.1": "EKeys",
+    "showcase.hero.title.2": "五个动作讲完。",
+    "showcase.hero.lede":
+      "EKeys 最值得讲的 5 件事，自动轮播。3D 键盘常驻舞台中央，每个功能切换时模型移动 / 缩放 / 旋转。点旋钮或等 6 秒，都能前进。",
+    "showcase.hero.cta.primary": "看文档",
+    "showcase.hero.cta.secondary": "← 返回首页",
+    "showcase.status.next": "下一项",
+    "showcase.status.prev": "上一项",
+    "showcase.status.pause": "暂停",
+    "showcase.status.resume": "继续",
+    "showcase.status.idle": "点击旋钮开始",
+    "showcase.screen.hint": "点击旋钮 → 下一项",
+    "showcase.feature.1.title": "8 套键位，一颗旋钮。",
+    "showcase.feature.1.lede":
+      "每个 Profile 把键位、RGB 主题、屏幕标签打成一个包。拧一下旋钮，整套键盘的人格立刻换。",
+    "showcase.feature.1.bullets": [
+      "闪存里 8 个槽位",
+      "键位 + RGB + 主题 + PC 状态",
+      "App / 专用键 / LCD 菜单都能切",
+    ],
+    "showcase.feature.2.title": "一颗键，三种命运。",
+    "showcase.feature.2.lede":
+      "3 × 4 网格的每个位置由三通道解析器决定：单个功能键、普通键序列或宏。再叠加 FUN1 / FUN2 两层修饰键。",
+    "showcase.feature.2.bullets": [
+      "键 / 组合 / 多键同按 / 文本 / 固件功能",
+      "FUN1 + FUN2 修饰层",
+      "下发前先看 diff 预览",
+    ],
+    "showcase.feature.3.title": "11 颗灯，9 种心情。",
+    "showcase.feature.3.lede":
+      "每颗键帽下放一颗 SK6812 LED。常亮、呼吸、彩虹、按键高亮、音频律动……按下时对应键会自动亮起。",
+    "showcase.feature.3.bullets": [
+      "内置 9 种模式",
+      "按键高亮（闪烁 / 波纹）",
+      "HSV 取色 + 亮度滑块",
+    ],
+    "showcase.feature.4.title": "按住就说话。",
+    "showcase.feature.4.lede":
+      "按住指定键、松开就识别结束，识别结果直接输入到当前光标。默认使用腾讯云一句话识别；UI 中密钥打码、本地保存。",
+    "showcase.feature.4.bullets": [
+      "腾讯云一句话识别",
+      "通过 HID 直出到光标",
+      "音乐屏自动避让",
+    ],
+    "showcase.feature.5.title": "和 App 说同一种话。",
+    "showcase.feature.5.lede":
+      "EKeysApp 与设备通过 USB CDC（115200）和 Wi-Fi（TCP 30000 / UDP 30001）上的行分隔 JSON 协议通信，共 23 条命令覆盖键位、OTA、媒体等全部场景。",
+    "showcase.feature.5.bullets": [
+      "23 条命令 / 行分隔 JSON",
+      "PC 状态 / 媒体 / OTA / 场景",
+      "USB-C / 蓝牙 / 2.4G 三链路",
+    ],
+    "showcase.kbd.hint": "拖拽 · 旋转 · 点击旋钮 · 下一项",
+    "showcase.footer.note":
+      "点击键盘右上角的旋钮即可切换。走秀每 6 秒自动前进一次，任意操作都会重置计时。",
     "site.description":
       "EKeys 是一款 11 键宏键盘,带旋转编码器、窄条彩色 LCD、每键 RGB、离线语音转文字和开源固件。",
 

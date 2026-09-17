@@ -1,15 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { STLLoader } from "three/examples/jsm/loaders/STLLoader.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 import { useI18n } from "../i18n/useI18n.tsx";
-import keycapUrl from "../stls/keycap_zzz01.stl?url";
 
 /* ============================================================
    Keyboard3D — Three.js 3D 模型展示组件
    - 键盘整体：宽 80cm × 高 93cm × 厚 18cm
    - 正面：上部 428:124 LCD 屏, 下部 3×4 按键矩阵(右下角为旋钮)
-   - 按键的实体形状来自 src/stls/keycap_zzz01.stl
+   - 按键为程序化生成(无外部 STL 资源)
    - 单位约定：场景中使用 cm 与 Three.js 单位 1:1,
      相机与光照按 cm 尺度调校。
    ============================================================ */
@@ -194,6 +192,8 @@ function makeArcIndicator(direction: -1 | 1): THREE.Line {
 }
 
 // ---------- 按键标签纹理 ----------
+// 注意: labelCanvasCache 是模块级共享缓存, 生命周期跨越组件挂载/卸载.
+// cleanup 时必须清空, 否则已 dispose 的纹理会被永久引用, 导致 GPU 资源泄漏.
 const labelCanvasCache: Record<string, THREE.CanvasTexture> = {};
 function makeLabelTexture(
   text: string,
@@ -202,7 +202,9 @@ function makeLabelTexture(
   // 键帽颜色在浅色主题下是深色, 在深色主题下是浅色, 所以标签字色反过来
   const color = theme === "dark" ? "#1a1a1a" : "#f5f3ee";
   const cacheKey = `${theme}-${text}`;
-  if (labelCanvasCache[cacheKey]) return labelCanvasCache[cacheKey];
+  // 若缓存命中但底层纹理已被 dispose(场景已重建过), 跳过以避免复用已失效纹理
+  const cached = labelCanvasCache[cacheKey];
+  if (cached && cached.image.width > 0) return cached;
   const c = document.createElement("canvas");
   c.width = 256;
   c.height = 256;
@@ -221,41 +223,94 @@ function makeLabelTexture(
   return tex;
 }
 
-// ---------- 加载并预处理 STL 键帽几何 ----------
-// 原始 STL 包围盒 (mm): 18 × 19.4 × 10.7 (W × D × H), 中心在 (125.96, 90, 5.35).
-// 我们把它: 1) 中心化; 2) 翻正(让顶面 +Y 朝外); 3) 按比例缩放到与按键槽吻合。
-async function loadKeycapGeometry(): Promise<THREE.BufferGeometry> {
-  const loader = new STLLoader();
-  const geometry = await loader.loadAsync(keycapUrl);
-  geometry.center();
-  // 原 STL 的高度在 Z, 我们场景里键帽高度沿 Z。
-  // 包围盒计算后:
-  geometry.computeBoundingBox();
-  const bb = geometry.boundingBox!;
-  const size = new THREE.Vector3();
-  bb.getSize(size);
-  // 原 STL 是 18×19.4×10.7 (mm), 接近方形。
-  // 缩放到 KEY_W × KEY_H × KEY_HEIGHT(cm) 范围内的合适大小。
-  // 这里希望键帽顶面与 KEY_HEIGHT 相当, 底面再坐下去一点(凸出于面板)。
-  // 计算缩放比例: XY 取小的等比缩放(保证键帽不超出槽), Z 单独缩放控制高度。
-  const targetW = KEY_W * 0.92; // 比槽略小一圈, 留出 KEY_GAP 视觉感
-  const targetD = KEY_H * 0.92;
-  const targetH = KEY_HEIGHT * 1.1; // 顶面比按键厚略高一点, 放大键帽高度
-  const scaleX = targetW / size.x;
-  const scaleY = targetD / size.y;
-  const scaleZ = targetH / size.z;
-  // XY 取最小等比, Z 单独, 让 XY 真正适配按键槽
-  const xyScale = Math.min(scaleX, scaleY);
-  geometry.scale(xyScale, xyScale, scaleZ);
-  // 重新居中并让底面落在 z=0
-  geometry.computeBoundingBox();
-  geometry.translate(
-    -(geometry.boundingBox!.min.x + geometry.boundingBox!.max.x) / 2,
-    -(geometry.boundingBox!.min.y + geometry.boundingBox!.max.y) / 2,
-    -geometry.boundingBox!.min.z,
+// ---------- 程序化生成键帽几何 ----------
+// 键帽为截顶金字塔 (frustum): 底面稍大, 顶面稍小, 模拟真实键帽的轻微内收;
+// 四个角做圆角, 让按键不至于看起来是硬边方块; 底面在 z=0, 顶面在 z=KEY_HEIGHT.
+// 所有按键共用同一个共享几何, 按键通过 mesh.scale 适配 KEY_W / KEY_H 槽位。
+function createKeycapGeometry(): THREE.BufferGeometry {
+  const baseW = 1;
+  const baseD = 1;
+  // 顶面相对底面的内收比例 (0~1), 0=直筒, 1=顶尖
+  const inset = 0.12;
+  const topW = baseW * (1 - inset);
+  const topD = baseD * (1 - inset);
+  const h = KEY_HEIGHT;
+  // 圆角半径 (相对底面边长), 太小看不出弧度, 太大顶面会被吃掉
+  const radius = 0.08;
+
+  // 用 ExtrudeGeometry + 形状构造: 取一个圆角矩形作底面, 沿 Z 挤出并缩放顶面
+  // 更简洁: 直接手工构造 BufferGeometry, 顶点 + 法线 + 索引都明确可控。
+  const positions: number[] = [];
+  const indices: number[] = [];
+
+  // 圆角矩形采样点数 (每角 1 段近似即可, 简化代码; 视觉上与 8 段圆弧差异不明显)
+  // 我们用 4 段近似圆角的截顶金字塔, 顶点更少, 性能好。
+  // 底面顶点: 8 个 (4 角 + 4 边中点)
+  // 顶面顶点: 8 个, 沿 X/Y 内缩到 (topW/2, topD/2)
+  const halfBaseW = baseW / 2;
+  const halfBaseD = baseD / 2;
+  const r = radius;
+
+  // 底面顶点顺序: 0..7 顺时针围绕底面
+  const bottom: [number, number][] = [
+    [-halfBaseW + r, -halfBaseD], // 0 左下
+    [halfBaseW - r, -halfBaseD],  // 1 右下
+    [halfBaseW, -halfBaseD + r],  // 2 右下角起
+    [halfBaseW, halfBaseD - r],   // 3 右上
+    [halfBaseW - r, halfBaseD],   // 4 右上边
+    [-halfBaseW + r, halfBaseD],  // 5 左上
+    [-halfBaseW, halfBaseD - r],  // 6 左上角起
+    [-halfBaseW, -halfBaseD + r], // 7 左下边
+  ];
+  // 顶面顶点 8..15, 与底面同顺序, 沿 X/Y 内缩
+  const top: [number, number][] = bottom.map(([x, y]) => {
+    // 顶点向中心内缩 (inset), 同时圆角也按同比例缩放
+    const sx = Math.sign(x) || 0;
+    const sy = Math.sign(y) || 0;
+    return [
+      sx * Math.max(0, Math.abs(x) - r * inset),
+      sy * Math.max(0, Math.abs(y) - r * inset),
+    ];
+  });
+
+  // 写入底面顶点 (z=0)
+  for (const [x, y] of bottom) positions.push(x, y, 0);
+  // 写入顶面顶点 (z=h)
+  for (const [x, y] of top) positions.push(x, y, h);
+
+  // 侧面: 8 个四边形面 (底面顶点 i -> 底面 i+1 -> 顶面 i+1 -> 顶面 i)
+  for (let i = 0; i < 8; i++) {
+    const a = i;
+    const b = (i + 1) % 8;
+    const c = 8 + b;
+    const d = 8 + i;
+    indices.push(a, b, c, a, c, d);
+  }
+  // 顶面: 中心扇形
+  const topCenter = positions.length / 3;
+  positions.push(0, 0, h);
+  for (let i = 0; i < 8; i++) {
+    const a = 8 + i;
+    const b = 8 + ((i + 1) % 8);
+    indices.push(topCenter, a, b);
+  }
+  // 底面: 中心扇形 (法线朝 -Z)
+  const botCenter = positions.length / 3;
+  positions.push(0, 0, 0);
+  for (let i = 0; i < 8; i++) {
+    const a = i;
+    const b = (i + 1) % 8;
+    indices.push(botCenter, b, a); // 反序保证法线朝 -Z
+  }
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute(
+    "position",
+    new THREE.Float32BufferAttribute(positions, 3),
   );
-  geometry.computeVertexNormals();
-  return geometry;
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 // =================== 主组件 ===================
@@ -272,31 +327,16 @@ export default function Keyboard3D() {
     const container = containerRef.current;
     if (!container) return;
 
-    let cleanup: (() => void) | null = null;
-    let cancelled = false;
-
-    (async () => {
-      try {
-        const keycapGeo = await loadKeycapGeometry();
-        if (cancelled) {
-          keycapGeo.dispose();
-          return;
-        }
-        const result = buildScene(container, theme, keycapGeo);
-        cleanup = result.cleanup;
-        applyPresetRef.current = (v: CameraView) => {
-          result.applyPreset(v);
-          setActiveView(v);
-        };
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("[Keyboard3D] failed to load keycap STL:", err);
-      }
-    })();
+    // 键帽几何同步创建, 不再走异步 STL 加载
+    const keycapGeo = createKeycapGeometry();
+    const result = buildScene(container, theme, keycapGeo);
+    applyPresetRef.current = (v: CameraView) => {
+      result.applyPreset(v);
+      setActiveView(v);
+    };
 
     return () => {
-      cancelled = true;
-      if (cleanup) cleanup();
+      result.cleanup();
     };
   }, [theme]);
 
@@ -336,28 +376,6 @@ export default function Keyboard3D() {
         <span>DRAG · ROTATE</span>
         <span>SCROLL · ZOOM</span>
         <span>CLICK · PRESS KEY / KNOB</span>
-      </div>
-      <div className="kbd3d__legend">
-        <div className="kbd3d__legend-row">
-          <span className="kbd3d__chip">80 cm</span>
-          <span className="kbd3d__legend-label">WIDTH</span>
-        </div>
-        <div className="kbd3d__legend-row">
-          <span className="kbd3d__chip">93 cm</span>
-          <span className="kbd3d__legend-label">HEIGHT</span>
-        </div>
-        <div className="kbd3d__legend-row">
-          <span className="kbd3d__chip">18 cm</span>
-          <span className="kbd3d__legend-label">DEPTH</span>
-        </div>
-        <div className="kbd3d__legend-row">
-          <span className="kbd3d__chip">428 : 124</span>
-          <span className="kbd3d__legend-label">LCD</span>
-        </div>
-        <div className="kbd3d__legend-row">
-          <span className="kbd3d__chip">3 × 4</span>
-          <span className="kbd3d__legend-label">KEYS</span>
-        </div>
       </div>
     </div>
   );
@@ -400,30 +418,8 @@ function buildScene(
 
   // ---- Scene & Camera -------------------------------------------
   const scene = new THREE.Scene();
-  // 用渐变天空做背景 — 与主题 token 协调, 顶部冷色, 底部暖色,
-  // 让任何朝向的键盘都能从背景里跳出来, 但饱和度更低, 不抢戏。
-  const bgCanvas = document.createElement("canvas");
-  bgCanvas.width = 2;
-  bgCanvas.height = 512;
-  const bgCtx = bgCanvas.getContext("2d")!;
-  const bgGrad = bgCtx.createLinearGradient(0, 0, 0, 512);
-  if (isDark) {
-    // 深色: 顶部稍冷的深蓝灰, 底部略微带暖的中性灰,
-    // 整体压低饱和度避免与外壳橙色高光打架
-    bgGrad.addColorStop(0, "#161a26");
-    bgGrad.addColorStop(0.55, "#0e1014");
-    bgGrad.addColorStop(1, "#1c1410");
-  } else {
-    // 浅色: 顶部冷灰蓝, 底部米白偏暖, 营造柔和摄影棚感
-    bgGrad.addColorStop(0, "#e6eaf2");
-    bgGrad.addColorStop(0.55, "#efebe2");
-    bgGrad.addColorStop(1, "#f3e3d2");
-  }
-  bgCtx.fillStyle = bgGrad;
-  bgCtx.fillRect(0, 0, 2, 512);
-  const bgTex = new THREE.CanvasTexture(bgCanvas);
-  bgTex.colorSpace = THREE.SRGBColorSpace;
-  scene.background = bgTex;
+  // 背景: 直接用纯色, 不再渲染渐变天空, 让键盘孤立展示
+  scene.background = isDark ? new THREE.Color(0x0a0c12) : new THREE.Color(0xf5f3ee);
 
   // ---- 环境贴图 (PBR 反射) --------------------------------------
   // 用 RoomEnvironment 生成程序化室内场景作为反射源,
@@ -446,9 +442,9 @@ function buildScene(
     2000,
   );
   // 3/4 视角: 略偏右上, 仰角 -10°, 起始距离拉远以让键盘在画面中更小。
-  // yaw≈-0.55rad(右前), pitch≈-0.18rad(略俯视), 距离 240cm。
+  // 键盘几何中心已置于原点, lookAt 直接瞄准原点。
   camera.position.set(160, 88, 220);
-  camera.lookAt(0, 10, 0);
+  camera.lookAt(0, 0, 0);
 
   // ---- Lighting --------------------------------------------------
   // 半球光替代纯环境光: 天空冷色 / 地面暖色, 明暗过渡更自然,
@@ -490,44 +486,14 @@ function buildScene(
   topFill.position.set(0, 220, 0);
   scene.add(topFill);
 
-  // ---- 整体舞台 (键盘 + 展台统一 Y 偏移) --------------------
+  // ---- 整体舞台 (键盘独立展示, 不再放展台) --------------------
   const stage = new THREE.Group();
-  const STAGE_Y_OFFSET = -30; // 整体 Y 下移量 (cm), 改这个就能上下移动舞台
-  stage.position.y = STAGE_Y_OFFSET;
   scene.add(stage);
-
-  // ---- Ground (圆形展台) ------------------------------------
-  // 转盘颜色比键盘外壳明显更暗, 形成"深底盘"对比, 让键盘主体从展台上跳出来。
-  // 浅色主题: 深暖灰(比外壳 #c9c2b3 深一档);
-  // 深色主题: 接近全黑(比外壳 #1c1f26 更暗), 强化阴影层次。
-  const groundGeo = new THREE.CircleGeometry(220, 64);
-  const groundMat = new THREE.MeshStandardMaterial({
-    color: isDark ? 0x0a0c12 : 0x4a463d,
-    roughness: isDark ? 0.8 : 0.85,
-    metalness: isDark ? 0.05 : 0.1,
-  });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.y = -KEYBOARD_D / 2 - 0.05;
-  ground.receiveShadow = true;
-  stage.add(ground);
-
-  // 在展台上加一圈 ring 让底盘更明显 — 透明度提升, 不再像一道硬边
-  const ringGeo = new THREE.RingGeometry(150, 158, 96);
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0xff5722,
-    transparent: true,
-    opacity: isDark ? 0.55 : 0.4,
-    side: THREE.DoubleSide,
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = -Math.PI / 2;
-  ring.position.y = -KEYBOARD_D / 2 - 0.04;
-  stage.add(ring);
 
   // ---- Keyboard group -------------------------------------------
   const keyboard = new THREE.Group();
-  keyboard.position.y = KEYBOARD_D / 2 + 0.3 + 30;
+  // 键盘居中: 让键盘的几何中心位于原点附近, 便于相机和光照聚焦
+  keyboard.position.y = 0;
   stage.add(keyboard);
 
   // 外壳 — 圆角 box
@@ -647,6 +613,8 @@ function buildScene(
   keysGroup.add(slot);
 
   const keys: KeyInfo[] = [];
+  // 程序化键帽几何是 1×1×KEY_HEIGHT, 顶面 z = KEY_HEIGHT
+  const capH = KEY_HEIGHT;
   const keyMat = new THREE.MeshStandardMaterial({
     // 键帽: 比键槽亮、比外壳浅, 形成三层明度梯度:
     // 键槽(深) -> 外壳(中) -> 键帽(亮)
@@ -813,11 +781,12 @@ function buildScene(
         keysGroup.add(rightArc);
         knobArrows.push(rightArc);
       } else {
-        // ---- 使用 STL 键帽 -------------------------------
-        // 我们的键帽几何: 顶面 +Z 朝外, 底面在 z=0, XY 居中。
-        // 场景里: x=横向槽位, y=纵向槽位, z=面板表面(z=0)。
+        // ---- 使用程序化键帽几何 -------------------------------
+        // 几何: 1×1×KEY_HEIGHT 单位立方 (底面 z=0, 顶面 z=KEY_HEIGHT),
+        // 通过 mesh.scale 适配 KEY_W / KEY_H, 留 8% 缩进保持 KEY_GAP 视觉感。
         // 让键帽底面略微沉入面板下方 0.3cm, 顶部凸出 ~KEY_HEIGHT cm。
         const keyMesh = new THREE.Mesh(keycapGeo, keyMat);
+        keyMesh.scale.set(KEY_W * 0.92, KEY_H * 0.92, 1);
         keyMesh.position.set(x, y, -0.3);
         keyMesh.castShadow = true;
         keyMesh.receiveShadow = true;
@@ -838,9 +807,7 @@ function buildScene(
           transparent: true,
         });
         const labelSprite = new THREE.Sprite(labelMat);
-        // 标签放到键帽顶面上方一点
-        keycapGeo.computeBoundingBox();
-        const capH = keycapGeo.boundingBox!.max.z - keycapGeo.boundingBox!.min.z;
+        // 标签放到键帽顶面上方一点 (capH = KEY_HEIGHT, 因几何 1×1×KEY_HEIGHT)
         const scale = Math.min(KEY_W, KEY_H) * 0.5;
         labelSprite.scale.set(scale, scale, 1);
         labelSprite.position.set(x, y, capH + 0.3);
@@ -921,6 +888,9 @@ function buildScene(
     if (preset) activePreset = preset;
     else activePreset = "free";
   }
+
+  // 跟踪所有挂起的定时器, 避免组件卸载后回调触发对已释放 mesh 的引用
+  const pendingTimers: number[] = [];
 
   function applyPreset(name: keyof typeof PRESETS) {
     const p = PRESETS[name];
@@ -1034,7 +1004,9 @@ function buildScene(
     );
     if (k) {
       pressKey(k);
-      setTimeout(() => releaseKey(k!), 180);
+      pendingTimers.push(
+        window.setTimeout(() => releaseKey(k!), 180),
+      );
       // 旋钮本体点击不再旋转, 旋转改为点箭头触发
     }
   }
@@ -1081,8 +1053,8 @@ function buildScene(
 
     // lookAt 跟随 pitch 微调: pitch 越大(越俯视)目标点越靠下(屏幕底部),
     // 让俯视时键盘不至于飞出画面顶部; pitch 为负(从下方仰视)时目标点抬高。
-    // 经验系数 -15 让 ±1 rad 的视角变化让目标点上下浮动 ±15cm。
-    const lookY = 10 + Math.sin(pitch) * -15;
+    // 键盘中心在 y=0, 基准 lookY 也归零。
+    const lookY = 0 + Math.sin(pitch) * -15;
     const cx = Math.sin(yaw) * Math.cos(pitch) * camDistance;
     const cy = Math.sin(pitch) * camDistance;
     const cz = Math.cos(yaw) * Math.cos(pitch) * camDistance;
@@ -1133,17 +1105,25 @@ function buildScene(
     cleanup: () => {
       cancelAnimationFrame(rafId);
       ro.disconnect();
+      // 清理挂起的定时器, 避免回调在场景释放后触发 releaseKey 访问已 dispose 的 mesh
+      pendingTimers.forEach((id) => window.clearTimeout(id));
+      pendingTimers.length = 0;
       dom.removeEventListener("pointerdown", onPointerDown);
       dom.removeEventListener("pointermove", onPointerMove);
       dom.removeEventListener("pointerup", onPointerUp);
       dom.removeEventListener("pointerleave", onPointerUp);
       dom.removeEventListener("wheel", onWheel);
       dom.removeEventListener("click", onClick);
-      bgTex.dispose();
+      // scene.background 是纯 Color 对象, 无需 dispose
       envRT.texture.dispose();
       envRT.dispose();
       screenTex.dispose();
+      // 清空模块级标签缓存: dispose 所有纹理并删除引用,
+      // 避免下次重建场景时拿到已 dispose 的失效纹理, 也避免已 dispose 对象被永久持有。
       Object.values(labelCanvasCache).forEach((t) => t.dispose());
+      for (const k of Object.keys(labelCanvasCache)) {
+        delete labelCanvasCache[k];
+      }
       brandTex.dispose();
       scene.traverse((obj) => {
         const mesh = obj as THREE.Mesh;

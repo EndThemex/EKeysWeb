@@ -9,6 +9,8 @@ import SpecsPage from "./pages/SpecsPage";
 import DocsPage from "./pages/DocsPage";
 import AppPage from "./pages/AppPage";
 import Model3DPage from "./pages/Model3DPage";
+import ShowcasePage from "./pages/ShowcasePage";
+import PrototypePage from "./pages/PrototypePage";
 import { ConfigLayout } from "./components/ConfigLayout";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { KeymapPanel } from "./components/KeymapPanel";
@@ -20,6 +22,12 @@ import { AboutPanel } from "./components/AboutPanel";
 import { LogPanel } from "./components/LogPanel";
 import { useReveal } from "./hooks/useReveal";
 import { useDocumentMeta } from "./hooks/useDocumentMeta";
+
+/** /showcase /prototype 是完全脱离外壳的独立全屏页 */
+const STANDALONE_ROUTES = new Set<string>(["/showcase", "/prototype"]);
+function isStandalone(pathname: string): boolean {
+  return STANDALONE_ROUTES.has(pathname.split("/").slice(0, 2).join("/") || "/");
+}
 
 /** 切换路由时回到顶部，同时更新文档标题 */
 function useScrollOnRouteChange() {
@@ -64,6 +72,7 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
   useDocumentMeta();
 
   const location = useLocation();
+  const standalone = isStandalone(location.pathname);
   // 仅在一级路由变化时重建 reveal observer；二级 Tab 切换不动它，
   // 但因为 config 面板不用 [data-reveal]，MutationObserver 在 Tab 切
   // 换时不会观察到任何新目标，等价于 no-op。
@@ -77,6 +86,18 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
     return () => window.cancelAnimationFrame(id);
   }, [onMounted]);
 
+  // 独立页(如 /showcase):完全脱离 SiteHeader / Footer / ScrollCue / app-root 外壳,
+  // 自行负责全屏布局。其余路由走标准站点外壳。
+  if (standalone) {
+    return (
+      <Routes>
+        <Route path="/showcase" element={<ShowcasePage />} />
+        <Route path="/prototype" element={<PrototypePage />} />
+        <Route path="*" element={<HomePage />} />
+      </Routes>
+    );
+  }
+
   return (
     <>
       <SiteHeader />
@@ -88,6 +109,8 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
           <Route path="/docs" element={<DocsPage />} />
           <Route path="/app" element={<AppPage />} />
           <Route path="/model3d" element={<Model3DPage />} />
+<Route path="/showcase" element={<ShowcasePage />} />
+<Route path="/prototype" element={<PrototypePage />} />
 
           {/* Config 区：二级 Tab */}
           <Route path="/config" element={<ConfigLayout />}>

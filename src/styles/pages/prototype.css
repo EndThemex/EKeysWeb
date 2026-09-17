@@ -1,0 +1,833 @@
+/* =====================================================================
+   EKeysWeb — Prototype page
+   3D 键盘模型作为全屏背景,网页内容覆盖在它上面
+   独立全屏,完全不依赖站点外壳
+   配色跟随主站 design tokens:亮色 / 暗色双主题
+   ===================================================================== */
+
+.proto {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(
+      circle at 30% 30%,
+      var(--proto-bg-inner, #1a1e24),
+      var(--proto-bg-outer, #0a0c0f)
+    );
+  color: var(--fg);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+  transition:
+    background 0.35s ease,
+    color 0.35s ease;
+}
+
+/* ====== 全屏 3D 模型背景 ====== */
+.proto3d-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: auto; /* 接收鼠标拖拽 / 滚轮 */
+}
+
+.proto3d-bg__canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* 主题切换按钮 — 移入悬浮工具条内,与其他控件并排 */
+.proto3d-bg__theme-btn {
+  /* 在工具条内显示时取消 fixed,样式由 .btn-icon 兜底 */
+  position: static;
+  bottom: auto;
+  right: auto;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.proto3d-bg__hint {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 14px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--proto-hint, rgba(160, 180, 200, 0.4));
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 4;
+  transition: color 0.35s ease;
+}
+
+/* ====== 顶部状态条 ======
+ * 配色用主站 token 的低透明混合,
+ * 亮色主题下背景自动变白,暗色下自动变黑。 */
+.proto__topbar {
+  position: relative;
+  z-index: 10;
+  background: color-mix(in srgb, var(--bg) 80%, transparent);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--border-soft);
+  flex-shrink: 0;
+}
+
+.proto__topbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+  padding: 0 24px;
+}
+
+.proto__status-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  color: var(--fg-muted);
+}
+
+.proto__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.proto__status-right {
+  display: flex;
+  gap: 28px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  color: var(--fg-muted);
+}
+
+.proto__status-right span {
+  opacity: 0.8;
+}
+
+/* ====== 悬浮工具条 — 翻页 / 暂停 / 操作提示 =====
+ * 不再独占一行,改为浮在 3D 模型上方;位于顶部状态条下方,
+ * 左 PREV / PAUSE / NEXT 按钮,右键盘快捷键提示(`.proto__hint`)靠右对齐。 */
+.proto__toolbar {
+  position: absolute;
+  top: 76px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: color-mix(in srgb, var(--bg) 75%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  padding: 6px 12px;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+
+.proto__toolbar .proto__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proto__toolbar .proto__hint {
+  margin-left: auto;
+}
+
+/* ====== 主舞台 ======
+ * flex: 1 + min-height 让 stage 撑满剩余空间,
+ * 即使文案很短底部控制栏也会被推到页面底部。 */
+.proto__stage {
+  position: relative;
+  z-index: 5;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 24px 32px;
+  min-height: 0;
+}
+
+.proto__grid {
+  width: 100%;
+  max-width: 1400px;
+  display: grid;
+  grid-template-columns: 1fr 1.6fr 1fr;
+  align-items: center;
+  gap: 24px;
+}
+
+.proto__col--spacer {
+  /* 中部留空,3D 模型在 fixed 背景层 */
+  pointer-events: none;
+}
+
+.proto__col {
+  min-width: 0;
+}
+
+.proto__col--enter {
+  animation: protoColIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes protoColIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ====== 左文案 ====== */
+.proto__col--copy {
+  padding: 8px 16px 8px 8px;
+}
+
+.proto__copy--left {
+  text-align: left;
+  align-items: flex-start;
+}
+
+.proto__copy--right {
+  text-align: right;
+  align-items: flex-end;
+}
+
+.proto__copy-subtitle {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--fg-muted);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.proto__copy-title {
+  font-size: clamp(28px, 3.2vw, 38px);
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 0 0 16px;
+  color: var(--fg);
+  max-width: 340px;
+}
+
+.proto__copy--right .proto__copy-title {
+  margin-left: auto;
+}
+
+.proto__copy-lede {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  margin: 0 0 20px;
+  max-width: 320px;
+}
+
+.proto__copy--right .proto__copy-lede {
+  margin-left: auto;
+}
+
+.proto__copy-points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.proto__copy--right .proto__copy-points {
+  align-items: flex-end;
+}
+
+.proto__copy-point {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 15px;
+  color: var(--fg);
+  opacity: 0;
+  animation: protoPointIn 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.proto__copy--right .proto__copy-point {
+  flex-direction: row-reverse;
+}
+
+@keyframes protoPointIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.proto__copy-point-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* ====== 屏幕文字覆盖层 ======
+   跟随 3D 模型上的 LCD 屏位置。键盘已摆正:相机水平居中、
+   屏幕在外壳顶部,所以这里水平居中、垂直在屏幕高度附近。
+   屏幕本身始终保持暗色 LCD 风格(科技屏语义)。 */
+.proto__screen-overlay {
+  position: fixed;
+  /* 屏幕位于 3D 模型顶部 (~viewport 38% 位置),
+   * 水平严格居中。 */
+  top: 38%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(220px, 26vw, 380px);
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 4;
+}
+
+.proto__screen-overlay-text {
+  font-family: var(--font-mono);
+  font-size: clamp(13px, 1.6vw, 22px);
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #d0e4ff;
+  text-shadow: 0 0 12px rgba(100, 180, 255, 0.6);
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* 旋钮点击热区 — 跟随 3D 模型上的旋钮(键盘右上角第一行第四列)
+ * 键盘已摆正、相机水平居中,所以旋钮在 viewport 中央偏右 + 屏幕下方。
+ * 仍保持蓝色虚线圈作为可点击的视觉提示,亮暗主题下颜色微调。 */
+.proto__knob-hot {
+  position: fixed;
+  /* 旋钮位于 3D 模型右上方 (~viewport 48% / 53%),
+   * 屏幕在 38%,所以旋钮在屏幕右下 */
+  top: 48%;
+  left: calc(50% + clamp(60px, 7vw, 110px));
+  width: clamp(50px, 6vw, 90px);
+  height: clamp(50px, 6vw, 90px);
+  border-radius: 50%;
+  background: color-mix(in srgb, #4a8aff 6%, transparent);
+  border: 2px dashed #4a8aff;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  z-index: 6;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #4a8aff;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+}
+
+.proto__knob-hot:hover {
+  background: color-mix(in srgb, #4a8aff 18%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: scale(1.05);
+}
+
+.proto__knob-hot:active {
+  transform: scale(0.94);
+}
+
+.proto__knob-hot-label {
+  pointer-events: none;
+}
+
+/* ====== 右视觉区 ====== */
+.proto__col--visual {
+  align-self: center;
+  width: 100%;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  padding: 12px;
+  /* 保持 brutalist 直角风格,不用圆角 */
+}
+
+.proto-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  align-items: center;
+  justify-content: center;
+  min-height: 220px;
+}
+
+.proto-visual__label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.proto-visual__hint {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  color: var(--fg-faint);
+  text-transform: uppercase;
+}
+
+/* Profile arc */
+.proto-visual__arc {
+  position: relative;
+  width: 200px;
+  height: 160px;
+}
+
+.proto-visual__dot {
+  position: absolute;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg-muted);
+  transform: translate(-50%, -50%);
+  transition: all 0.3s ease;
+}
+
+.proto-visual__dot--active {
+  background: var(--fg);
+  border-color: var(--fg);
+  color: var(--bg);
+  transform: translate(-50%, -50%) scale(1.2);
+}
+
+/* Layer chips */
+.proto-visual__stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: stretch;
+  width: 100%;
+  max-width: 260px;
+}
+
+.proto-visual__chip {
+  background: var(--bg);
+  border: 1px solid var(--border-soft);
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--fg);
+  text-align: center;
+  animation: protoFloat 3s ease-in-out infinite;
+}
+
+.proto-visual__chip--a { border-color: var(--accent); animation-delay: 0s; }
+.proto-visual__chip--b { border-color: var(--fg); animation-delay: 0.3s; }
+.proto-visual__chip--c { border-color: var(--fg-muted); animation-delay: 0.6s; }
+
+@keyframes protoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* RGB palette */
+.proto-visual__palette {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+  max-width: 200px;
+}
+
+.proto-visual__swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  border: 2px solid var(--border);
+  transition: transform 0.2s ease;
+  cursor: pointer;
+}
+
+.proto-visual__swatch:hover {
+  transform: scale(1.08);
+}
+
+/* Voice */
+.proto-visual__rec {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--fg);
+}
+
+.proto-visual__rec-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+  animation: protoBlink 1s infinite;
+}
+
+@keyframes protoBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.25; }
+}
+
+.proto-visual__bars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 56px;
+}
+
+.proto-visual__bar {
+  width: 6px;
+  height: 20px;
+  background: var(--fg);
+  animation: protoWave 1.2s ease-in-out infinite;
+}
+
+.proto-visual__bar:nth-child(1) { height: 22px; }
+.proto-visual__bar:nth-child(2) { height: 36px; animation-delay: 0.1s; }
+.proto-visual__bar:nth-child(3) { height: 50px; animation-delay: 0.2s; }
+.proto-visual__bar:nth-child(4) { height: 30px; animation-delay: 0.3s; }
+.proto-visual__bar:nth-child(5) { height: 44px; animation-delay: 0.4s; }
+.proto-visual__bar:nth-child(6) { height: 24px; animation-delay: 0.5s; }
+
+@keyframes protoWave {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.8); }
+}
+
+.proto-visual__quote {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 10px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--fg);
+  font-style: italic;
+}
+
+/* Device link */
+.proto-visual__devices {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.proto-visual__device {
+  width: 64px;
+  height: 64px;
+  background: var(--bg);
+  border: 2px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.proto-visual__device--mid {
+  width: 80px;
+  height: 80px;
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+/* ====== 底部 ======
+ * 在 flex column 父容器下,这里自然靠下;
+ * 配色用主站 token,保持 brutalist 直角 + 描边风格。 */
+.proto__bottombar {
+  position: relative;
+  z-index: 10;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 12px 24px 16px;
+  flex-shrink: 0;
+}
+
+.proto__bottombar-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.proto__knob-row {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.proto__knob-row li {
+  display: contents;
+}
+
+.proto__knob-dot {
+  appearance: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  color: var(--fg-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.proto__knob-dot:hover {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.proto__knob-dot.is-active {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+
+.proto__knob-dot-num {
+  color: var(--accent);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+.proto__knob-dot:hover .proto__knob-dot-num,
+.proto__knob-dot.is-active .proto__knob-dot-num {
+  color: var(--accent);
+}
+
+.proto__progress {
+  position: relative;
+  height: 4px;
+  background: var(--border-soft);
+  overflow: hidden;
+}
+
+.proto__progress-bar {
+  display: block;
+  height: 100%;
+  background: var(--accent);
+  transition: width 80ms linear;
+}
+
+.proto__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proto__btn {
+  appearance: none;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.proto__btn:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.proto__btn:active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+/* 工具条内的图标按钮(主题切换)— 紧凑方形,与 PREV/PAUSE/NEXT 等高 */
+.proto__toolbar .proto__btn--icon {
+  padding: 6px 10px;
+  line-height: 1;
+}
+
+.proto__hint {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.16em;
+  color: var(--fg);
+  text-transform: uppercase;
+}
+
+/* ====== 响应式 ====== */
+@media (max-width: 1100px) {
+  .proto__grid {
+    grid-template-columns: 1fr 1.4fr 1fr;
+    gap: 16px;
+  }
+  .proto__copy-title {
+    font-size: 26px;
+  }
+  .proto__copy-point {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 900px) {
+  .proto {
+    height: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  .proto__stage {
+    flex: 0 0 auto;
+  }
+  .proto__grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding-bottom: 24px;
+  }
+  .proto__col--spacer {
+    display: none;
+  }
+  .proto__col--copy,
+  .proto__col--visual {
+    text-align: center;
+  }
+  .proto__copy--left,
+  .proto__copy--right {
+    text-align: center;
+    align-items: center;
+  }
+  .proto__copy-points {
+    align-items: center;
+  }
+  .proto__copy-point {
+    flex-direction: row;
+  }
+  .proto__copy-title {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .proto__copy-lede {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .proto__topbar-inner {
+    padding: 0 12px;
+    height: 48px;
+  }
+  .proto__status-right {
+    gap: 14px;
+    font-size: 12px;
+  }
+  .proto__screen-overlay {
+    width: 220px;
+    height: 48px;
+    top: 34%;
+  }
+  .proto__screen-overlay-text {
+    font-size: 12px;
+  }
+  .proto__knob-hot {
+    width: 44px;
+    height: 44px;
+    top: 46%;
+    left: calc(50% + 56px);
+  }
+  .proto3d-bg__theme-btn {
+    right: 12px;
+    bottom: 160px;
+  }
+  .proto__knob-row {
+    grid-template-columns: repeat(5, 1fr);
+    gap: 4px;
+  }
+  .proto__knob-dot {
+    flex-direction: column;
+    text-align: center;
+    padding: 6px 4px;
+    gap: 4px;
+  }
+  .proto__knob-dot-name {
+    font-size: 9px;
+  }
+  .proto__hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .proto__col--enter,
+  .proto__copy-point {
+    animation-duration: 0.15s !important;
+  }
+}

@@ -82,6 +82,12 @@
   --max-w: 1280px;
   --gutter: 24px;
   --header-h: 64px;
+
+  /* Prototype page — 3D 模型外壳所在的背景层,
+   * 主站与原型页共用 design tokens,这里只对几个非常规色单独覆盖。 */
+  --proto-bg-inner: #ffffff;
+  --proto-bg-outer: #e8e6df;
+  --proto-hint: rgba(60, 70, 80, 0.55);
 }
 
 [data-theme="dark"] {
@@ -109,6 +115,11 @@
   --code-dot-yellow: #ffbd2e;
   --code-dot-green: #27c93f;
   --code-prompt: #ff7a4d;
+
+  /* Prototype page 暗色版本 — 与主站 --bg 同调 */
+  --proto-bg-inner: #1a1e24;
+  --proto-bg-outer: #0a0c0f;
+  --proto-hint: rgba(160, 180, 200, 0.4);
 }
 
 /* ---- Reset --------------------------------------------------------- */
