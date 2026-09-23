@@ -248,19 +248,6 @@ export default function ShowcasePage() {
           <div className="showcase__col showcase__col--kbd">
             <div className="showcase__kbd-wrap">
               <Keyboard3D />
-              {/* 旋钮点击热区 */}
-              <button
-                type="button"
-                className="showcase__knob-hot"
-                onClick={() => {
-                  resetAuto();
-                  goNext();
-                }}
-                aria-label={t("showcase.status.next")}
-                title={t("showcase.status.next")}
-              >
-                <span className="showcase__knob-hot-dot" />
-              </button>
               {/* 屏幕文字 HTML 覆盖层 */}
               <div className="showcase__screen-overlay" aria-hidden="true">
                 <ScreenOverlayText current={current} />

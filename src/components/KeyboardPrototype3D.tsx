@@ -415,64 +415,76 @@ function makeBackgroundTexture(palette: ThemePalette): THREE.CanvasTexture {
 }
 
 // ---------- 键帽几何(共享) ----------
+// 键帽 = 平顶棱柱:底面是圆角矩形,侧壁近乎直筒,顶面是一整块平面。
+// 关键点:侧壁 / 顶面 / 底面各用一套独立顶点,彼此不共享。
+// 若顶面与侧壁共用顶点,computeVertexNormals() 会把侧面法线和顶面法线
+// 平均掉,顶面在光照下就会被平滑成"圆顶"的观感;顶点拆开后顶面法线
+// 统一朝 +Z,顶边成为硬边,渲染出来才是真正的平面。
 function createKeycapGeometry(): THREE.BufferGeometry {
   const baseW = 1;
   const baseD = 1;
-  const inset = 0.12;
-  const topW = baseW * (1 - inset);
-  const topD = baseD * (1 - inset);
   const h = KEY_HEIGHT;
-  const radius = 0.08;
+  const cornerRadius = 0.12; // 圆角半径
+  const cornerSegs = 4; // 每个圆角的分段数,保证轮廓足够圆润
+  const taper = 0.02; // 顶面相对底面的内收量 → 侧壁轻微内收
 
+  // 圆角矩形轮廓(逆时针一圈)
+  function outline(w: number, d: number): Array<[number, number]> {
+    const hw = w / 2;
+    const hd = d / 2;
+    const r = Math.min(cornerRadius, hw, hd);
+    const corners = [
+      { cx: hw - r, cy: -hd + r, start: -Math.PI / 2 }, // 右下
+      { cx: hw - r, cy: hd - r, start: 0 }, // 右上
+      { cx: -hw + r, cy: hd - r, start: Math.PI / 2 }, // 左上
+      { cx: -hw + r, cy: -hd + r, start: Math.PI }, // 左下
+    ];
+    const pts: Array<[number, number]> = [];
+    for (const c of corners) {
+      for (let i = 0; i <= cornerSegs; i++) {
+        const a = c.start + (i / cornerSegs) * (Math.PI / 2);
+        pts.push([c.cx + Math.cos(a) * r, c.cy + Math.sin(a) * r]);
+      }
+    }
+    return pts;
+  }
+
+  const bottom = outline(baseW, baseD);
+  // 顶面轮廓:每个点朝中心收一点 → 侧壁略带内收,顶面依然是完整平面
+  const top: Array<[number, number]> = bottom.map(([x, y]) => [
+    Math.sign(x) * Math.max(0, Math.abs(x) - taper),
+    Math.sign(y) * Math.max(0, Math.abs(y) - taper),
+  ]);
+
+  const n = bottom.length;
   const positions: number[] = [];
   const indices: number[] = [];
 
-  const halfBaseW = baseW / 2;
-  const halfBaseD = baseD / 2;
-  const r = radius;
-
-  const bottom: [number, number][] = [
-    [-halfBaseW + r, -halfBaseD],
-    [halfBaseW - r, -halfBaseD],
-    [halfBaseW, -halfBaseD + r],
-    [halfBaseW, halfBaseD - r],
-    [halfBaseW - r, halfBaseD],
-    [-halfBaseW + r, halfBaseD],
-    [-halfBaseW, halfBaseD - r],
-    [-halfBaseW, -halfBaseD + r],
-  ];
-  const top: [number, number][] = bottom.map(([x, y]) => {
-    const sx = Math.sign(x) || 0;
-    const sy = Math.sign(y) || 0;
-    return [
-      sx * Math.max(0, Math.abs(x) - r * inset),
-      sy * Math.max(0, Math.abs(y) - r * inset),
-    ];
-  });
-
+  // 1) 侧壁:底环 + 顶环,仅被侧壁引用 → 法线沿径向,环绕方向平滑
   for (const [x, y] of bottom) positions.push(x, y, 0);
   for (const [x, y] of top) positions.push(x, y, h);
-
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < n; i++) {
     const a = i;
-    const b = (i + 1) % 8;
-    const c = 8 + b;
-    const d = 8 + i;
-    indices.push(a, b, c, a, c, d);
+    const b = (i + 1) % n;
+    indices.push(a, b, n + b, a, n + b, n + a);
   }
+
+  // 2) 顶面:独立顶环 + 中心点,法线统一朝 +Z → 平顶 + 硬边
+  const topRing = positions.length / 3;
+  for (const [x, y] of top) positions.push(x, y, h);
   const topCenter = positions.length / 3;
   positions.push(0, 0, h);
-  for (let i = 0; i < 8; i++) {
-    const a = 8 + i;
-    const b = 8 + ((i + 1) % 8);
-    indices.push(topCenter, a, b);
+  for (let i = 0; i < n; i++) {
+    indices.push(topCenter, topRing + i, topRing + ((i + 1) % n));
   }
+
+  // 3) 底面:独立底环 + 中心点,法线朝 -Z
+  const botRing = positions.length / 3;
+  for (const [x, y] of bottom) positions.push(x, y, 0);
   const botCenter = positions.length / 3;
   positions.push(0, 0, 0);
-  for (let i = 0; i < 8; i++) {
-    const a = i;
-    const b = (i + 1) % 8;
-    indices.push(botCenter, b, a);
+  for (let i = 0; i < n; i++) {
+    indices.push(botCenter, botRing + ((i + 1) % n), botRing + i);
   }
 
   const geo = new THREE.BufferGeometry();
@@ -899,7 +911,7 @@ function buildScene(
 
         // 指示条
         knobIndicator = new THREE.Mesh(
-          new THREE.BoxGeometry(0.7, KNOB_RADIUS * 0.78, 0.35),
+          new THREE.BoxGeometry(1.7, KNOB_RADIUS * 0.78, 0.35),
           new THREE.MeshStandardMaterial({
             color: palette.knobIndicatorColor,
             emissive: palette.knobIndicatorEmissive,
