@@ -9,20 +9,22 @@
  *
  * - 选中：accent 高亮 + 描边
  * - dirty：琥珀色左下小点（来自 draft ≠ snapshot）
- * - read-only layer（非 LAYER_BASE）：灰色 + 「lock」角标
+ * - read-only layer（LAYER_CUSTOM，仅本地占位）：灰色 + 「lock」角标
  *
  * 单击 / Enter / Space 触发 onSelect(slot)。
  */
 
 import { useI18n } from "../../i18n/useI18n.tsx";
 import {
+  BUILTIN_FUNCTIONS,
   hidLabel,
-  LAYER_BASE,
+  LAYER_CUSTOM,
   PHYSICAL_KEY_COUNT,
+  SYNCED_LAYERS,
   type KeyAction,
   type KeymapData,
 } from "../../protocol";
-import { actionToFirmware } from "../../protocol/keymap";
+import { actionToChannel } from "../../protocol/keymap";
 
 /**
  * 物理键 → (row, col)；encoder 占 (0, 3)（第一行第四个位置），
@@ -56,6 +58,8 @@ export function KeyGrid({
   layer,
   selected,
   dirtyKeys,
+  funKey1 = 0,
+  funKey2 = 0,
   onSelect,
   onClearLayer,
 }: {
@@ -64,13 +68,16 @@ export function KeyGrid({
   layer: number;
   selected: number | null;
   dirtyKeys: number[];
+  /** 当前 FUN 键分配（物理键号 0=未分配），用于角标展示。 */
+  funKey1?: number;
+  funKey2?: number;
   onSelect: (slot: number) => void;
   onClearLayer?: () => void;
 }) {
   const { t } = useI18n();
   const dirtySet = new Set(dirtyKeys);
 
-  const layerLocked = layer !== LAYER_BASE;
+  const layerLocked = !SYNCED_LAYERS.includes(layer) || layer === LAYER_CUSTOM;
   const slotArr = draft.layers[layer]?.slots ?? [];
 
   return (
@@ -112,7 +119,8 @@ export function KeyGrid({
           const selectedCls = selected === slotIdx ? "is-selected" : "";
           const dirtyCls = dirty ? "is-dirty" : "";
           const lockedCls = layerLocked ? "is-locked" : "";
-          const encoded = actionToFirmware(action);
+          const funRole = funKey1 === slotIdx + 1 ? "F1" : funKey2 === slotIdx + 1 ? "F2" : "";
+          const wire = wireSummary(action);
           return (
             <button
               key={cell.slot}
@@ -122,12 +130,17 @@ export function KeyGrid({
               onClick={() => onSelect(slotIdx)}
               disabled={layerLocked}
               aria-pressed={selected === slotIdx}
-              aria-label={`Key ${cell.label} – ${describeAction(action, t)}`}
+              aria-label={`Key ${cell.label}${funRole ? ` (${funRole})` : ""} – ${describeAction(action, t)}`}
             >
               <span className="keymap-key__num mono">#{cell.label}</span>
+              {funRole && (
+                <span className="keymap-key__fun mono" title={t("keymap.fun.title")}>
+                  {funRole}
+                </span>
+              )}
               <span className="keymap-key__label">{describeAction(action, t)}</span>
               <span className="keymap-key__wire mono">
-                {encoded.normal || (encoded.function ? encoded.function : t("keymap.key.unbound"))}
+                {wire || t("keymap.key.unbound")}
               </span>
               {dirty && <span className="keymap-key__dirty-dot" aria-hidden="true" />}
             </button>
@@ -148,6 +161,14 @@ export function KeyGrid({
   );
 }
 
+/** 把动作压缩成网格里能放下的 wire 摘要（≤14 字符）。 */
+function wireSummary(a: KeyAction): string {
+  const ch = actionToChannel(a, true);
+  const raw = ch.normal ?? ch.macro ?? ch.text ?? ch.function ?? "";
+  if (raw.length <= 14) return raw;
+  return raw.slice(0, 13) + "…";
+}
+
 function describeAction(
   a: KeyAction,
   t: (k: string) => string,
@@ -160,16 +181,19 @@ function describeAction(
       if (friendly) return friendly;
       return `0x${a.code.toString(16).padStart(2, "0")}`;
     }
-    case "media":
-      return t("keymap.bind.media");
-    case "mouse":
-      return t("keymap.bind.mouse");
-    case "layer-switch":
-      return t("keymap.bind.layerSwitch");
+    case "combo":
+      return a.codes
+        .map((c) => hidLabel(c) ?? `0x${c.toString(16).padStart(2, "0")}`)
+        .join("+");
+    case "text":
+      return `“${a.text.slice(0, 8)}${a.text.length > 8 ? "…" : ""}”`;
     case "macro":
       return t("keymap.key.macroPlaceholder");
-    case "fun-modifier":
-      return a.slot === 0 ? t("keymap.bind.unbound") : `FUN${a.slot}`;
+    case "builtin": {
+      // 已知内建功能用译名；未知串原样展示（透传保留，固件不解析）
+      if (!(BUILTIN_FUNCTIONS as readonly string[]).includes(a.name)) return a.name;
+      return t("keymap.bind.builtin");
+    }
   }
 }
 

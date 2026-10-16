@@ -514,7 +514,7 @@ function VisualPanel({ kind }: { kind: VisualKind }) {
             </span>
             <span className="proto-visual__device">HA</span>
           </div>
-          <span className="proto-visual__hint">TCP 30000 · USB CDC · 2.4G</span>
+          <span className="proto-visual__hint">TCP 30000 · USB CDC · BLE</span>
         </div>
       );
   }

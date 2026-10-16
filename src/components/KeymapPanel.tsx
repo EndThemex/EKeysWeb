@@ -2,18 +2,21 @@
  * KeymapPanel — M3 主面板：键位编辑 + Profile 切换 + Profile 重命名 + Profile 图标上传。
  *
  * 数据流：
- *  - 进入页面：sendCmd(CMD.KEYMAP_GET) 拉取当前 Profile 的 11 键映射；
- *  - 编辑：本地 useKeymap 草稿模型（与 Settings Tab 一致）；
- *  - 应用：sendCmd(CMD.KEYMAP_SET, { keymap: entries }) 整表下发 layer 0；
+ *  - 进入页面 / 切 Profile：sendCmd(CMD.KEYMAP_GET, { profile }) 拉取该 Profile 映射
+ *    （响应带顶层 profile / fun_key1 / fun_key2）；
+ *  - 编辑：本地 useKeymap 草稿模型（layer 0/1/2 = Base/FUN1/FUN2）；
+ *  - 应用：sendCmd(CMD.KEYMAP_SET, buildKeymapSetPayload(...)) 整表下发三层 +
+ *    变更过的 fun_key；
  *  - 重命名：sendCmd(CMD.PROFILE_NAME_SET, { profile, name })；
  *  - 图标上传：<input type=file> → ArrayBuffer → base64 → sendCmd(0x11)；
  *  - Profile 切换（设备）：sendCmd(0x08 CONFIG_SET, active_keymap_profile) → 0x10 refresh；
  *  - 0x87 推送：用 snapshot 同步 profile 名 / icon flag（mergeFromPush 由 useDeviceDraft 负责）。
  *
- * 模型限制（设计文档 §10.4）：
- *  - Media / Mouse / LayerSwitch / Macro 通过 function 字段尽力编码，固件当前不解析，
- *    下次 GET 会被还原为 unbound —— UI 已通过"firmwareLoss"提示告知。
- *  - 仅 layer 0 可编辑；其它 layer 显示为只读占位。
+ * 模型限制：
+ *  - Media / Mouse / LayerSwitch 固件当前不解析（function 通道仅支持内建功能串），
+ *    下次 GET 会被还原为 unbound —— UI 已通过 "firmwareLoss" 提示告知；
+ *  - 宏序列 / 文本注入 / 内建功能 / 组合键均为固件原生支持，可无损回读；
+ *  - layer 3（Custom）仅本地占位。
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -35,9 +38,12 @@ import { useKeymap } from "../hooks/useKeymap";
 import {
   CMD,
   applyFirmwareEntries,
-  dataToFirmwareEntries,
+  buildKeymapSetPayload,
+  clampFunKey,
   emptyKeymapData,
   LAYER_BASE,
+  PHYSICAL_KEY_COUNT,
+  SYNCED_LAYERS,
   type FirmwareKeyEntry,
   type KeyAction,
   type KeymapData,
@@ -98,11 +104,20 @@ export function KeymapPanel() {
     let cancelled = false;
     (async () => {
       try {
-        const frame = await sendCmd<Record<string, unknown>>(CMD.KEYMAP_GET);
+        // data.profile（0..7）：定向拉取该 Profile（缺省 = 当前激活）
+        const frame = await sendCmd<Record<string, unknown>>(CMD.KEYMAP_GET, {
+          data: { profile: prof },
+        });
         if (cancelled) return;
         const arr = extractKeymapArray(frame);
         const base: KeymapData = km.draft ?? emptyKeymapData();
-        const next = applyFirmwareEntries(base, arr);
+        const next = applyFirmwareEntries(base, arr, {
+          profile: typeof frame.profile === "number" ? frame.profile : undefined,
+          funKey1:
+            typeof frame.fun_key1 === "number" ? clampFunKey(frame.fun_key1) : undefined,
+          funKey2:
+            typeof frame.fun_key2 === "number" ? clampFunKey(frame.fun_key2) : undefined,
+        });
         km.syncFromSnapshot(next);
         lastFetchedProfile.current = prof;
       } catch (e) {
@@ -144,9 +159,19 @@ export function KeymapPanel() {
     setApplying(true);
     setApplyError(null);
     try {
-      // 0x06 SET：固件按 active profile 整表覆盖 layer 0 的 11 键
-      const entries = dataToFirmwareEntries(km.draft);
-      await sendCmd(CMD.KEYMAP_SET, { data: { keymap: entries } });
+      // 0x08：draft 正在编辑的 Profile 与设备激活不一致时先切设备 Profile，
+      // 否则 0x06 整表会写进设备当前激活的方案（与 App 端 apply_keymap
+      // 先 switch_device_profile 的行为一致）。
+      const deviceActive = snapshot.profile?.active_profile;
+      if (deviceActive !== undefined && km.draft.activeProfile !== deviceActive) {
+        await sendCmd(CMD.CONFIG_SET, {
+          data: { config: { active_keymap_profile: km.draft.activeProfile } },
+        });
+      }
+      // 0x06 SET：整表覆盖 layer 0/1/2 + 变更过的 fun_key（缺省 = 保持现值）。
+      // 超时对齐 App 端 4s（固件 ACK 后才做 SPIFFS 原子写，但留足余量）
+      const payload = buildKeymapSetPayload(km.draft, km.snapshot);
+      await sendCmd(CMD.KEYMAP_SET, { data: payload }, 4000);
       // 成功后让 snapshot 与 draft 对齐（避免「下发后立即又显示 dirty」）
       km.syncFromSnapshot(km.draft);
       setSavedTick((n) => n + 1);
@@ -358,7 +383,13 @@ export function KeymapPanel() {
 
       {iconError && <div className="settings-panel__error-icon" role="alert">{iconError}</div>}
 
-      <LayerSelector layer={layer} onChange={setLayer} />
+      <LayerSelector
+        layer={layer}
+        selectedSlot={selectedSlot}
+        funKey1={draftSafe.funKey1}
+        funKey2={draftSafe.funKey2}
+        onChange={setLayer}
+      />
 
       <div className="keymap-grid-wrap">
         <div className="keymap-grid-col">
@@ -368,15 +399,16 @@ export function KeymapPanel() {
             layer={layer}
             selected={selectedSlot}
             dirtyKeys={km.dirtyKeys}
+            funKey1={draftSafe.funKey1}
+            funKey2={draftSafe.funKey2}
             onSelect={(s) => setSelectedSlot(s)}
             onClearLayer={() => {
-              if (layer !== LAYER_BASE) return;
-              const layers = draftSafe.layers.slice();
-              const slots = (layers[layer]?.slots ?? []).map(() => ({
-                kind: "unbound" as const,
-              }));
-              layers[layer] = { slots };
-              km.syncFromSnapshot({ ...draftSafe, layers });
+              if (!SYNCED_LAYERS.includes(layer)) return;
+              // draft-only 更新：不能走 syncFromSnapshot（会连 snapshot 一起改，
+              // 导致 dirty 被吞、未下发就显示已保存）
+              for (let s = 0; s < PHYSICAL_KEY_COUNT; s++) {
+                km.setLayerSlot(layer, s, { kind: "unbound" });
+              }
             }}
           />
         </div>
@@ -388,7 +420,11 @@ export function KeymapPanel() {
               if (selectedSlot === null) return;
               km.setLayerSlot(layer, selectedSlot, next);
             }}
-            disabled={layer !== LAYER_BASE}
+            disabled={!SYNCED_LAYERS.includes(layer)}
+            allowMacro={layer === LAYER_BASE}
+            funKey1={draftSafe.funKey1}
+            funKey2={draftSafe.funKey2}
+            onSetFunKey={km.setFunKey}
           />
         </div>
       </div>

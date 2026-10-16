@@ -475,7 +475,7 @@ function CompanionVisual() {
           </g>
         ))}
       </svg>
-      <span className="visual__hint">TCP 30000 · USB CDC · 2.4G</span>
+      <span className="visual__hint">TCP 30000 · USB CDC · BLE</span>
     </div>
   );
 }

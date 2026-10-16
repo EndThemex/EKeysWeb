@@ -2,7 +2,7 @@
 
 > 面向 **浏览器端配置面板**（`/config` 路由）的完整设计与实现说明。
 > 与 [`EKeysApp` 桌面端](https://github.com/EndThemex/EKeysApp) 协议层（[`docs/protocol-usage.md`](https://github.com/EndThemex/EKeysApp/blob/main/docs/protocol-usage.md)）保持 100% 兼容：
-> 同一份 `v1.0` 协议、同一个 `DeviceSettings` 25 字段、同一个 22 条命令集。
+> 同一份 `v1.0` 协议、同一个 `DeviceSettings` 25 字段、同一个 23 条命令集（0x01–0x17）。
 >
 > 当前仓库已具备的最小骨架：
 >
@@ -71,7 +71,7 @@
 - 协议版本 **v1.0**；
 - 任何破坏性变更**先**在协议文档顶部声明，再 bump `PROTOCOL_VERSION`；
 - 命令 ID 与字段顺序与桌面端 `protocol.rs` 保持一致；
-- 所有 22 条命令常量集中在一个文件（参见 §4.1）。
+- 所有 23 条命令常量集中在一个文件（参见 §4.1）。
 
 ---
 
@@ -207,7 +207,7 @@ export interface EKeysSerial {
 src/protocol/
 ├── index.ts          # 重导出 + 版本号 PROTOCOL_VERSION = 1
 ├── frame.ts          # Frame 编解码 / isResponse / isPush / status / parseLine
-├── commands.ts       # 22 条 CMD_* 常量 + responseCmd / isResponse / isResponseLike / isTopLevelCmd
+├── commands.ts       # 23 条 CMD_* 常量（0x01–0x17）+ responseCmd / isResponse / isResponseLike / TOP_LEVEL_CMDS
 ├── mask.ts           # FieldMask（BigInt 位运算，>25 字段也能容纳）
 ├── settings.ts       # DeviceSettings 类型 + clamp() + diff() + apply() + mergePush() + maskSensitive()
 ├── keymap.ts         # KeymapData 类型 + toFirmwareEntries() + applyFirmwareEntries() + KeyAction ↔ 固件编码
@@ -253,8 +253,8 @@ export interface DeviceSettings {
   connect_host: number; // 0/1
   wifi_ssid: string;
   wifi_password: string; // 敏感
-  work_mode: number; // 0=USB 1=BLE 2=2.4G
-  rgb_mode: number; // 0..9
+  work_mode: number; // 0=USB 1=BLE（2.4G 已废弃移除）
+  rgb_mode: number; // 0..10，与固件 RGBMode 枚举同序
   rgb_single_color: number; // 0..23
   rgb_click_mode: number; // 0..2
   rgb_brightness: number; // 0..100
@@ -280,8 +280,8 @@ export interface DeviceSettings {
 `clamp()` 规则与 Rust 端 `DeviceSettings::clamp()` 1:1（见 `protocol.rs:374` 起）：
 
 - `tft_brightness ∈ [5, 100]`；
-- `rgb_mode ∈ [0, 9]`、`rgb_single_color ∈ [0, 23]`、`rgb_click_mode ∈ [0, 2]`、`rgb_brightness ∈ [0, 100]`；
-- `work_mode ∈ {0, 1, 2}`，越界回退 0；
+- `rgb_mode ∈ [0, 10]`、`rgb_single_color ∈ [0, 23]`、`rgb_click_mode ∈ [0, 2]`、`rgb_brightness ∈ [0, 100]`；
+- `work_mode ∈ {0, 1}`，越界回退 0；
 - `active_keymap_profile ∈ [0, 7]`，越界回退 0；
 - `wifi_switch` / `connect_host` / `voice_enable` / `voice_auto_enter` 归一化为 0/1；
 - `voice_trigger_key ∈ [0, 11]`；
@@ -348,7 +348,7 @@ export function maskSensitive(s: DeviceSettings): DeviceSettings;
 
 ### 4.7 命令常量（`src/protocol/commands.ts`）
 
-完整 22 条常量（与 [`protocol.rs:122` 起](../../EKeysApp/src/protocol.rs) 对齐）：
+完整 23 条常量（与 [`protocol.rs:122` 起](../../EKeysApp/src/protocol.rs) 对齐）：
 
 ```ts
 export const CMD = {
@@ -535,7 +535,7 @@ interface DeviceSessionValue {
 
 | 卡片                  | 字段                             | 控件                                                  |
 | --------------------- | -------------------------------- | ----------------------------------------------------- |
-| 连接                  | `work_mode`                      | `<select>`：USB / BLE / 2.4G                          |
+| 连接                  | `work_mode`                      | `<select>`：USB / BLE（2.4G 已废弃）                  |
 | 连接                  | `connect_host`                   | `<Switch>`                                            |
 | Wi-Fi 总开关          | `wifi_switch`                    | `<Switch>`（展开后显示 SSID 输入）                    |
 | Wi-Fi 详情            | `wifi_ssid` / `wifi_password`    | `<Input>`（密码带 `type="password"` + 显示/隐藏按钮） |
@@ -555,12 +555,12 @@ interface DeviceSessionValue {
 
 ### 7.3 Lighting Tab — `panel_lighting` 对应
 
-| 控件                    | 字段                     |
-| ----------------------- | ------------------------ |
-| 模式 `<Select>`         | `rgb_mode`（0..9）       |
-| 单色选择（24 色调色板） | `rgb_single_color`       |
-| 点击模式 `<Select>`     | `rgb_click_mode`（0..2） |
-| 亮度 `<Slider>`         | `rgb_brightness`         |
+| 控件                    | 字段                                   |
+| ----------------------- | -------------------------------------- |
+| 模式 `<Select>`         | `rgb_mode`（0..10，固件 RGBMode 枚举） |
+| 单色选择（24 色调色板） | `rgb_single_color`                     |
+| 点击模式 `<Select>`     | `rgb_click_mode`（0..2）               |
+| 亮度 `<Slider>`         | `rgb_brightness`                       |
 
 ### 7.4 WiFi Tab — `panel_wifi` 对应
 
@@ -894,28 +894,34 @@ export function useOtaWorker() {
 
 ### 13.1 浏览器限制
 
-- 浏览器沙箱不能拿键盘 Lock、网络状态细节；
-- `navigator.deviceMemory`、`navigator.hardwareConcurrency` 可作为 CPU / 内存近似值；
-- `navigator.connection`（如果可用）给出下行带宽与 RTT；
-- 在线状态可用 `navigator.onLine`。
+- 浏览器沙箱拿不到键盘 Lock、CPU / 内存 / GPU / 磁盘占用等系统指标；
+- `navigator.onLine` 只能给出粗粒度的在线状态，等价不了桌面端的采集链路。
 
-### 13.2 本期实现
+### 13.2 固件契约（2026-09 更新）
 
-```ts
-function collectPcStatus(): PcStatus {
-  return {
-    online: navigator.onLine ? 1 : 0,
-    cpu_cores: navigator.hardwareConcurrency ?? 0,
-    mem_gb: (navigator as any).deviceMemory ?? 0,
-    downlink_mbps: (navigator as any).connection?.downlink ?? 0,
-    rtt_ms: (navigator as any).connection?.rtt ?? 0,
-  };
-}
-```
+固件 `cmd_pc_status.cpp`（`0x0d`）当前的解析字段（未列出的字段会被静默丢弃）：
 
-提供开关按钮（Settings Tab 的 PC 状态卡片）。开启后每 1 秒调用 `diff` + `sendCmd(0x0d, { pc_status: delta })`。
+| 字段                   | 类型 | 说明                                   |
+| ---------------------- | ---- | -------------------------------------- |
+| `network_connected`    | bool | 网络连接状态                           |
+| `cpu_usage_percent`    | f32  | CPU 占用（0~100，-1 表示未采集）       |
+| `memory_usage_percent` | f32  | 内存占用                               |
+| `gpu_usage_percent`    | f32  | GPU 占用（原 `cpu_temp_c` 槽位已改名） |
+| `disk_io_percent`      | f32  | 磁盘 I/O 占用                          |
+| `disk_space_percent`   | f32  | 磁盘空间使用率                         |
+| `network_up_kbps`      | f32  | 上行速率                               |
+| `network_down_kbps`    | f32  | 下行速率                               |
 
-> 与桌面端 [`pc_status.rs`](../../EKeysApp/src/pc_status.rs) 不等价，但**协议层字段兼容**（`PcStatusReq`）；固件侧收到的字段少一些不会报错。
+> 已废弃：`caps_lock` / `num_lock` / `scroll_lock`（二级屏未渲染，固件已删除解析）、
+> `on_ac_power` / `battery_percent`（电量走 `CMD_BATTERY_STATUS`）、`cpu_temp_c`（从未采集）。
+
+### 13.3 Web 端实现边界
+
+Web 端**不实现** `0x0d` 推送（§1.2），只保留 `pc_status_mask` 的配置 UI
+（Settings Tab 的 PC 状态卡片）。掩码位序与上表字段一一对应：
+bit0 网络 / bit1 CPU / bit2 内存 / bit3 GPU / bit4 磁盘 I/O / bit5 磁盘空间 / bit6 上行 / bit7 下行。
+
+> 推送仍由桌面端 [`pc_status.rs`](../../EKeysApp/src/pc_status.rs) 负责（1 Hz diff-based 推送）。
 
 ---
 
@@ -1072,7 +1078,7 @@ src/protocol/__tests__/
 ├── mask.test.ts         # set/test/intersect/union/边界
 ├── keymap.test.ts       # toFirmwareEntries / applyFirmwareEntries 双向
 ├── audio.test.ts        # 文件名白名单 / sanitize / 块大小校验
-└── commands.test.ts     # 22 条常量值 / responseCmd / isResponseLike
+└── commands.test.ts     # 23 条常量值 / responseCmd / isResponseLike
 ```
 
 对齐桌面端 `protocol.rs` 的测试模块：
@@ -1145,23 +1151,23 @@ src/hooks/__tests__/
 | Audio File             | `0x16`          | `0x16`          | M4：音效上传 / 删除                    |
 | Audio Pad              | `0x17`          | `0x17`          | M4：音效绑定 / 播放                    |
 
-> 注：上表已含 22 条命令 ID；与桌面端 `protocol.rs:122` 起声明的 22 个 `CMD_*` 常量一一对应（除 `0x0e` Music Status 在桌面端当前仅声明未接通、Web 端同样仅订阅）。
+> 注：上表已含 23 条命令 ID；与桌面端 `protocol.rs:122` 起声明的 23 个 `CMD_*` 常量一一对应（除 `0x0e` Music Status 在桌面端当前仅声明未接通、Web 端同样仅订阅）。
 
 ---
 
 ## 22. 附录 B：与桌面 App 的差异与限制
 
-| 维度      | 桌面 App                         | Web 端                                               |
-| --------- | -------------------------------- | ---------------------------------------------------- |
-| 串口库    | `serialport` 4.6                 | Web Serial API                                       |
-| 心跳线程  | 后台 `std::thread`               | `setInterval` + `visibilitychange`                   |
-| 后台保活  | 系统进程                         | 浏览器可能休眠 Tab → 推送可能丢失                    |
-| OTA HTTP  | 自建一次性 HTTP                  | 浏览器**不能**监听端口；M4 改用 USB-Serial-JTAG 直写 |
-| PC Status | Windows API 取 Lock / 网络 / CPU | 仅 `navigator.*` 近似值                              |
-| 持久化    | `%APPDATA%/wxi/config.json`      | `localStorage`（仅语言 / 主题）                      |
-| 主题      | 深 / 浅 + 自定义调色板           | 沿用现有 `data-theme`                                |
-| 多语言    | Rust 端 i18n                     | 沿用 [`dict.ts`](../../src/i18n/dict.ts)             |
-| 错误反馈  | Toast / Confirm                  | `<ErrorBanner>` + Log Tab                            |
-| OTA 校验  | MD5 + HTTP 服务                  | MD5 + 直写（无 HTTP 校验环节）                       |
+| 维度      | 桌面 App                                                     | Web 端                                                        |
+| --------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| 串口库    | `serialport` 4.6                                             | Web Serial API                                                |
+| 心跳线程  | 后台 `std::thread`                                           | `setInterval` + `visibilitychange`                            |
+| 后台保活  | 系统进程                                                     | 浏览器可能休眠 Tab → 推送可能丢失                             |
+| OTA HTTP  | 自建一次性 HTTP                                              | 浏览器**不能**监听端口；M4 改用 USB-Serial-JTAG 直写          |
+| PC Status | Windows API 采集 CPU / 内存 / GPU / 磁盘 / 网络（1 Hz 推送） | 不实现推送（浏览器沙箱限制），仅提供 `pc_status_mask` 配置 UI |
+| 持久化    | `%APPDATA%/wxi/config.json`                                  | `localStorage`（仅语言 / 主题）                               |
+| 主题      | 深 / 浅 + 自定义调色板                                       | 沿用现有 `data-theme`                                         |
+| 多语言    | Rust 端 i18n                                                 | 沿用 [`dict.ts`](../../src/i18n/dict.ts)                      |
+| 错误反馈  | Toast / Confirm                                              | `<ErrorBanner>` + Log Tab                                     |
+| OTA 校验  | MD5 + HTTP 服务                                              | MD5 + 直写（无 HTTP 校验环节）                                |
 
 > 这些差异**不影响协议层兼容性**；固件侧对两端一视同仁。

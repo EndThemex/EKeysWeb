@@ -37,6 +37,7 @@ const RGB_MODE_KEYS = [
   "settings.field.rgbMode.7",
   "settings.field.rgbMode.8",
   "settings.field.rgbMode.9",
+  "settings.field.rgbMode.10",
 ] as const;
 const RGB_CLICK_MODE_KEYS = [
   "settings.field.rgbClickMode.0",

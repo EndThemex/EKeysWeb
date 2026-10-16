@@ -1,20 +1,36 @@
 /**
  * KeyBindingPicker — Keymap 抽屉：编辑选中物理键的 KeyAction。
  *
- * 支持 5 种动作：未绑定 / 键盘键 / 媒体键 / 鼠标 / 层切换 / 宏；
- * 受 §10.4 模型限制：Media / Mouse / LayerSwitch / Macro 通过 `function`
- * 字段尽力编码，固件当前不会解析（下次 GET 回来会被还原为 unbound），
- * 因此 UI 必须在「写入」/「读取」时显式提示这一点。
+ * 支持 6 种动作（与 App 端 KeyAction 一致）：未绑定 / 键盘键 / 组合键 /
+ * 文本注入 / 宏序列 / 内建功能。
+ *
+ * 固件支持矩阵（2026-10 协议，与 cmd_keymap.cpp 对齐）：
+ *  - 键盘键 / 组合键 / 文本注入 / 宏序列 / 内建功能：原生支持，无损回读；
+ *    宏仅 Base 层（combo 层无宏通道，allowMacro=false 时隐藏）；
+ *    下发一律 0xNN 字面量（固件不解析 Tab/Esc 等扩展键名）；
+ *  - 内建功能串原样透传：未知串固件不解析（按键无效），但 GET → 应用 → SET
+ *    往返不丢失（与 App 端 KeyAction::Function(String) 一致）。
+ *
+ * FUN 角色区：为选中键分配 / 取消 FUN1/FUN2（与 App 端 set_fun_key 语义一致，
+ * 冲突互斥与孤儿绑定清理在 useKeymap.setFunKey 内完成）。
  */
 
 import { useI18n } from "../../i18n/useI18n.tsx";
-import { NumberRow, SelectRow, TextRow } from "../settings/controls";
+import { NumberRow, SelectRow, SwitchRow, TextRow } from "../settings/controls";
 import {
+  BUILTIN_FUNCTIONS,
   hidLabel,
+  hidWireName,
+  MACRO_DEFAULT_MS,
+  MACRO_MAX_MS,
+  MAX_MACRO_STEPS,
+  MAX_NORMAL_KEYS,
+  MAX_TEXT_LEN,
+  type BuiltinFunctionName,
+  type ComboAction,
   type KeyAction,
-  type LayerSwitchAction,
   type MacroAction,
-  type MouseAction,
+  type TextAction,
 } from "../../protocol";
 
 export type BindingKind = KeyAction["kind"];
@@ -22,51 +38,60 @@ export type BindingKind = KeyAction["kind"];
 const BINDING_KINDS: BindingKind[] = [
   "unbound",
   "keyboard",
-  "media",
-  "mouse",
-  "layer-switch",
+  "combo",
+  "text",
   "macro",
+  "builtin",
 ];
 
-const MOUSE_BUTTON_KEYS = [
-  "keymap.mouse.button.left",
-  "keymap.mouse.button.right",
-  "keymap.mouse.button.middle",
-] as const;
-const MOUSE_BUTTON_VALUES = [1, 2, 3];
+const BUILTIN_NAME_KEYS: Record<BuiltinFunctionName, string> = {
+  KEY_FUNCTION_ASR: "keymap.builtin.asr",
+  KEY_FUNCTION_PAGE_PC: "keymap.builtin.pagePc",
+  KEY_FUNCTION_PAGE_MUSIC: "keymap.builtin.pageMusic",
+  KEY_FUNCTION_PAGE_AUDIO: "keymap.builtin.pageAudio",
+  KEY_FUNCTION_PAGE_KEYMAP: "keymap.builtin.pageKeymap",
+  KEY_FUNCTION_PAGE_SETTING: "keymap.builtin.pageSetting",
+  KEY_FUNCTION_PAGE_HA: "keymap.builtin.pageHa",
+};
 
-const LAYER_TARGET_KEYS = [
-  "keymap.layer.base",
-  "keymap.layer.fun1",
-  "keymap.layer.fun2",
-  "keymap.layer.custom",
-] as const;
-
-const LAYER_MODE_KEYS = [
-  "keymap.layer.mode.momentary",
-  "keymap.layer.mode.toggle",
-] as const;
+/** 字母键区间（宏 Shift 勾选有意义）。 */
+function isLetterCode(code: number): boolean {
+  return code >= 0x04 && code <= 0x1d;
+}
 
 export function KeyBindingPicker({
   slot,
   action,
   onChange,
   disabled,
+  allowMacro = true,
+  funKey1 = 0,
+  funKey2 = 0,
+  onSetFunKey,
 }: {
   slot: number | null;
   action: KeyAction;
   onChange: (next: KeyAction) => void;
   disabled?: boolean;
+  /** 组合层无宏通道：false 时隐藏"宏序列"选项并把已选宏回退为 unbound。 */
+  allowMacro?: boolean;
+  /** 当前 draft 的 FUN 键分配（物理键号 0=未分配）。 */
+  funKey1?: number;
+  funKey2?: number;
+  /** 分配 / 取消 FUN 键角色（side=1|2，phys=0 取消）。 */
+  onSetFunKey?: (side: 1 | 2, phys: number) => void;
 }) {
   const { t } = useI18n();
 
-  const kindOptions = BINDING_KINDS.map((k) => ({
+  const kinds = BINDING_KINDS.filter((k) => k !== "macro" || allowMacro);
+  const kindOptions = kinds.map((k) => ({
     value: k,
     label: t(`keymap.bind.${k}`),
   }));
 
   function setKind(k: BindingKind) {
     if (k === action.kind) return;
+    if (k === "macro" && !allowMacro) return;
     switch (k) {
       case "unbound":
         onChange({ kind: "unbound" });
@@ -74,20 +99,36 @@ export function KeyBindingPicker({
       case "keyboard":
         onChange({ kind: "keyboard", code: 0x04 });
         return;
-      case "media":
-        onChange({ kind: "media", code: 0xe9 });
+      case "combo":
+        onChange({ kind: "combo", codes: [0xe0, 0x06] }); // Ctrl+c
         return;
-      case "mouse":
-        onChange({ kind: "mouse", button: 1, clicks: 1 });
-        return;
-      case "layer-switch":
-        onChange({ kind: "layer-switch", target: 1, mode: "momentary" });
+      case "text":
+        onChange({ kind: "text", text: "" });
         return;
       case "macro":
-        onChange({ kind: "macro", steps: [] });
+        onChange({ kind: "macro", steps: [{ code: 0x04, delayMs: MACRO_DEFAULT_MS }] });
+        return;
+      case "builtin":
+        onChange({ kind: "builtin", name: "KEY_FUNCTION_ASR" });
         return;
     }
   }
+
+  // 组合层切到宏时回退为 unbound（无宏通道）
+  const effective: KeyAction =
+    action.kind === "macro" && !allowMacro ? { kind: "unbound" } : action;
+
+  // 未知内建功能串：SelectRow 无法表达，用只读文本展示（原样透传保留）
+  const isKnownBuiltin =
+    effective.kind === "builtin" &&
+    (BUILTIN_FUNCTIONS as readonly string[]).includes(effective.name);
+
+  const funRole: 0 | 1 | 2 =
+    slot !== null && funKey1 === slot + 1
+      ? 1
+      : slot !== null && funKey2 === slot + 1
+        ? 2
+        : 0;
 
   return (
     <section className="keymap-picker card">
@@ -100,17 +141,17 @@ export function KeyBindingPicker({
 
       <SelectRow<BindingKind>
         label={t("keymap.bind.title")}
-        value={action.kind}
+        value={effective.kind}
         options={kindOptions}
         onChange={setKind}
         disabled={disabled}
       />
 
-      {action.kind === "keyboard" && (
+      {effective.kind === "keyboard" && (
         <>
           <NumberRow
             label={t("keymap.code.label")}
-            value={action.code}
+            value={effective.code}
             min={0}
             max={0xff}
             step={1}
@@ -119,7 +160,7 @@ export function KeyBindingPicker({
           />
           <TextRow
             label={t("keymap.encoded")}
-            value={hidLabel(action.code) ?? `0x${action.code.toString(16).padStart(2, "0")}`}
+            value={hidLabel(effective.code) ?? `0x${effective.code.toString(16).padStart(2, "0")}`}
             onChange={() => {
               /* 单向展示 */
             }}
@@ -130,131 +171,205 @@ export function KeyBindingPicker({
         </>
       )}
 
-      {action.kind === "media" && (
-        <>
-          <NumberRow
-            label={t("keymap.media.label")}
-            value={action.code}
-            min={0}
-            max={0xffff}
-            step={1}
-            onChange={(v) => onChange({ kind: "media", code: v & 0xffff })}
-            disabled={disabled}
-          />
-          <TextRow
-            label={t("keymap.encoded")}
-            value={`media(0x${action.code.toString(16)})`}
-            onChange={() => {
-              /* */
-            }}
-            monospace
-            disabled
-          />
-          <p className="hint">{t("keymap.media.hint")}</p>
-          <p className="hint hint--warn">{t("keymap.firmwareLoss")}</p>
-        </>
+      {effective.kind === "combo" && (
+        <ComboFields action={effective} onChange={onChange} disabled={disabled} />
       )}
 
-      {action.kind === "mouse" && (
+      {effective.kind === "text" && (
+        <TextFields action={effective} onChange={onChange} disabled={disabled} />
+      )}
+
+      {effective.kind === "macro" && (
+        <MacroFields action={effective} onChange={onChange} disabled={disabled} />
+      )}
+
+      {effective.kind === "builtin" && isKnownBuiltin && (
         <>
-          <SelectRow
-            label={t("keymap.mouse.button")}
-            value={action.button}
-            options={MOUSE_BUTTON_KEYS.map((k, i) => ({
-              value: MOUSE_BUTTON_VALUES[i],
-              label: t(k),
+          <SelectRow<BuiltinFunctionName>
+            label={t("keymap.builtin.label")}
+            value={effective.name as BuiltinFunctionName}
+            options={BUILTIN_FUNCTIONS.map((name) => ({
+              value: name,
+              label: t(BUILTIN_NAME_KEYS[name]),
             }))}
-            onChange={(v) => onChange({ kind: "mouse", button: v as number, clicks: action.clicks })}
-            disabled={disabled}
-          />
-          <NumberRow
-            label={t("keymap.mouse.clicks")}
-            value={action.clicks ?? 1}
-            min={1}
-            max={10}
-            step={1}
-            onChange={(v) =>
-              onChange({
-                kind: "mouse",
-                button: action.button,
-                clicks: Math.max(1, Math.min(10, v)),
-              })
-            }
+            onChange={(v) => onChange({ kind: "builtin", name: v })}
             disabled={disabled}
           />
           <TextRow
             label={t("keymap.encoded")}
-            value={`mouse(button=${action.button},clicks=${action.clicks ?? 1})`}
+            value={effective.name}
             onChange={() => {
               /* */
             }}
             monospace
             disabled
           />
-          <p className="hint hint--warn">{t("keymap.firmwareLoss")}</p>
+          <p className="hint">{t("keymap.builtin.hint")}</p>
         </>
       )}
 
-      {action.kind === "layer-switch" && (
-        <LayerSwitchFields action={action} onChange={onChange} disabled={disabled} />
+      {effective.kind === "builtin" && !isKnownBuiltin && (
+        <>
+          <TextRow
+            label={t("keymap.builtin.label")}
+            value={effective.name}
+            onChange={(v) => onChange({ kind: "builtin", name: v })}
+            monospace
+            disabled={disabled}
+          />
+          <p className="hint hint--warn">{t("keymap.builtin.rawHint")}</p>
+        </>
       )}
 
-      {action.kind === "macro" && (
-        <MacroFields action={action} onChange={onChange} disabled={disabled} />
-      )}
-
-      {action.kind === "unbound" && (
+      {effective.kind === "unbound" && (
         <p className="hint">{t("keymap.bind.none")}</p>
+      )}
+
+      {onSetFunKey && slot !== null && (
+        <div className="keymap-macro">
+          <span className="settings-card__title">{t("keymap.fun.title")}</span>
+          <p className="hint">{t("keymap.fun.hint")}</p>
+          <div className="btn-row">
+            <button
+              type="button"
+              className="btn btn--ghost"
+              disabled={disabled || funRole === 1}
+              onClick={() => onSetFunKey(1, funRole === 1 ? 0 : slot + 1)}
+            >
+              {t("keymap.fun.set1")}
+            </button>
+            <button
+              type="button"
+              className="btn btn--ghost"
+              disabled={disabled || funRole === 2}
+              onClick={() => onSetFunKey(2, funRole === 2 ? 0 : slot + 1)}
+            >
+              {t("keymap.fun.set2")}
+            </button>
+          </div>
+          {funRole !== 0 && (
+            <p className="hint">
+              {t("keymap.fun.self").replace("{side}", String(funRole))}
+            </p>
+          )}
+        </div>
       )}
     </section>
   );
 }
 
-function LayerSwitchFields({
+/* ============================================================
+ * 组合键（normal "+" 序列，≤ MAX_NORMAL_KEYS 个 HID code）
+ * ============================================================ */
+
+function ComboFields({
   action,
   onChange,
   disabled,
 }: {
-  action: LayerSwitchAction;
+  action: ComboAction;
   onChange: (next: KeyAction) => void;
   disabled?: boolean;
 }) {
   const { t } = useI18n();
+  function setCode(idx: number, code: number) {
+    const codes = action.codes.slice();
+    codes[idx] = code;
+    onChange({ kind: "combo", codes });
+  }
+  function remove(idx: number) {
+    const codes = action.codes.slice();
+    codes.splice(idx, 1);
+    onChange({ kind: "combo", codes });
+  }
+  function add() {
+    onChange({ kind: "combo", codes: action.codes.concat(0xe0) });
+  }
   return (
     <>
-      <SelectRow
-        label={t("keymap.layer.target")}
-        value={action.target}
-        options={LAYER_TARGET_KEYS.map((k, i) => ({ value: i, label: t(k) }))}
-        onChange={(v) => onChange({ kind: "layer-switch", target: v as number, mode: action.mode })}
-        disabled={disabled}
-      />
-      <SelectRow
-        label={t("keymap.layer.mode")}
-        value={action.mode}
-        options={LAYER_MODE_KEYS.map((k) => ({ value: k.split(".").pop()!, label: t(k) }))}
-        onChange={(v) =>
-          onChange({
-            kind: "layer-switch",
-            target: action.target,
-            mode: v === "toggle" ? "toggle" : "momentary",
-          })
-        }
-        disabled={disabled}
-      />
+      <div className="keymap-macro">
+        <span className="settings-card__title">{t("keymap.combo.keys")}</span>
+        {action.codes.map((c, i) => (
+          <div key={i} className="keymap-macro__step">
+            <span className="keymap-macro__index mono">#{i + 1}</span>
+            <NumberRow
+              label={t("keymap.code.label")}
+              value={c}
+              min={0}
+              max={0xff}
+              step={1}
+              onChange={(v) => setCode(i, v & 0xff)}
+              disabled={disabled}
+            />
+            <span className="keymap-macro__wire mono">{hidWireName(c)}</span>
+            <button
+              type="button"
+              className="btn btn--ghost keymap-macro__remove"
+              onClick={() => remove(i)}
+              disabled={disabled}
+            >
+              {t("keymap.macro.removeStep")}
+            </button>
+          </div>
+        ))}
+        <button
+          type="button"
+          className="btn btn--ghost"
+          onClick={add}
+          disabled={disabled || action.codes.length >= MAX_NORMAL_KEYS}
+        >
+          {t("keymap.combo.addKey")}
+        </button>
+      </div>
       <TextRow
         label={t("keymap.encoded")}
-        value={`layer(target=${action.target},mode=${action.mode})`}
+        value={action.codes.map((c) => hidWireName(c)).join("+")}
         onChange={() => {
           /* */
         }}
         monospace
         disabled
       />
-      <p className="hint hint--warn">{t("keymap.firmwareLoss")}</p>
+      <p className="hint">{t("keymap.combo.hint")}</p>
     </>
   );
 }
+
+/* ============================================================
+ * 文本注入（ASCII ≤ MAX_TEXT_LEN）
+ * ============================================================ */
+
+function TextFields({
+  action,
+  onChange,
+  disabled,
+}: {
+  action: TextAction;
+  onChange: (next: KeyAction) => void;
+  disabled?: boolean;
+}) {
+  const { t } = useI18n();
+  const nonAscii = /[^\x20-\x7e]/.test(action.text);
+  const overLimit = action.text.length > MAX_TEXT_LEN;
+  return (
+    <>
+      <TextRow
+        label={t("keymap.text.label")}
+        value={action.text}
+        onChange={(v) => onChange({ kind: "text", text: v })}
+        disabled={disabled}
+      />
+      <p className={`hint ${overLimit ? "hint--warn" : ""}`}>
+        {t("keymap.text.hint")} ({action.text.length}/{MAX_TEXT_LEN})
+      </p>
+      {nonAscii && <p className="hint hint--warn">{t("keymap.text.warn")}</p>}
+    </>
+  );
+}
+
+/* ============================================================
+ * 宏序列（≤ MAX_MACRO_STEPS 步：按下→间隔→释放）
+ * ============================================================ */
 
 function MacroFields({
   action,
@@ -266,9 +381,12 @@ function MacroFields({
   disabled?: boolean;
 }) {
   const { t } = useI18n();
-  function update(idx: number, patch: Partial<{ delayMs: number; action: KeyAction }>) {
+  function update(
+    idx: number,
+    patch: Partial<{ code: number; shift: boolean; delayMs: number }>,
+  ) {
     const steps = action.steps.slice();
-    const cur = steps[idx] ?? { action: { kind: "unbound" } as KeyAction };
+    const cur = steps[idx] ?? { code: 0x04, delayMs: MACRO_DEFAULT_MS };
     steps[idx] = { ...cur, ...patch };
     onChange({ kind: "macro", steps });
   }
@@ -278,54 +396,49 @@ function MacroFields({
     onChange({ kind: "macro", steps });
   }
   function add() {
-    const steps = action.steps.concat({
-      action: { kind: "keyboard", code: 0x04 } as KeyAction,
-      delayMs: 0,
+    if (action.steps.length >= MAX_MACRO_STEPS) return;
+    onChange({
+      kind: "macro",
+      steps: action.steps.concat({ code: 0x04, delayMs: MACRO_DEFAULT_MS }),
     });
-    onChange({ kind: "macro", steps });
   }
   return (
     <>
       <div className="keymap-macro">
-        <span className="settings-card__title">{t("keymap.macro.steps")}</span>
+        <span className="settings-card__title">
+          {t("keymap.macro.steps")} ({action.steps.length}/{MAX_MACRO_STEPS})
+        </span>
         {action.steps.length === 0 && (
           <p className="hint">{t("keymap.bind.none")}</p>
         )}
         {action.steps.map((s, i) => (
           <div key={i} className="keymap-macro__step">
             <span className="keymap-macro__index mono">#{i + 1}</span>
-            <SelectRow
-              label={t("keymap.bind.title")}
-              value={s.action.kind}
-              options={BINDING_KINDS.map((k) => ({
-                value: k,
-                label: t(`keymap.bind.${k}`),
-              }))}
-              onChange={(v) =>
-                update(i, {
-                  action:
-                    v === "keyboard"
-                      ? { kind: "keyboard", code: 0x04 }
-                      : v === "media"
-                      ? { kind: "media", code: 0xe9 }
-                      : v === "mouse"
-                      ? { kind: "mouse", button: 1 }
-                      : v === "layer-switch"
-                      ? { kind: "layer-switch", target: 1, mode: "momentary" }
-                      : v === "macro"
-                      ? { kind: "macro", steps: [] }
-                      : { kind: "unbound" },
-                })
-              }
+            <NumberRow
+              label={t("keymap.code.label")}
+              value={s.code}
+              min={0}
+              max={0xff}
+              step={1}
+              onChange={(v) => update(i, { code: v & 0xff })}
               disabled={disabled}
             />
+            <span className="keymap-macro__wire mono">{hidWireName(s.code)}</span>
+            {isLetterCode(s.code) && (
+              <SwitchRow
+                label={t("keymap.macro.shift")}
+                checked={Boolean(s.shift)}
+                onChange={(v) => update(i, { shift: v })}
+                disabled={disabled}
+              />
+            )}
             <NumberRow
               label={t("keymap.macro.delay")}
-              value={s.delayMs ?? 0}
+              value={s.delayMs}
               min={0}
-              max={60000}
+              max={MACRO_MAX_MS}
               step={10}
-              onChange={(v) => update(i, { delayMs: Math.max(0, Math.min(60000, v)) })}
+              onChange={(v) => update(i, { delayMs: Math.max(0, Math.min(MACRO_MAX_MS, v)) })}
               disabled={disabled}
               unit={t("settings.unit.ms")}
             />
@@ -343,21 +456,29 @@ function MacroFields({
           type="button"
           className="btn btn--ghost"
           onClick={add}
-          disabled={disabled}
+          disabled={disabled || action.steps.length >= MAX_MACRO_STEPS}
         >
           {t("keymap.macro.addStep")}
         </button>
       </div>
       <TextRow
         label={t("keymap.encoded")}
-        value={`macro(steps=${action.steps.length})`}
+        value={action.steps
+          .map((s) => {
+            const name =
+              s.shift && isLetterCode(s.code)
+                ? String.fromCharCode(65 + (s.code - 0x04)).toUpperCase()
+                : hidWireName(s.code);
+            return s.delayMs === MACRO_DEFAULT_MS ? name : `${name}:${s.delayMs}`;
+          })
+          .join("+") || t("keymap.bind.none")}
         onChange={() => {
           /* */
         }}
         monospace
         disabled
       />
-      <p className="hint hint--warn">{t("keymap.firmwareLoss")}</p>
+      <p className="hint">{t("keymap.macro.hint")}</p>
     </>
   );
 }

@@ -1,5 +1,5 @@
 /**
- * EKeys 协议层 —— 22 条命令常量。
+ * EKeys 协议层 —— 23 条命令常量（0x01–0x17）。
  *
  * 与 EKeysApp/src/protocol.rs 中的 CMD_* 一一对应；
  * Web 端下发的所有 cmd 字段必须从此处取值，禁止使用裸数字。
@@ -58,7 +58,14 @@ export const TOP_LEVEL_CMDS: ReadonlySet<number> = new Set<number>([
   CMD.MUSIC_CONTROL,
 ]);
 
-/** 当前 Web 端已实现的命令 ID 集合（M1 + M2 + M3）。 */
+/**
+ * 当前 Web 端已实现的命令 ID 集合。
+ *
+ * - AUDIO_FILE / AUDIO_PAD 由 AudioPadPanel + useAudioUploader 实现；
+ * - FIRMWARE_DOWNLOAD（0x14）尚未实现：OtaPanel 目前是占位，仅发 0x0b；
+ * - PC_STATUS（0x0d）是主机 → 设备的单向推送，浏览器沙箱拿不到
+ *   CPU / 内存 / GPU 等细节，Web 端不实现（设计文档 §1.2）。
+ */
 export const IMPLEMENTED_CMDS: ReadonlySet<number> = new Set<number>([
   CMD.CONF_VERSION_GET,
   CMD.CONF_VERSION_SET,
@@ -71,11 +78,12 @@ export const IMPLEMENTED_CMDS: ReadonlySet<number> = new Set<number>([
   CMD.HEARTBEAT,
   CMD.FIRMWARE_INFO,
   CMD.VOICE_TEXT,
-  CMD.PC_STATUS,
   CMD.PROFILE_STATE,
   CMD.PROFILE_ICON_SET,
   CMD.TIME_SET,
   CMD.PROFILE_NAME_SET,
   CMD.MUSIC_STATUS,
   CMD.MUSIC_CONTROL,
+  CMD.AUDIO_FILE,
+  CMD.AUDIO_PAD,
 ]);

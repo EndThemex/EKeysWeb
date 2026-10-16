@@ -9,7 +9,7 @@ import {
   type ProfileState,
 } from "../hooks/useEKeysDevice";
 
-const WORK_MODE_LABEL = ["USB", "BLE", "2.4G"];
+const WORK_MODE_LABEL = ["USB", "BLE"];
 
 const POWER_MODE_LABEL = ["performance", "balanced", "low-power"];
 const RGB_MODE_LABEL = ["solid", "breathing", "spectrum", "reactive", "audio"];

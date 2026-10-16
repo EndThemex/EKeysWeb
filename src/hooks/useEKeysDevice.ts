@@ -502,7 +502,14 @@ export function useEKeysDevice() {
 
   /* ---------- TIME_SET ---------- */
   const sendTimeSet = useCallback(async () => {
-    const tz = -new Date().getTimezoneOffset() / 60;
+    // 固件端 tz 期望 POSIX TZ 字符串（如 "CST-8"），且 POSIX 偏移符号与
+    // 常规 UTC 偏移相反：UTC+8 → "-8"。分钟部分如 UTC+5:30 → "-5:30"。
+    const offsetMin = -new Date().getTimezoneOffset(); // 东八区 → 480
+    const sign = offsetMin >= 0 ? "-" : "+";
+    const abs = Math.abs(offsetMin);
+    const h = Math.floor(abs / 60);
+    const m = abs % 60;
+    const tz = `EKEY${sign}${h}${m ? `:${String(m).padStart(2, "0")}` : ""}`;
     const epoch = Math.floor(Date.now() / 1000);
     try {
       await sendCmd(CMD.TIME_SET, { epoch, tz });

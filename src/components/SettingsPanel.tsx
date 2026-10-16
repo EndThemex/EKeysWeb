@@ -49,14 +49,18 @@ const TFT_THEME_KEYS = [
 const WORK_MODE_KEYS = [
   "settings.field.workMode.0",
   "settings.field.workMode.1",
-  "settings.field.workMode.2",
 ] as const;
+/* pc_status_mask 位序与固件 0x0d 契约字段一致
+ * （caps/num/scroll lock 已废弃，新增 gpu / disk_io / disk_space）。 */
 const PC_STATUS_FLAG_KEYS = [
+  "settings.pcStatus.net",
   "settings.pcStatus.cpu",
   "settings.pcStatus.mem",
-  "settings.pcStatus.lock",
-  "settings.pcStatus.net",
-  "settings.pcStatus.online",
+  "settings.pcStatus.gpu",
+  "settings.pcStatus.diskIo",
+  "settings.pcStatus.diskSpace",
+  "settings.pcStatus.netUp",
+  "settings.pcStatus.netDown",
 ] as const;
 
 export function SettingsPanel() {
