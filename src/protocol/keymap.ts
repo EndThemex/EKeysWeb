@@ -294,6 +294,20 @@ const HID_MODIFIER_INV: Record<string, number> = Object.fromEntries(
   Object.entries(HID_MODIFIER).map(([k, v]) => [v.toLowerCase(), parseInt(k, 10)]),
 );
 
+/** UI 按键下拉选项（字符标签 + HID code）。 */
+export interface HidKeyChoice {
+  code: number;
+  label: string;
+}
+
+/** 下拉可选按键：a-z / 0-9 / Enter / Backspace / Space / Tab / Esc / 修饰键。 */
+export const HID_KEY_CHOICES: readonly HidKeyChoice[] = [
+  ...Object.entries(HID_ALPHA).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+  ...Object.entries(HID_DIGIT).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+  ...Object.entries(HID_SPECIAL).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+  ...Object.entries(HID_MODIFIER).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+];
+
 /* ============================================================
  * 单通道编码 / 解码（base 层含 macro；combo 层无 macro）
  * ============================================================ */

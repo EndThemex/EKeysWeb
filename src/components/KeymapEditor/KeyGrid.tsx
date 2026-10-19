@@ -19,12 +19,14 @@ import {
   BUILTIN_FUNCTIONS,
   hidLabel,
   LAYER_CUSTOM,
+  MACRO_DEFAULT_MS,
+  MAX_MACRO_STEPS,
+  MAX_NORMAL_KEYS,
   PHYSICAL_KEY_COUNT,
   SYNCED_LAYERS,
   type KeyAction,
   type KeymapData,
 } from "../../protocol";
-import { actionToChannel } from "../../protocol/keymap";
 
 /**
  * 物理键 → (row, col)；encoder 占 (0, 3)（第一行第四个位置），
@@ -121,6 +123,7 @@ export function KeyGrid({
           const lockedCls = layerLocked ? "is-locked" : "";
           const funRole = funKey1 === slotIdx + 1 ? "F1" : funKey2 === slotIdx + 1 ? "F2" : "";
           const wire = wireSummary(action);
+          const label = describeAction(action, t);
           return (
             <button
               key={cell.slot}
@@ -130,7 +133,7 @@ export function KeyGrid({
               onClick={() => onSelect(slotIdx)}
               disabled={layerLocked}
               aria-pressed={selected === slotIdx}
-              aria-label={`Key ${cell.label}${funRole ? ` (${funRole})` : ""} – ${describeAction(action, t)}`}
+              aria-label={`Key ${cell.label}${funRole ? ` (${funRole})` : ""} – ${label}`}
             >
               <span className="keymap-key__num mono">#{cell.label}</span>
               {funRole && (
@@ -138,10 +141,10 @@ export function KeyGrid({
                   {funRole}
                 </span>
               )}
-              <span className="keymap-key__label">{describeAction(action, t)}</span>
-              <span className="keymap-key__wire mono">
-                {wire || t("keymap.key.unbound")}
-              </span>
+              <span className="keymap-key__label">{label}</span>
+              {wire && wire !== label && (
+                <span className="keymap-key__wire mono">{wire}</span>
+              )}
               {dirty && <span className="keymap-key__dirty-dot" aria-hidden="true" />}
             </button>
           );
@@ -161,10 +164,38 @@ export function KeyGrid({
   );
 }
 
-/** 把动作压缩成网格里能放下的 wire 摘要（≤14 字符）。 */
+/** 把动作压缩成网格里能放下的摘要（≤14 字符），显示按键字符而非 HID code。 */
 function wireSummary(a: KeyAction): string {
-  const ch = actionToChannel(a, true);
-  const raw = ch.normal ?? ch.macro ?? ch.text ?? ch.function ?? "";
+  const label = (c: number) => hidLabel(c) ?? `0x${c.toString(16).padStart(2, "0")}`;
+  let raw: string;
+  switch (a.kind) {
+    case "keyboard":
+      raw = label(a.code);
+      break;
+    case "combo":
+      raw = a.codes.slice(0, MAX_NORMAL_KEYS).map(label).join("+");
+      break;
+    case "macro":
+      raw = a.steps
+        .slice(0, MAX_MACRO_STEPS)
+        .map((s) => {
+          const l =
+            s.shift && s.code >= 0x04 && s.code <= 0x1d
+              ? String.fromCharCode(65 + (s.code - 0x04))
+              : label(s.code);
+          return s.delayMs === MACRO_DEFAULT_MS ? l : `${l}:${s.delayMs}`;
+        })
+        .join("+");
+      break;
+    case "text":
+      raw = a.text;
+      break;
+    case "builtin":
+      raw = a.name;
+      break;
+    default:
+      raw = "";
+  }
   if (raw.length <= 14) return raw;
   return raw.slice(0, 13) + "…";
 }

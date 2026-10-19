@@ -19,7 +19,7 @@ import { useI18n } from "../../i18n/useI18n.tsx";
 import { NumberRow, SelectRow, SwitchRow, TextRow } from "../settings/controls";
 import {
   BUILTIN_FUNCTIONS,
-  hidLabel,
+  HID_KEY_CHOICES,
   hidWireName,
   MACRO_DEFAULT_MS,
   MACRO_MAX_MS,
@@ -57,6 +57,37 @@ const BUILTIN_NAME_KEYS: Record<BuiltinFunctionName, string> = {
 /** 字母键区间（宏 Shift 勾选有意义）。 */
 function isLetterCode(code: number): boolean {
   return code >= 0x04 && code <= 0x1d;
+}
+
+/**
+ * 按键字符下拉：显示字符标签（a / 1 / Enter / Ctrl…）而非 HID code。
+ * 设备回读到下拉未收录的键（如 0x4f）时，追加一项 hex 标签保证往返不丢。
+ */
+function KeyCodeSelect({
+  label,
+  value,
+  onChange,
+  disabled,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  disabled?: boolean;
+}) {
+  const known = HID_KEY_CHOICES.some((c) => c.code === value);
+  const options = [
+    ...HID_KEY_CHOICES.map((c) => ({ value: c.code, label: c.label })),
+    ...(known ? [] : [{ value, label: hidWireName(value) }]),
+  ];
+  return (
+    <SelectRow<number>
+      label={label}
+      value={value}
+      options={options}
+      onChange={onChange}
+      disabled={disabled}
+    />
+  );
 }
 
 export function KeyBindingPicker({
@@ -149,18 +180,15 @@ export function KeyBindingPicker({
 
       {effective.kind === "keyboard" && (
         <>
-          <NumberRow
-            label={t("keymap.code.label")}
+          <KeyCodeSelect
+            label={t("keymap.key.select")}
             value={effective.code}
-            min={0}
-            max={0xff}
-            step={1}
             onChange={(v) => onChange({ kind: "keyboard", code: v & 0xff })}
             disabled={disabled}
           />
           <TextRow
             label={t("keymap.encoded")}
-            value={hidLabel(effective.code) ?? `0x${effective.code.toString(16).padStart(2, "0")}`}
+            value={hidWireName(effective.code)}
             onChange={() => {
               /* 单向展示 */
             }}
@@ -292,12 +320,9 @@ function ComboFields({
         {action.codes.map((c, i) => (
           <div key={i} className="keymap-macro__step">
             <span className="keymap-macro__index mono">#{i + 1}</span>
-            <NumberRow
-              label={t("keymap.code.label")}
+            <KeyCodeSelect
+              label={t("keymap.key.select")}
               value={c}
-              min={0}
-              max={0xff}
-              step={1}
               onChange={(v) => setCode(i, v & 0xff)}
               disabled={disabled}
             />
@@ -414,12 +439,9 @@ function MacroFields({
         {action.steps.map((s, i) => (
           <div key={i} className="keymap-macro__step">
             <span className="keymap-macro__index mono">#{i + 1}</span>
-            <NumberRow
-              label={t("keymap.code.label")}
+            <KeyCodeSelect
+              label={t("keymap.key.select")}
               value={s.code}
-              min={0}
-              max={0xff}
-              step={1}
               onChange={(v) => update(i, { code: v & 0xff })}
               disabled={disabled}
             />

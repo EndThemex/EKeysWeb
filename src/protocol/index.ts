@@ -53,6 +53,7 @@ export {
   hidLabel,
   hidWireName,
   hidWireCode,
+  HID_KEY_CHOICES,
 } from "./keymap";
 export type {
   KeyAction,
@@ -71,6 +72,7 @@ export type {
   ChannelFields,
   ProfileNameReq,
   ProfileIconReq,
+  HidKeyChoice,
 } from "./keymap";
 
 export {
