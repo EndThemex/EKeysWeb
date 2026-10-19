@@ -241,6 +241,8 @@ export function hidLabel(code: number): string | null {
   if (code in HID_ALPHA) return HID_ALPHA[code];
   if (code in HID_DIGIT) return HID_DIGIT[code];
   if (code in HID_SPECIAL) return HID_SPECIAL[code];
+  if (code in HID_MODIFIER) return HID_MODIFIER[code];
+  if (code in HID_EXTRA) return HID_EXTRA[code];
   return null;
 }
 
@@ -279,6 +281,21 @@ const HID_SPECIAL: Record<number, string> = {
 /** 修饰键名（固件 KeyNameTable 约定别名取正式名）。 */
 const HID_MODIFIER: Record<number, string> = {
   0xe0: "Ctrl", 0xe1: "Shift", 0xe2: "Alt", 0xe3: "Win",
+};
+
+/**
+ * 仅展示用的扩展键名（F 功能键 / 方向键 / 常用编辑键）。
+ * 不进入 HID_KEY_CHOICES 下拉，也不参与 wire 解析 —— 固件 KeyNameTable
+ * 只认 0xNN 字面量，这些键从设备读回时以 0xNN 形式出现，此处仅供 UI 显示。
+ */
+const HID_EXTRA: Record<number, string> = {
+  0x3a: "F1", 0x3b: "F2", 0x3c: "F3", 0x3d: "F4",
+  0x3e: "F5", 0x3f: "F6", 0x40: "F7", 0x41: "F8",
+  0x42: "F9", 0x43: "F10", 0x44: "F11", 0x45: "F12",
+  0x46: "PrtSc", 0x47: "ScrLk", 0x48: "Pause",
+  0x49: "Insert", 0x4a: "Home", 0x4b: "PgUp",
+  0x4c: "Delete", 0x4d: "End", 0x4e: "PgDn",
+  0x4f: "→", 0x50: "←", 0x51: "↓", 0x52: "↑",
 };
 
 const HID_ALPHA_INV: Record<string, number> = Object.fromEntries(

@@ -1,15 +1,15 @@
 /**
- * LayerSelector — 4 个 layer 切换按钮（Base / Fun1 / Fun2 / Custom）。
+ * LayerSelector — layer 切换按钮（Base / Fun1 / Fun2）。
  *
  * 可编辑性（与 App 端 panel_keymap 一致）：
  * - Base：始终可编辑；
  * - Fun1/Fun2：对应 FUN 键已分配且当前选中键不是 FUN 键本身
- *   （FUN 键按住时进入组合层，自身在组合层无输出）；
- * - Custom：仅本地占位，只读。
+ *   （FUN 键按住时进入组合层，自身在组合层无输出）。
+ * - Custom（layer 3）仅本地占位，不提供切换入口。
  */
 
 import { useI18n } from "../../i18n/useI18n.tsx";
-import { LAYER_BASE, LAYER_CUSTOM, LAYER_FUN1, LAYER_FUN2 } from "../../protocol";
+import { LAYER_BASE, LAYER_FUN1, LAYER_FUN2 } from "../../protocol";
 
 export function LayerSelector({
   layer,
@@ -48,12 +48,6 @@ export function LayerSelector({
       editable: funKey2 !== 0 && selectedSlot !== funKey2 - 1,
       lockedHint:
         funKey2 === 0 ? "keymap.layer.needFun" : "keymap.layer.funSelf",
-    },
-    {
-      idx: LAYER_CUSTOM,
-      i18n: "keymap.layer.custom",
-      editable: false,
-      lockedHint: "keymap.layer.lockedHint",
     },
   ];
 

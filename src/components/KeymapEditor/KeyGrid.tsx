@@ -63,7 +63,6 @@ export function KeyGrid({
   funKey1 = 0,
   funKey2 = 0,
   onSelect,
-  onClearLayer,
 }: {
   draft: KeymapData;
   snapshot: KeymapData;
@@ -74,7 +73,6 @@ export function KeyGrid({
   funKey1?: number;
   funKey2?: number;
   onSelect: (slot: number) => void;
-  onClearLayer?: () => void;
 }) {
   const { t } = useI18n();
   const dirtySet = new Set(dirtyKeys);
@@ -122,8 +120,10 @@ export function KeyGrid({
           const dirtyCls = dirty ? "is-dirty" : "";
           const lockedCls = layerLocked ? "is-locked" : "";
           const funRole = funKey1 === slotIdx + 1 ? "F1" : funKey2 === slotIdx + 1 ? "F2" : "";
-          const wire = wireSummary(action);
-          const label = describeAction(action, t);
+          // FUN 键本体：键帽直接显示 FUN 角色，不显示「未绑定」——
+          // 其组合层绑定会被清空、单击输出被固件抑制（与 App 端键帽角标语义一致）。
+          const label = funRole ? `FUN${funRole.slice(1)}` : describeAction(action, t);
+          const wire = funRole ? "" : wireSummary(action);
           return (
             <button
               key={cell.slot}
@@ -149,16 +149,6 @@ export function KeyGrid({
             </button>
           );
         })}
-      </div>
-      <div className="keymap-board__actions">
-        <button
-          type="button"
-          className="btn btn--ghost"
-          onClick={onClearLayer}
-          disabled={layerLocked || slotArr.every((s) => s.kind === "unbound")}
-        >
-          {t("keymap.bind.unbound")}
-        </button>
       </div>
     </div>
   );

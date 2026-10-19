@@ -20,6 +20,7 @@ import { NumberRow, SelectRow, SwitchRow, TextRow } from "../settings/controls";
 import {
   BUILTIN_FUNCTIONS,
   HID_KEY_CHOICES,
+  hidLabel,
   hidWireName,
   MACRO_DEFAULT_MS,
   MACRO_MAX_MS,
@@ -61,7 +62,8 @@ function isLetterCode(code: number): boolean {
 
 /**
  * 按键字符下拉：显示字符标签（a / 1 / Enter / Ctrl…）而非 HID code。
- * 设备回读到下拉未收录的键（如 0x4f）时，追加一项 hex 标签保证往返不丢。
+ * 设备回读到下拉未收录的键（如 0x4f 方向键）时，追加一项并优先显示
+ * 友好名（hidLabel，含修饰键 / F 键 / 方向键等扩展表），保证往返不丢。
  */
 function KeyCodeSelect({
   label,
@@ -77,7 +79,7 @@ function KeyCodeSelect({
   const known = HID_KEY_CHOICES.some((c) => c.code === value);
   const options = [
     ...HID_KEY_CHOICES.map((c) => ({ value: c.code, label: c.label })),
-    ...(known ? [] : [{ value, label: hidWireName(value) }]),
+    ...(known ? [] : [{ value, label: hidLabel(value) ?? hidWireName(value) }]),
   ];
   return (
     <SelectRow<number>
@@ -261,18 +263,18 @@ export function KeyBindingPicker({
             <button
               type="button"
               className="btn btn--ghost"
-              disabled={disabled || funRole === 1}
+              disabled={disabled || funRole === 2}
               onClick={() => onSetFunKey(1, funRole === 1 ? 0 : slot + 1)}
             >
-              {t("keymap.fun.set1")}
+              {funRole === 1 ? t("keymap.fun.unset1") : t("keymap.fun.set1")}
             </button>
             <button
               type="button"
               className="btn btn--ghost"
-              disabled={disabled || funRole === 2}
+              disabled={disabled || funRole === 1}
               onClick={() => onSetFunKey(2, funRole === 2 ? 0 : slot + 1)}
             >
-              {t("keymap.fun.set2")}
+              {funRole === 2 ? t("keymap.fun.unset2") : t("keymap.fun.set2")}
             </button>
           </div>
           {funRole !== 0 && (

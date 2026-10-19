@@ -42,7 +42,8 @@ import {
   clampFunKey,
   emptyKeymapData,
   LAYER_BASE,
-  PHYSICAL_KEY_COUNT,
+  LAYER_FUN1,
+  LAYER_FUN2,
   SYNCED_LAYERS,
   type FirmwareKeyEntry,
   type KeyAction,
@@ -94,6 +95,15 @@ export function KeymapPanel() {
   useEffect(() => {
     setSelectedSlot(null);
   }, [activeProfile]);
+
+  // FUN 键被取消分配后其组合层不可再触发：自动回落到 Base 层（与 App 端
+  // edit_channel 回落语义一致，避免停留在永久锁定的组合层上）
+  const funKey1 = km.draft?.funKey1 ?? 0;
+  const funKey2 = km.draft?.funKey2 ?? 0;
+  useEffect(() => {
+    if (layer === LAYER_FUN1 && funKey1 === 0) setLayer(LAYER_BASE);
+    else if (layer === LAYER_FUN2 && funKey2 === 0) setLayer(LAYER_BASE);
+  }, [layer, funKey1, funKey2]);
 
   /* ---------- 进入页面 / 收到 profile 推送时拉 KEYMAP_GET ---------- */
   const lastFetchedProfile = useRef<number | null>(null);
@@ -383,14 +393,6 @@ export function KeymapPanel() {
 
       {iconError && <div className="settings-panel__error-icon" role="alert">{iconError}</div>}
 
-      <LayerSelector
-        layer={layer}
-        selectedSlot={selectedSlot}
-        funKey1={draftSafe.funKey1}
-        funKey2={draftSafe.funKey2}
-        onChange={setLayer}
-      />
-
       <div className="keymap-grid-wrap">
         <div className="keymap-grid-col">
           <KeyGrid
@@ -401,18 +403,27 @@ export function KeymapPanel() {
             dirtyKeys={km.dirtyKeys}
             funKey1={draftSafe.funKey1}
             funKey2={draftSafe.funKey2}
-            onSelect={(s) => setSelectedSlot(s)}
-            onClearLayer={() => {
-              if (!SYNCED_LAYERS.includes(layer)) return;
-              // draft-only 更新：不能走 syncFromSnapshot（会连 snapshot 一起改，
-              // 导致 dirty 被吞、未下发就显示已保存）
-              for (let s = 0; s < PHYSICAL_KEY_COUNT; s++) {
-                km.setLayerSlot(layer, s, { kind: "unbound" });
+            onSelect={(s) => {
+              setSelectedSlot(s);
+              // 在组合层选中 FUN 键本体时回落到 Base（FUN 键自身组合层
+              // 无绑定、不可编辑，与 App 端 edit_channel 回落一致）
+              if (
+                (layer === LAYER_FUN1 && draftSafe.funKey1 === s + 1) ||
+                (layer === LAYER_FUN2 && draftSafe.funKey2 === s + 1)
+              ) {
+                setLayer(LAYER_BASE);
               }
             }}
           />
         </div>
         <div className="keymap-drawer-col">
+          <LayerSelector
+            layer={layer}
+            selectedSlot={selectedSlot}
+            funKey1={draftSafe.funKey1}
+            funKey2={draftSafe.funKey2}
+            onChange={setLayer}
+          />
           <KeyBindingPicker
             slot={selectedSlot}
             action={selectedAction}
