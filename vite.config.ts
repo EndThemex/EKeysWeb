@@ -17,6 +17,25 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: "index.html",
+      output: {
+        /**
+         * 手动分包：把长期不变的依赖拆出来，让业务代码更新时这两块
+         * 仍然命中浏览器缓存。
+         * - three 只在 /model3d /showcase /prototype 懒加载时下载；
+         * - react 全家桶（含 react-router）随首屏加载，但很少变动。
+         */
+        manualChunks(id) {
+          if (id.includes("node_modules/three")) return "three";
+          if (
+            /node_modules\/(react|react-dom|scheduler|react-router|react-router-dom)\//.test(
+              id,
+            )
+          ) {
+            return "react";
+          }
+          return undefined;
+        },
+      },
     },
   },
 });
