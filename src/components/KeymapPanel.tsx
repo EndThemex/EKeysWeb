@@ -165,13 +165,13 @@ export function KeymapPanel() {
       const deviceActive = snapshot.profile?.active_profile;
       if (deviceActive !== undefined && km.draft.activeProfile !== deviceActive) {
         await sendCmd(CMD.CONFIG_SET, {
-          data: { config: { active_keymap_profile: km.draft.activeProfile } },
+          config: { active_keymap_profile: km.draft.activeProfile },
         });
       }
       // 0x06 SET：整表覆盖 layer 0/1/2 + 变更过的 fun_key（缺省 = 保持现值）。
       // 超时对齐 App 端 4s（固件 ACK 后才做 SPIFFS 原子写，但留足余量）
       const payload = buildKeymapSetPayload(km.draft, km.snapshot);
-      await sendCmd(CMD.KEYMAP_SET, { data: payload }, 4000);
+      await sendCmd(CMD.KEYMAP_SET, payload, 4000);
       // 成功后让 snapshot 与 draft 对齐（避免「下发后立即又显示 dirty」）
       km.syncFromSnapshot(km.draft);
       setSavedTick((n) => n + 1);
@@ -195,7 +195,7 @@ export function KeymapPanel() {
     try {
       // 通过 0x08 CONFIG_SET 写 active_keymap_profile，再 refresh
       await sendCmd(CMD.CONFIG_SET, {
-        data: { config: { active_keymap_profile: idx } },
+        config: { active_keymap_profile: idx },
       });
       // 主动拉一次 0x10，让 snapshot.profile 立即反映
       try {
@@ -219,7 +219,8 @@ export function KeymapPanel() {
     setIconError(null);
     try {
       await sendCmd(CMD.PROFILE_NAME_SET, {
-        data: { profile: km.draft.activeProfile, name: trimmed },
+        profile: km.draft.activeProfile,
+        name: trimmed,
       });
       km.setProfileName(trimmed);
       // 触发 0x10 刷新一次拿权威值
@@ -250,10 +251,9 @@ export function KeymapPanel() {
         throw new Error("only png / jpg accepted");
       }
       await sendCmd(CMD.PROFILE_ICON_SET, {
-        data: {
+        profile_icon: {
           profile: km.draft?.activeProfile ?? 0,
-          image: b64,
-          ext: ext === "jpeg" ? "jpg" : ext,
+          png_base64: b64,
         },
       });
       km.setHasCustomIcon(true);
@@ -272,7 +272,7 @@ export function KeymapPanel() {
     setIconError(null);
     try {
       await sendCmd(CMD.PROFILE_ICON_SET, {
-        data: { profile: km.draft.activeProfile, image: "", ext: "" },
+        profile_icon: { profile: km.draft.activeProfile, clear: true },
       });
       km.setHasCustomIcon(false);
     } catch (e) {

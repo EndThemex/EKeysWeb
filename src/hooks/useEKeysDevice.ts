@@ -155,6 +155,17 @@ export function classify(
   return { kind: fallbackKind, message: raw };
 }
 
+/**
+ * classify 返回的是普通 DeviceError 对象；用作 Promise 拒绝值时必须包成
+ * Error 实例（并保留 kind），否则调用方 `e instanceof Error` 判定失败，
+ * 错误信息退化为 "[object Object]"。
+ */
+function rejectError(err: DeviceError): Error {
+  const e = new Error(err.message);
+  (e as unknown as { kind: ErrorKind }).kind = err.kind;
+  return e;
+}
+
 export function useEKeysDevice() {
   const [serial, setSerial] = useState<EKeysSerial | null>(null);
   const [phase, setPhase] = useState<Phase>("idle");
@@ -360,7 +371,7 @@ export function useEKeysDevice() {
       const op = async (): Promise<T> => {
         const s = serialRef.current;
         if (!s || s.closed) {
-          throw classify(new Error("disconnecting"), "portBusy");
+          throw rejectError(classify(new Error("disconnecting"), "portBusy"));
         }
         const seq = seqRef.current++;
         const payload = encodeLine({ cmd, seq, ...(data ? { data } : {}) });
@@ -376,9 +387,11 @@ export function useEKeysDevice() {
           const timer = window.setTimeout(() => {
             finish(() =>
               reject(
-                classify(
-                  new Error(`请求超时：cmd=0x${cmd.toString(16)} seq=${seq}`),
-                  "timeout",
+                rejectError(
+                  classify(
+                    new Error(`请求超时：cmd=0x${cmd.toString(16)} seq=${seq}`),
+                    "timeout",
+                  ),
                 ),
               ),
             );
@@ -411,13 +424,15 @@ export function useEKeysDevice() {
               const errMsg = (frame as { error?: unknown }).error;
               finish(() =>
                 reject(
-                  classify(
-                    new Error(
-                      `设备返回错误 (cmd=0x${cmd.toString(16)}, status=${String(st)}): ${
-                        typeof errMsg === "string" ? errMsg : ""
-                      }`,
+                  rejectError(
+                    classify(
+                      new Error(
+                        `设备返回错误 (cmd=0x${cmd.toString(16)}, status=${String(st)}): ${
+                          typeof errMsg === "string" ? errMsg : ""
+                        }`,
+                      ),
+                      "protocol",
                     ),
-                    "protocol",
                   ),
                 ),
               );
@@ -434,7 +449,13 @@ export function useEKeysDevice() {
             })
             .catch((e) => {
               if (writeOk) return;
-              finish(() => reject(classify(e, "writeFailed")));
+              finish(() =>
+                reject(
+                  e instanceof Error && "kind" in e
+                    ? e
+                    : rejectError(classify(e, "writeFailed")),
+                ),
+              );
             });
         });
       };

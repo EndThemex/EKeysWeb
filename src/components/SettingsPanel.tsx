@@ -108,7 +108,7 @@ export function SettingsPanel() {
     setApplying(true);
     setApplyError(null);
     try {
-      await sendCmd(CMD.CONFIG_SET, { data: { config: out.delta } });
+      await sendCmd(CMD.CONFIG_SET, { config: out.delta });
       setSavedTick((n) => n + 1);
     } catch (e) {
       setApplyError(e instanceof Error ? e.message : String(e));

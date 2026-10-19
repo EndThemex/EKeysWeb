@@ -298,7 +298,7 @@ export class FieldMask {
   static empty(): FieldMask;
   static all(): FieldMask; // 低 FIELD_COUNT 位全 1
   static fromBits(b: bigint): FieldMask;
-  set(bit: number): FieldMask;
+  set(bit: number): FieldMask; // 原地置位并返回 this（与 Rust set_bit(&mut self) 对齐）
   test(bit: number): boolean;
   intersect(other: FieldMask): FieldMask;
   union(other: FieldMask): FieldMask;
@@ -307,6 +307,11 @@ export class FieldMask {
 ```
 
 > 选择 `bigint` 是为了未来字段 > 25 时无需重构（与 Rust `u64` 等价）。
+>
+> ⚠️ `set()` 是**原地修改**（返回 `this` 仅供链式调用），与 Rust 端
+> `set_bit(&mut self)` 语义对齐。历史版本曾误实现为返回新对象，导致
+> `mask.set(F[k])` 丢弃返回值后 dirtyMask 永远为空、Apply 永远无效——
+> 新增方法时务必保持「调用即生效」语义或显式命名（如 `with`）以示区分。
 
 ### 4.5 `diff` / `apply` / `mergePush` / `maskSensitive`
 
@@ -430,6 +435,19 @@ export function useEKeysDevice() {
   };
 }
 ```
+
+> **`sendCmd(cmd, data?)` 契约**：
+>
+> 1. 第二个参数 `data` 会**直接**作为线帧的 `data` 字段发送
+>    （`encodeLine({ cmd, seq, data })`）。调用方**不要再包一层
+>    `{ data: ... }`**，否则固件读 `data.xxx` 时会得到 null，
+>    回 `status=1, missing 'xxx'`（0x08 曾因此报 `missing 'config'`）。
+>    即：固件 handler 里的 `data["config"]` 对应 Web 调用
+>    `sendCmd(0x08, { config: ... })`。
+> 2. 失败时 reject 的值是**带 `kind` 属性的 `Error` 实例**
+>    （`rejectError(classify(...))`），调用方用
+>    `e instanceof Error ? e.message : ...` 即可拿到可读信息；
+>    `e.kind` ∈ timeout / protocol / writeFailed / portBusy。
 
 ### 5.4 会话快照 `DeviceSnapshot`
 
@@ -699,14 +717,21 @@ export function useDeviceDraft(initial: DeviceSettings | null) {
 `sendCmd(CMD.CONFIG_SET, payload)`：
 
 ```ts
+// sendCmd 的第二个参数就是线帧的 data 字段，直接放 config delta，
+// 不要再包一层 { data: ... }（固件 handler 读的是 data["config"]）
 const payload = {
-  data: {
-    config: delta, // 仅 dirtyMask 标记的字段
-  },
+  config: delta, // 仅 dirtyMask 标记的字段
 };
+await sendCmd(CMD.CONFIG_SET, payload);
 ```
 
 > 与桌面端一致：**不发送 `mask` 字段**，固件按"字段是否存在"判断增量。
+> ⚠️ 历史教训：本文档曾把伪代码写成 `payload = { data: { config: delta } }`，
+> 而调用点又原样传入 `sendCmd(cmd, payload)`，sendCmd 再包一层后线帧变成
+> `data.data.config`，固件报 `missing 'config'`——0x08 / 0x06 / 0x15 / 0x11
+> 的全部 Web 调用点都因此失效过。新增命令时对照固件 handler 的
+> `data["..."]` 读取层级来写 payload（0x11 例外：固件要求包一层
+> `data.profile_icon`）。
 
 ### 9.4 应用按钮 / 放弃按钮
 

@@ -26,10 +26,17 @@ export class FieldMask {
     return new FieldMask(b);
   }
 
-  /** 把第 `bit` 位置 1，返回新对象（不可变）。 */
+  /**
+   * 把第 `bit` 位置 1（原地修改，返回 this 以便链式调用）。
+   *
+   * 注意：语义与 EKeysApp/src/protocol.rs 的 set_bit(&mut self) 对齐——
+   * 历史版本曾实现为返回新对象，导致 `mask.set(F[k])` 丢弃返回值后
+   * dirtyMask 永远为空、Apply 按钮永远 disabled。
+   */
   set(bit: number): FieldMask {
     if (bit < 0 || bit >= 64) throw new RangeError(`bit out of range: ${bit}`);
-    return new FieldMask(this.bits | (1n << BigInt(bit)));
+    this.bits |= 1n << BigInt(bit);
+    return this;
   }
 
   /** 第 `bit` 位是否为 1。 */
