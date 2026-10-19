@@ -115,8 +115,9 @@ export function KeymapPanel() {
     (async () => {
       try {
         // data.profile（0..7）：定向拉取该 Profile（缺省 = 当前激活）
+        // 第二参直接作为线帧 data 字段（固件读 data["profile"]），勿再包一层
         const frame = await sendCmd<Record<string, unknown>>(CMD.KEYMAP_GET, {
-          data: { profile: prof },
+          profile: prof,
         });
         if (cancelled) return;
         const arr = extractKeymapArray(frame);
@@ -382,6 +383,7 @@ export function KeymapPanel() {
           profile: t("keymap.profile.label"),
           rename: t("keymap.profile.rename"),
           name: t("keymap.profile.name"),
+          icon: t("keymap.profile.icon"),
           uploadIcon: t("keymap.profile.icon.upload"),
           clearIcon: t("keymap.profile.icon.clear"),
           iconHint: t("keymap.profile.iconHint"),

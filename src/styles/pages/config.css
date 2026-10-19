@@ -784,8 +784,8 @@
 
 .keymap-profile {
   display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+  flex-direction: column;
+  gap: 14px;
   padding: 16px 20px;
   margin-bottom: 16px;
   background: var(--surface-1, rgba(255, 255, 255, 0.04));
@@ -793,18 +793,26 @@
   border-radius: 14px;
 }
 
+/* 顶条：标题 + 8 槽位 + 切换主操作 */
 .keymap-profile__slots {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 200px;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.keymap-profile__slots > .settings-card__title {
   flex: 0 0 auto;
+  margin: 0;
 }
 
 .keymap-profile__buttons {
+  flex: 1 1 260px;
   display: grid;
   grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 4px;
+  min-width: 0;
 }
 
 .keymap-profile__btn {
@@ -832,26 +840,45 @@
   box-shadow: 0 2px 8px rgba(255, 59, 0, 0.24);
 }
 
+.keymap-profile__switch {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+/* 字段区：名称 / 图标 两列并列 */
 .keymap-profile__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 12px 28px;
+  align-items: start;
+}
+
+.keymap-profile__field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  flex: 1 1 280px;
+  gap: 6px;
   min-width: 0;
 }
 
-.keymap-profile__name-row,
-.keymap-profile__icon-row {
+.keymap-profile__field-label {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #9aa3b2);
+}
+
+.keymap-profile__field-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
+  min-width: 0;
 }
 
 .keymap-profile__name {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 4px 10px;
+  padding: 6px 10px;
   background: var(--surface-2, rgba(255, 255, 255, 0.02));
   border: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
@@ -863,7 +890,7 @@
 
 .keymap-profile__icon {
   flex: 0 0 auto;
-  padding: 4px 10px;
+  padding: 6px 10px;
   background: var(--surface-2, rgba(255, 255, 255, 0.02));
   border: 1px solid var(--border-1, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
@@ -880,11 +907,6 @@
 .keymap-profile__rename input {
   flex: 1 1 auto;
   min-width: 0;
-}
-
-.keymap-profile__switch {
-  align-self: flex-start;
-  margin-top: 4px;
 }
 
 /* ============================================================
@@ -1160,8 +1182,9 @@
 
 @media (max-width: 860px) {
   .keymap-grid-wrap { grid-template-columns: minmax(0, 1fr); }
-  .keymap-profile { flex-direction: column; }
   .keymap-profile__buttons { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .keymap-profile__switch { margin-left: 0; flex-basis: 100%; }
+  .keymap-profile__meta { grid-template-columns: minmax(0, 1fr); }
 }
 
 @media (max-width: 480px) {
