@@ -41,16 +41,19 @@
 /* ---- Design Tokens ------------------------------------------------- */
 :root {
   /* type */
-  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Noto Sans SC",
+    sans-serif;
   --font-sans:
-    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-    "Microsoft YaHei", "Noto Sans SC", sans-serif;
-  --font-display: "Bebas Neue", "JetBrains Mono", sans-serif;
-  /* 中文专用栈：优先系统中文（PingFang SC / 微软雅黑 / Noto Sans SC），
-     400 字重在任何浅色背景下都清晰不虚。 */
-  --font-zh: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
-    "Source Han Sans SC", "Noto Sans SC", -apple-system, BlinkMacSystemFont,
-    "Segoe UI", sans-serif;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+    "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: "Bebas Neue", "JetBrains Mono", "Noto Sans SC", sans-serif;
+  /* 中文栈：网络字体 Noto Sans SC（= 思源黑体）优先，保证全平台渲染一致；
+     网络字体加载失败时回退系统中文（PingFang SC / 微软雅黑）。 */
+  --font-zh:
+    "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+    "Source Han Sans SC", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
 
   /* light theme (default) */
   --bg: #f4f3ee;
@@ -176,9 +179,10 @@ body {
    栈顺序保证：英文/数字仍由 JetBrains Mono 渲染（靠前的中文字体不含西文
    字形或回退优先级），中文则由 PingFang SC / 微软雅黑等系统中文渲染。 */
 :root[lang="zh-CN"] {
-  --font-mono: "JetBrains Mono", "PingFang SC", "Hiragino Sans GB",
-    "Microsoft YaHei", "Source Han Sans SC", "Noto Sans SC", ui-monospace,
-    "SF Mono", Consolas, monospace;
+  --font-mono:
+    "JetBrains Mono", "Noto Sans SC", "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Source Han Sans SC", ui-monospace, "SF Mono", Consolas,
+    monospace;
 }
 img {
   max-width: 100%;

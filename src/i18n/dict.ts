@@ -119,6 +119,7 @@ export const DICT: Record<Lang, Dict> = {
       "Every position on the 3 × 4 grid is bound by a three-channel resolver: a function key, a normal key sequence, or a multi-step macro. Add FUN1 / FUN2 for two more layers.",
     "showcase.feature.2.bullets": [
       "key / combo / multi-press / text / firmware-fn",
+      "text over 128 chars spills to the next non-FUN keys",
       "FUN1 + FUN2 modifier layers",
       "diff preview before sending",
     ],
@@ -178,8 +179,8 @@ export const DICT: Record<Lang, Dict> = {
 
     "feature.2.title": "11 remappable keys",
     "feature.2.desc":
-      "Each key can be bound to a single keystroke, a modifier combo, a multi-tap sequence, a text snippet or a firmware-side function. Bindings are edited in the desktop app and pushed to the device via the protocol — the on-device storage holds up to 8 keymaps.",
-    "feature.2.tags": ["11 keys", "combos", "macros"],
+      "Each key can be bound to a single keystroke, a modifier combo, a multi-tap sequence, a text snippet or a firmware-side function. A single key holds up to 128 characters of text; longer snippets automatically spill onto the following non-FUN keys in physical order. Bindings are edited in the desktop app and pushed to the device via the protocol — the on-device storage holds up to 8 keymaps.",
+    "feature.2.tags": ["11 keys", "combos", "macros", "text spill"],
 
     "feature.3.title": "Rotary encoder",
     "feature.3.desc":
@@ -256,7 +257,7 @@ export const DICT: Record<Lang, Dict> = {
     "specs.size.eyebrow": "// size & shape",
     "specs.size.title": "dimensions.",
     "specs.size.desc":
-      "Approximate footprint is 105 × 75 × 28 mm with the base attached. USB-C is centered on the rear edge. The base is a magnetic riser with three height positions; without the base the device sits at 12 mm.",
+      "Approximate footprint is 105 × 75 × 28 mm with the base attached. USB-C is centered on the rear edge. The base is a magnetic riser; without the base the device sits at 12 mm.",
     "specs.size.fig.top": "FIG · 03 — TOP",
     "specs.size.fig.back": "FIG · 04 — BACK",
     "specs.size.label.knob": "ENCODER",
@@ -420,10 +421,10 @@ export const DICT: Record<Lang, Dict> = {
 
     "app.panel.keymap.title": "Keymap editor",
     "app.panel.keymap.desc":
-      "A visual representation of the 11 keys plus the encoder, with two FUN modifier layers. Click a position to open its binding drawer on the right; the draft updates live as you edit.",
+      "A visual representation of the 11 keys plus the encoder, with two FUN modifier layers. Click a position to open its binding drawer on the right; the draft updates live as you edit. Text snippets longer than 128 characters are split automatically across the following non-FUN keys, and the overflow preview shows exactly which keys will carry the extra text.",
     "app.panel.keymap.bullets":
-      "11 keys + 1 encoder rendered to scale\nBinding types: key, combo, multi-press, text snippet, firmware function\nTwo FUN layers with per-position overrides\nDiff preview lists every binding change before it is sent",
-    "app.panel.keymap.tags": ["11 keys", "FUN layers", "visual"],
+      "11 keys + 1 encoder rendered to scale\nBinding types: key, combo, multi-press, text snippet, firmware function\nText over 128 chars spills onto the next non-FUN keys, with overflow preview and capacity warnings\nTwo FUN layers with per-position overrides\nDiff preview lists every binding change before it is sent",
+    "app.panel.keymap.tags": ["11 keys", "FUN layers", "text spill", "visual"],
 
     "app.panel.lighting.title": "Lighting",
     "app.panel.lighting.desc":
@@ -838,7 +839,7 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.combo.addKey": "Add key",
     "keymap.combo.hint": "Modifiers (Ctrl/Shift/Alt/Win) + key, e.g. Ctrl+c; up to 6 keys.",
     "keymap.text.label": "Text",
-    "keymap.text.hint": "Sent as-is; firmware HID can only type ASCII, max 128 chars; typed once per press.",
+    "keymap.text.hint": "Typed once per press; HID can only type ASCII. Up to 128 chars per key — longer text spills onto the following non-FUN keys in physical order (128 chars each).",
     "keymap.text.spill": "Overflow: {count} chars go to keys {slots} (up to 128 chars each).",
     "keymap.text.spillTruncated": "Not enough free keys: {count} chars exceed total capacity ({cap} chars) and will be dropped.",
     "keymap.text.warn": "Contains non-ASCII characters: they are stored but cannot be typed by the HID keyboard.",
@@ -1053,6 +1054,7 @@ export const DICT: Record<Lang, Dict> = {
       "3 × 4 网格的每个位置由三通道解析器决定：单个功能键、普通键序列或宏。再叠加 FUN1 / FUN2 两层修饰键。",
     "showcase.feature.2.bullets": [
       "键 / 组合 / 多键同按 / 文本 / 固件功能",
+      "文本超 128 字符自动拆分到后续非 FUN 按键",
       "FUN1 + FUN2 修饰层",
       "下发前先看 diff 预览",
     ],
@@ -1112,8 +1114,8 @@ export const DICT: Record<Lang, Dict> = {
 
     "feature.2.title": "11 个可重映射按键",
     "feature.2.desc":
-      "每个键可绑定到单个按键、修饰键组合、多键序列、文本片段或固件内置功能。绑定在桌面 App 里编辑并通过协议推送到设备，设备侧闪存最多保存 8 套键位。",
-    "feature.2.tags": ["11 键", "组合键", "宏"],
+      "每个键可绑定到单个按键、修饰键组合、多键序列、文本片段或固件内置功能。单键文本最长 128 字符，超出的部分会沿物理键顺序自动拆分写入后续非 FUN 按键。绑定在桌面 App 里编辑并通过协议推送到设备，设备侧闪存最多保存 8 套键位。",
+    "feature.2.tags": ["11 键", "组合键", "宏", "长文本拆分"],
 
     "feature.3.title": "旋转编码器",
     "feature.3.desc":
@@ -1190,7 +1192,7 @@ export const DICT: Record<Lang, Dict> = {
     "specs.size.eyebrow": "// 尺寸外观",
     "specs.size.title": "尺寸。",
     "specs.size.desc":
-      "含底座时整机尺寸约 105 × 75 × 28 mm。USB-C 居中布置在后侧边缘。底座为磁吸增高架，3 段高度可调；不带底座时厚度 12 mm。",
+      "含底座时整机尺寸约 105 × 75 × 28 mm。USB-C 居中布置在后侧边缘。底座为磁吸增高架；不带底座时厚度 12 mm。",
     "specs.size.fig.top": "图 · 03 — 正面",
     "specs.size.fig.back": "图 · 04 — 背面",
     "specs.size.label.knob": "编码器",
@@ -1354,10 +1356,10 @@ export const DICT: Record<Lang, Dict> = {
 
     "app.panel.keymap.title": "键映射编辑器",
     "app.panel.keymap.desc":
-      "11 个按键 + 1 个旋钮的可视化编辑界面，含两层 FUN 修饰层。点击任意位置打开右侧抽屉编辑绑定，草稿实时更新。",
+      "11 个按键 + 1 个旋钮的可视化编辑界面，含两层 FUN 修饰层。点击任意位置打开右侧抽屉编辑绑定，草稿实时更新。文本片段超过 128 字符时会自动拆分到后续非 FUN 按键，并在界面上预览溢出落点。",
     "app.panel.keymap.bullets":
-      "11 键 + 1 旋钮按比例渲染\n绑定类型：按键 / 组合 / 多键同按 / 文本片段 / 固件功能\n两层 FUN 修饰，每个位置都可独立配置\ndiff 预览列出所有绑定变更",
-    "app.panel.keymap.tags": ["11 键", "FUN 层", "可视化"],
+      "11 键 + 1 旋钮按比例渲染\n绑定类型：按键 / 组合 / 多键同按 / 文本片段 / 固件功能\n文本超 128 字符自动拆分到后续非 FUN 按键，带溢出预览与容量警告\n两层 FUN 修饰，每个位置都可独立配置\ndiff 预览列出所有绑定变更",
+    "app.panel.keymap.tags": ["11 键", "FUN 层", "长文本拆分", "可视化"],
 
     "app.panel.lighting.title": "灯效",
     "app.panel.lighting.desc":
@@ -1766,7 +1768,7 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.combo.addKey": "新增按键",
     "keymap.combo.hint": "修饰键（Ctrl/Shift/Alt/Win）+ 键名，如 Ctrl+c；最多 6 键。",
     "keymap.text.label": "文本",
-    "keymap.text.hint": "原样下发；HID 键盘仅能输出 ASCII，最长 128 字符；每次触发整串输出一次。",
+    "keymap.text.hint": "每次触发整串输出一次；HID 仅能输出 ASCII。单键最长 128 字符，超出部分沿物理键顺序拆分写入后续非 FUN 按键（每键最多 128 字符）。",
     "keymap.text.spill": "溢出：{count} 字符将依次写入按键 {slots}（每键最多 128 字符）。",
     "keymap.text.spillTruncated": "非 FUN 按键容量不足：{count} 字符超出总容量（{cap} 字符），将被丢弃。",
     "keymap.text.warn": "包含非 ASCII 字符：会原样存储，但 HID 键盘无法输出这些字符。",

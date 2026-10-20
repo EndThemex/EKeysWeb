@@ -2,10 +2,24 @@
 <html lang="en" data-lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#f4f3ee" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%230a0a0a'/><text x='16' y='22' font-family='monospace' font-size='18' font-weight='700' fill='%23f4f3ee' text-anchor='middle'>E</text></svg>"
+    />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta
+      name="theme-color"
+      content="#f4f3ee"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#0a0a0a"
+      media="(prefers-color-scheme: dark)"
+    />
     <title>EKeys · Macropad for people who build</title>
     <meta
       name="description"
@@ -17,21 +31,73 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
     <!--
+      Google Fonts 双源回退：主源 fonts.googleapis.com 在大陆常不可达，
+      且 error 事件可能长时间不触发（DNS 挂起），因此除了 onerror 直切镜像外，
+      还在 CSS 加载后用 document.fonts 实际拉取一个中文字形验证 gstatic 可达，
+      8 秒内未验证通过则切换到 fonts.loli.net 镜像（其 CSS 返回的字形文件
+      指向 gstatic.loli.net，同样在镜像域内）。回退只在主源失败时发生，
+      海外用户不受影响；重复注入时镜像规则同族后声明覆盖，无副作用。
+    -->
+    <script>
+      (function () {
+        var MIRROR_CSS =
+          "https://fonts.loli.net/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700&display=swap";
+        var switched = false;
+        var verified = false;
+        function useMirror() {
+          if (switched) return;
+          switched = true;
+          var l = document.createElement("link");
+          l.rel = "stylesheet";
+          l.href = MIRROR_CSS;
+          document.head.appendChild(l);
+        }
+        window.__gfFallback = useMirror;
+        // 主源 CSS 加载完成后调用：确认 Noto Sans SC 字形文件真的可下载
+        window.__gfVerify = function () {
+          if (switched || verified || !document.fonts || !document.fonts.load)
+            return;
+          verified = true;
+          document.fonts
+            .load('400 16px "Noto Sans SC"')
+            .then(function (faces) {
+              if (!faces || !faces.length) useMirror();
+            })
+            .catch(useMirror);
+          // load() 挂起（连接黑洞）的兜底：超时仍未完成则切镜像
+          setTimeout(function () {
+            if (!switched) {
+              document.fonts
+                .load('400 16px "Noto Sans SC"')
+                .then(function (faces) {
+                  if (!faces || !faces.length) useMirror();
+                })
+                .catch(useMirror);
+            }
+          }, 8000);
+        };
+      })();
+    </script>
+
+    <!--
       Load only the weights we actually use. Bebas Neue + Inter + JetBrains Mono
       were previously loaded with four extra weights per family (300/700 etc.)
       that no rule references — trim the request.
+      Noto Sans SC = 思源黑体（与 Source Han Sans 同一设计），自动按 unicode-range
+      切片，浏览器只下载页面实际用到的中文字形分块。
       `display=swap` keeps the fallback visible instead of blocking paint.
     -->
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       media="print"
-      onload="this.media='all'"
+      onload="this.media = 'all'; window.__gfVerify && window.__gfVerify()"
+      onerror="window.__gfFallback && window.__gfFallback()"
     />
     <noscript>
       <link
         rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Bebas+Neue&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       />
     </noscript>
 
@@ -50,10 +116,10 @@
         --border-soft: #d8d6cf;
         --accent: #ff3b00;
         --grid: rgba(10, 10, 10, 0.06);
-        --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+        --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Consolas, "Noto Sans SC", sans-serif;
         --font-sans:
-          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-          "Microsoft YaHei", "Noto Sans SC", sans-serif;
+          "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+          "PingFang SC", "Microsoft YaHei", sans-serif;
         --font-display: "Bebas Neue", "JetBrains Mono", sans-serif;
         --max-w: 1280px;
         --gutter: 24px;
