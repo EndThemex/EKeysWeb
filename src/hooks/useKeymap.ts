@@ -16,6 +16,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   diffKeymap,
   emptyKeymapData,
+  projectTextSpill,
   SYNCED_LAYERS,
   PHYSICAL_KEY_COUNT,
   syncProfileFromSettings,
@@ -67,6 +68,19 @@ export function useKeymap(
     snapRef.current = snapshot;
   }, [snapshot]);
 
+  // 组件先挂载、设备后连接时（如停留在键位页点连接），initial 在挂载后才
+  // 从 snapshot.profile 派生出来 —— 此时补采初始数据，否则 draft 永远为 null，
+  // KEYMAP_GET 不会触发、面板一直显示未加载
+  useEffect(() => {
+    if (snapshot === null && initialSynced !== null) {
+      snapRef.current = initialSynced;
+      setSnapshot(initialSynced);
+      setDraft(initialSynced);
+    }
+  }, [initialSynced, snapshot]);
+
+  // dirty 以「溢出投影后的逐键状态」比较：文本注入超 128 溢出到后续键时，
+  // 起始键与溢出目标键都计入待下发（与 0x06 实际写入的设备状态一致）
   const dirty = useMemo(() => {
     if (!snapshot || !draft) return false;
     // 名称 / 图标 / activeProfile / funKey 也算 dirty
@@ -75,12 +89,12 @@ export function useKeymap(
     if (snapshot.activeProfile !== draft.activeProfile) return true;
     if (snapshot.funKey1 !== draft.funKey1) return true;
     if (snapshot.funKey2 !== draft.funKey2) return true;
-    return diffKeymap(draft, snapshot).changed;
+    return diffKeymap(projectTextSpill(draft), projectTextSpill(snapshot)).changed;
   }, [snapshot, draft]);
 
   const dirtyKeys = useMemo(() => {
     if (!snapshot || !draft) return [];
-    return diffKeymap(draft, snapshot).physical;
+    return diffKeymap(projectTextSpill(draft), projectTextSpill(snapshot)).physical;
   }, [snapshot, draft]);
 
   const setLayerSlot = useCallback(

@@ -27,6 +27,7 @@ import {
   MAX_MACRO_STEPS,
   MAX_NORMAL_KEYS,
   MAX_TEXT_LEN,
+  planTextSpill,
   type BuiltinFunctionName,
   type ComboAction,
   type KeyAction,
@@ -206,7 +207,14 @@ export function KeyBindingPicker({
       )}
 
       {effective.kind === "text" && (
-        <TextFields action={effective} onChange={onChange} disabled={disabled} />
+        <TextFields
+          action={effective}
+          onChange={onChange}
+          disabled={disabled}
+          slot={slot}
+          funKey1={funKey1}
+          funKey2={funKey2}
+        />
       )}
 
       {effective.kind === "macro" && (
@@ -363,21 +371,38 @@ function ComboFields({
 }
 
 /* ============================================================
- * 文本注入（ASCII ≤ MAX_TEXT_LEN）
+ * 文本注入（ASCII；单键 ≤ MAX_TEXT_LEN，超出部分溢出到后续非 FUN 键）
  * ============================================================ */
 
 function TextFields({
   action,
   onChange,
   disabled,
+  slot,
+  funKey1 = 0,
+  funKey2 = 0,
 }: {
   action: TextAction;
   onChange: (next: KeyAction) => void;
   disabled?: boolean;
+  /** 选中槽位（0 基）；溢出拆分从该键起。 */
+  slot: number | null;
+  funKey1?: number;
+  funKey2?: number;
 }) {
   const { t } = useI18n();
   const nonAscii = /[^\x20-\x7e]/.test(action.text);
-  const overLimit = action.text.length > MAX_TEXT_LEN;
+  // 溢出预览与 SET 编码共用 planTextSpill，保证所见即所发
+  const plan =
+    action.text.length > MAX_TEXT_LEN
+      ? planTextSpill(action.text, slot ?? 0, funKey1, funKey2)
+      : null;
+  const spillSlots = plan
+    ? plan.chunks
+        .slice(1)
+        .map((c) => `#${c.slot + 1}`)
+        .join(", ")
+    : "";
   return (
     <>
       <TextRow
@@ -386,9 +411,23 @@ function TextFields({
         onChange={(v) => onChange({ kind: "text", text: v })}
         disabled={disabled}
       />
-      <p className={`hint ${overLimit ? "hint--warn" : ""}`}>
+      <p className="hint">
         {t("keymap.text.hint")} ({action.text.length}/{MAX_TEXT_LEN})
       </p>
+      {plan && spillSlots && (
+        <p className="hint">
+          {t("keymap.text.spill")
+            .replace("{count}", String(action.text.length - MAX_TEXT_LEN))
+            .replace("{slots}", spillSlots)}
+        </p>
+      )}
+      {plan && plan.truncatedChars > 0 && (
+        <p className="hint hint--warn">
+          {t("keymap.text.spillTruncated")
+            .replace("{count}", String(plan.truncatedChars))
+            .replace("{cap}", String(plan.chunks.length * MAX_TEXT_LEN))}
+        </p>
+      )}
       {nonAscii && <p className="hint hint--warn">{t("keymap.text.warn")}</p>}
     </>
   );

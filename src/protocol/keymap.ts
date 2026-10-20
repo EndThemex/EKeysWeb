@@ -7,7 +7,9 @@
  * wire 模型（每物理键，全部字段可选，缺省 = 不修改 / 空 = 清除）：
  * - normal          "+" 分隔的键名序列（最多 6），支持修饰键组合 "Ctrl+c"
  * - macro           宏序列，最多 5 步 "键名[:间隔ms]"（仅单击层，默认 20ms，clamp 0~60000）
- * - text            文本注入串（ASCII ≤128）
+ * - text            文本注入串（单键 ASCII ≤128）；>128 的全文在 SET 编码时按
+ *                   128 字符分块溢出到后续非 FUN 键（applyTextSpill），GET 回读时
+ *                   再回并为全文（mergeTextSpill）
  * - function        固件内建功能串（KEY_FUNCTION_ASR / KEY_FUNCTION_PAGE_*）
  * - combo1_*        FUN1 按住时的组合层通道（无宏通道）
  * - combo2_*        FUN2 按住时的组合层通道（无宏通道）
@@ -109,7 +111,12 @@ export interface ComboAction {
   codes: number[];
 }
 
-/** 文本注入（ASCII ≤128；按键触发整串输出一次）。 */
+/**
+ * 文本注入（按键触发整串输出一次）。
+ * draft / UI 模型保存完整文本（可 > MAX_TEXT_LEN）；SET 编码时按
+ * MAX_TEXT_LEN 分块溢出到后续非 FUN 键（见 planTextSpill），GET 回读时
+ * 由 mergeTextSpill 回并为全文，往返稳定。
+ */
 export interface TextAction {
   kind: "text";
   text: string;
@@ -337,6 +344,48 @@ export interface ChannelFields {
   function?: string;
 }
 
+/* ============================================================
+ * 文本注入溢出拆分（> MAX_TEXT_LEN 的全文 → 后续非 FUN 键分块）
+ * ============================================================ */
+
+/** planTextSpill 的规划结果。 */
+export interface TextSpillPlan {
+  /** (slot 0 基, chunk) 列表，首项为起始键本身（全文前 MAX_TEXT_LEN 字符）。 */
+  chunks: Array<{ slot: number; chunk: string }>;
+  /** 非 FUN 键容量不足而被截断的字符数（0 = 全文都放得下）。 */
+  truncatedChars: number;
+}
+
+/**
+ * 规划文本注入溢出拆分：从 originSlot 起（含）按物理键顺序循环分配
+ * MAX_TEXT_LEN 字符分块，跳过 FUN 键槽位，直到文本用尽或所有非 FUN 键
+ * 都已分配；容量不足时截断（truncatedChars > 0）。
+ * SET 编码（applyTextSpill）与 UI 溢出预览共用，保证所见即所发。
+ */
+export function planTextSpill(
+  text: string,
+  originSlot: number,
+  funKey1: number,
+  funKey2: number,
+): TextSpillPlan {
+  const skip = new Set(
+    [funKey1 - 1, funKey2 - 1].filter((s) => s >= 0 && s !== originSlot),
+  );
+  const order: number[] = [];
+  for (let i = 0; i < PHYSICAL_KEY_COUNT; i++) {
+    const slot = (originSlot + i) % PHYSICAL_KEY_COUNT;
+    if (!skip.has(slot)) order.push(slot);
+  }
+  const chunks: Array<{ slot: number; chunk: string }> = [];
+  let pos = 0;
+  for (const slot of order) {
+    if (pos >= text.length) break;
+    chunks.push({ slot, chunk: text.slice(pos, pos + MAX_TEXT_LEN) });
+    pos += MAX_TEXT_LEN;
+  }
+  return { chunks, truncatedChars: Math.max(0, text.length - pos) };
+}
+
 /** 把 KeyAction 编码为单层通道字段。 */
 export function actionToChannel(a: KeyAction, allowMacro: boolean): ChannelFields {
   switch (a.kind) {
@@ -512,16 +561,59 @@ function setEntryChannel(e: FirmwareKeyEntry, layer: number, ch: ChannelFields):
   }
 }
 
+/**
+ * 文本注入溢出拆分（编码侧）：把单层通道数组中超过 MAX_TEXT_LEN 的 text
+ * 按 planTextSpill 分块写入后续非 FUN 键槽位。分块会覆盖目标键该层的全部
+ * 通道（固件通道优先级 text > normal，残留旧 normal 会变成永不触发的死绑定）。
+ * 与解码侧 mergeTextSpill 对称：GET 回读后分块在 draft 中重新合并为全文。
+ */
+function applyTextSpill(chans: ChannelFields[], funKey1: number, funKey2: number): void {
+  for (let i = 0; i < chans.length; i++) {
+    const text = chans[i].text;
+    if (!text || text.length <= MAX_TEXT_LEN) continue;
+    const { chunks } = planTextSpill(text, i, funKey1, funKey2);
+    for (const { slot, chunk } of chunks) {
+      chans[slot] = { text: chunk };
+    }
+  }
+}
+
+/**
+ * 溢出投影：把 draft 中「起始键保存的完整全文」按 applyTextSpill 的规则
+ * 映射成逐键状态（起始键截到 128 + 后续非 FUN 键的分块），即 Apply 将实际
+ * 下发的设备状态。用于 KeyGrid 展示与 diffKeymap（让溢出目标键也显示
+ * 新配置与待下发高亮）；编辑器（KeyBindingPicker）仍用原始 draft。
+ * 非 text 通道经 actionToChannel → channelToAction 往返无损。
+ */
+export function projectTextSpill(d: KeymapData): KeymapData {
+  const layers = d.layers.map((l, idx) => {
+    if (idx === LAYER_CUSTOM) return l;
+    const chans = Array.from({ length: PHYSICAL_KEY_COUNT }, (_, i) =>
+      actionToChannel(l.slots[i] ?? { kind: "unbound" }, idx === LAYER_BASE),
+    );
+    applyTextSpill(chans, d.funKey1, d.funKey2);
+    return {
+      slots: chans.map((ch) => channelToAction(ch, idx === LAYER_BASE)),
+    };
+  });
+  return { ...d, layers };
+}
+
 /** 为指定物理键（1 基）构建 entry，覆盖 Base / FUN1 / FUN2 三层。 */
 function entriesForKeys(d: KeymapData, physicals: number[]): FirmwareKeyEntry[] {
-  return physicals.map((physical) => {
-    const entry: FirmwareKeyEntry = { physical };
-    for (const layer of SYNCED_LAYERS) {
-      const a = d.layers[layer]?.slots[physical - 1] ?? { kind: "unbound" };
-      setEntryChannel(entry, layer, actionToChannel(a, layer === LAYER_BASE));
-    }
-    return entry;
-  });
+  const entries: FirmwareKeyEntry[] = physicals.map((physical) => ({ physical }));
+  for (const layer of SYNCED_LAYERS) {
+    // 先整层编码全部槽位，再做文本溢出拆分（分块可能落到其它槽位）
+    const chans = physicals.map((physical) =>
+      actionToChannel(
+        d.layers[layer]?.slots[physical - 1] ?? { kind: "unbound" },
+        layer === LAYER_BASE,
+      ),
+    );
+    applyTextSpill(chans, d.funKey1, d.funKey2);
+    chans.forEach((ch, i) => setEntryChannel(entries[i], layer, ch));
+  }
+  return entries;
 }
 
 /**
@@ -556,29 +648,64 @@ export function buildKeymapSetPayload(
   return payload;
 }
 
+/**
+ * 文本注入溢出回并（解码侧）：0x05 回读时把 applyTextSpill 拆分出去的
+ * 分块合并回起始键的全文（draft / UI 始终保存完整文本，所见即所编）。
+ * 合并条件与编码侧对称：起始块满 MAX_TEXT_LEN，后续块按物理键循环顺序、
+ * 跳过 FUN 键、连续为 text；末块不足 MAX_TEXT_LEN 即停止。
+ * 注：若某键被刻意配置为恰好满 128 字符且相邻键也有 text，会被并入起始键
+ * 展示 —— 重新下发时 applyTextSpill 会拆回相同设备状态，往返幂等。
+ */
+function mergeTextSpill(slots: KeyAction[], funKey1: number, funKey2: number): void {
+  const funSlots = new Set([funKey1 - 1, funKey2 - 1].filter((s) => s >= 0));
+  for (let i = 0; i < slots.length; i++) {
+    const head = slots[i];
+    if (head.kind !== "text" || head.text.length < MAX_TEXT_LEN) continue;
+    let merged = head.text;
+    const consumed: number[] = [];
+    let j = (i + 1) % slots.length;
+    while (j !== i && merged.length % MAX_TEXT_LEN === 0) {
+      if (funSlots.has(j)) {
+        j = (j + 1) % slots.length;
+        continue;
+      }
+      const a = slots[j];
+      if (a.kind !== "text" || a.text.length === 0) break;
+      merged += a.text;
+      consumed.push(j);
+      j = (j + 1) % slots.length;
+    }
+    if (consumed.length > 0) {
+      slots[i] = { kind: "text", text: merged };
+      for (const s of consumed) slots[s] = { kind: "unbound" };
+    }
+  }
+}
+
 /** 把固件返回的 entry 列表（+ 顶层元信息）写回 KeymapData。 */
 export function applyFirmwareEntries(
   d: KeymapData,
   entries: FirmwareKeyEntry[],
   meta?: KeymapSnapshotMeta,
 ): KeymapData {
-  const layers = d.layers.map((l, idx) =>
-    idx === LAYER_CUSTOM
-      ? l
-      : {
-          slots: Array.from({ length: PHYSICAL_KEY_COUNT }, (_, i) => {
-            const e = entries[i];
-            if (!e) return { kind: "unbound" } as KeyAction;
-            const ch = entryChannel(e, idx);
-            return channelToAction(ch, idx === LAYER_BASE);
-          }),
-        },
-  );
+  const funKey1 = clampFunKey(meta?.funKey1 ?? d.funKey1);
+  const funKey2 = clampFunKey(meta?.funKey2 ?? d.funKey2);
+  const layers = d.layers.map((l, idx) => {
+    if (idx === LAYER_CUSTOM) return l;
+    const slots = Array.from({ length: PHYSICAL_KEY_COUNT }, (_, i) => {
+      const e = entries[i];
+      if (!e) return { kind: "unbound" } as KeyAction;
+      const ch = entryChannel(e, idx);
+      return channelToAction(ch, idx === LAYER_BASE);
+    });
+    mergeTextSpill(slots, funKey1, funKey2);
+    return { slots };
+  });
   const next: KeymapData = {
     ...d,
     layers,
-    funKey1: clampFunKey(meta?.funKey1 ?? d.funKey1),
-    funKey2: clampFunKey(meta?.funKey2 ?? d.funKey2),
+    funKey1,
+    funKey2,
     activeProfile: clampProfile(meta?.profile ?? d.activeProfile),
   };
   return next;

@@ -44,6 +44,7 @@ import {
   LAYER_BASE,
   LAYER_FUN1,
   LAYER_FUN2,
+  projectTextSpill,
   SYNCED_LAYERS,
   type FirmwareKeyEntry,
   type KeyAction,
@@ -81,6 +82,18 @@ export function KeymapPanel() {
   }, [snapshot.profile]);
 
   const km = useKeymap(initial, snapshot.config);
+
+  // 溢出投影（hook 必须在下方条件 return 之前调用）：KeyGrid 展示 /
+  // dirty 用的「Apply 将下发的逐键状态」；KeyBindingPicker 仍编辑原始
+  // draft（起始键保存完整全文）
+  const draftProj = useMemo(
+    () => (km.draft ? projectTextSpill(km.draft) : null),
+    [km.draft],
+  );
+  const snapProj = useMemo(
+    () => (km.snapshot ? projectTextSpill(km.snapshot) : draftProj),
+    [km.snapshot, draftProj],
+  );
 
   const [layer, setLayer] = useState(LAYER_BASE);
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -345,6 +358,9 @@ export function KeymapPanel() {
   const draft = km.draft;
   const draftSafe = draft;
 
+  const gridDraft = draftProj ?? draftSafe;
+  const gridSnap = snapProj ?? draftSafe;
+
   const dirtyCount = km.dirtyKeys.length;
   const selectedAction: KeyAction =
     selectedSlot !== null
@@ -398,8 +414,8 @@ export function KeymapPanel() {
       <div className="keymap-grid-wrap">
         <div className="keymap-grid-col">
           <KeyGrid
-            draft={draftSafe}
-            snapshot={km.snapshot ?? draftSafe}
+            draft={gridDraft}
+            snapshot={gridSnap}
             layer={layer}
             selected={selectedSlot}
             dirtyKeys={km.dirtyKeys}
