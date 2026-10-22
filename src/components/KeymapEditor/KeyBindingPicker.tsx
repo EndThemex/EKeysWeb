@@ -20,6 +20,8 @@ import { NumberRow, SelectRow, SwitchRow, TextRow } from "../settings/controls";
 import {
   BUILTIN_FUNCTIONS,
   HID_KEY_CHOICES,
+  HID_SHIFTED_CHOICES,
+  decodeKeyChoice,
   hidLabel,
   hidWireName,
   MACRO_DEFAULT_MS,
@@ -63,23 +65,30 @@ function isLetterCode(code: number): boolean {
 
 /**
  * 按键字符下拉：显示字符标签（a / 1 / Enter / Ctrl…）而非 HID code。
- * 设备回读到下拉未收录的键（如 0x4f 方向键）时，追加一项并优先显示
+ * 设备回读到下拉未收录的键（如 0x53 NumLk）时，追加一项并优先显示
  * 友好名（hidLabel，含修饰键 / F 键 / 方向键等扩展表），保证往返不丢。
+ * withShifted：追加 Shift 字符选项（"~" / "|" 等，伪值 0x100+基键），
+ * 仅键盘键单选使用 —— 选中时由调用方产生 Shift 组合键。
  */
 function KeyCodeSelect({
   label,
   value,
   onChange,
   disabled,
+  withShifted = false,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   disabled?: boolean;
+  withShifted?: boolean;
 }) {
   const known = HID_KEY_CHOICES.some((c) => c.code === value);
   const options = [
     ...HID_KEY_CHOICES.map((c) => ({ value: c.code, label: c.label })),
+    ...(withShifted
+      ? HID_SHIFTED_CHOICES.map((c) => ({ value: c.value, label: c.label }))
+      : []),
     ...(known ? [] : [{ value, label: hidLabel(value) ?? hidWireName(value) }]),
   ];
   return (
@@ -186,7 +195,16 @@ export function KeyBindingPicker({
           <KeyCodeSelect
             label={t("keymap.key.select")}
             value={effective.code}
-            onChange={(v) => onChange({ kind: "keyboard", code: v & 0xff })}
+            withShifted
+            onChange={(v) => {
+              // Shift 字符（"~" / "|" 等，伪值 0x100+基键）→ Shift 组合键
+              const { base, shift } = decodeKeyChoice(v);
+              onChange(
+                shift
+                  ? { kind: "combo", codes: [0xe1, base] }
+                  : { kind: "keyboard", code: base },
+              );
+            }}
             disabled={disabled}
           />
           <TextRow

@@ -247,6 +247,7 @@ export function emptyKeymapData(): KeymapData {
 export function hidLabel(code: number): string | null {
   if (code in HID_ALPHA) return HID_ALPHA[code];
   if (code in HID_DIGIT) return HID_DIGIT[code];
+  if (code in HID_PUNCT) return HID_PUNCT[code];
   if (code in HID_SPECIAL) return HID_SPECIAL[code];
   if (code in HID_MODIFIER) return HID_MODIFIER[code];
   if (code in HID_EXTRA) return HID_EXTRA[code];
@@ -281,6 +282,11 @@ const HID_DIGIT: Record<number, string> = {
   0x1e: "1", 0x1f: "2", 0x20: "3", 0x21: "4", 0x22: "5",
   0x23: "6", 0x24: "7", 0x25: "8", 0x26: "9", 0x27: "0",
 };
+/** 标点符号键（US 布局，非 Shift 字符，直接按下即输出）。 */
+const HID_PUNCT: Record<number, string> = {
+  0x2d: "-", 0x2e: "=", 0x2f: "[", 0x30: "]", 0x31: "\\",
+  0x33: ";", 0x34: "'", 0x35: "`", 0x36: ",", 0x37: ".", 0x38: "/",
+};
 const HID_SPECIAL: Record<number, string> = {
   0x28: "Enter", 0x2a: "Backspace", 0x2c: "Space",
   0x2b: "Tab", 0x29: "Esc",
@@ -291,9 +297,10 @@ const HID_MODIFIER: Record<number, string> = {
 };
 
 /**
- * 仅展示用的扩展键名（F 功能键 / 方向键 / 常用编辑键）。
- * 不进入 HID_KEY_CHOICES 下拉，也不参与 wire 解析 —— 固件 KeyNameTable
- * 只认 0xNN 字面量，这些键从设备读回时以 0xNN 形式出现，此处仅供 UI 显示。
+ * 扩展键名（F 功能键 / 方向键 / 常用编辑键）。
+ * 全部进入 HID_KEY_CHOICES 下拉（固件经 0xNN 字面量无损下发，屏幕端
+ * keyDisplayName 也有对应可读名）；从设备读回时以 0xNN 形式出现，
+ * hidLabel 负责转回友好名显示。
  */
 const HID_EXTRA: Record<number, string> = {
   0x3a: "F1", 0x3b: "F2", 0x3c: "F3", 0x3d: "F4",
@@ -304,6 +311,53 @@ const HID_EXTRA: Record<number, string> = {
   0x4c: "Delete", 0x4d: "End", 0x4e: "PgDn",
   0x4f: "→", 0x50: "←", 0x51: "↓", 0x52: "↑",
 };
+
+/**
+ * 需要 Shift + 基键才能输出的字符（US 布局）：字符 → 基键 HID code。
+ * 固件单段解析只对大写字母自动附 Shift，这类字符按下拉选择时编码为
+ * Shift 组合键（normal 通道 "Shift+0xNN"，固件 resolveKeyWithModifier
+ * 展开修饰键掩码）。
+ */
+export const HID_SHIFTED_CHARS: Readonly<Record<string, number>> = {
+  "~": 0x35, "|": 0x31,
+  "!": 0x1e, "@": 0x1f, "#": 0x20, "$": 0x21, "%": 0x22,
+  "^": 0x23, "&": 0x24, "*": 0x25, "(": 0x26, ")": 0x27,
+  "_": 0x2d, "+": 0x2e, "{": 0x2f, "}": 0x30, ":": 0x33,
+  '"': 0x34, "<": 0x36, ">": 0x37, "?": 0x38,
+};
+
+/** Shift 字符在下拉选项中的伪值偏移（0x100 + 基键 code，避开真实 HID code 域）。 */
+export const SHIFTED_CHOICE_OFFSET = 0x100;
+
+/** 按键下拉的 Shift 字符选项（仅键盘键单选提供；组合/宏槽位不含）。 */
+export const HID_SHIFTED_CHOICES: readonly { value: number; label: string }[] =
+  Object.entries(HID_SHIFTED_CHARS).map(([label, base]) => ({
+    value: SHIFTED_CHOICE_OFFSET + base,
+    label,
+  }));
+
+/** 下拉选项值 → 基键 code 与是否 Shift 组合。 */
+export function decodeKeyChoice(
+  value: number,
+): { base: number; shift: boolean } {
+  if (value > 0xff) {
+    return { base: value - SHIFTED_CHOICE_OFFSET, shift: true };
+  }
+  return { base: value, shift: false };
+}
+
+/**
+ * combo 恰为 Shift+单键 且该键有 Shift 字符映射时返回该字符（如 "~"）。
+ * 用于 UI 把 "Shift+`" 压缩显示为 "~"；字母键不映射（保留 "Shift+a"）。
+ */
+export function comboShiftedChar(codes: readonly number[]): string | null {
+  if (codes.length !== 2 || codes[0] !== 0xe1) return null;
+  const base = codes[1];
+  for (const [label, b] of Object.entries(HID_SHIFTED_CHARS)) {
+    if (b === base) return label;
+  }
+  return null;
+}
 
 const HID_ALPHA_INV: Record<string, number> = Object.fromEntries(
   Object.entries(HID_ALPHA).map(([k, v]) => [v, parseInt(k, 10)]),
@@ -324,11 +378,16 @@ export interface HidKeyChoice {
   label: string;
 }
 
-/** 下拉可选按键：a-z / 0-9 / Enter / Backspace / Space / Tab / Esc / 修饰键。 */
+/**
+ * 下拉可选按键：a-z / 0-9 / 标点（- = [ ] \ ; ' ` , . /）/
+ * Enter / Backspace / Space / Tab / Esc / F1-F12 / 方向键 / 编辑键 / 修饰键。
+ */
 export const HID_KEY_CHOICES: readonly HidKeyChoice[] = [
   ...Object.entries(HID_ALPHA).map(([k, label]) => ({ code: parseInt(k, 10), label })),
   ...Object.entries(HID_DIGIT).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+  ...Object.entries(HID_PUNCT).map(([k, label]) => ({ code: parseInt(k, 10), label })),
   ...Object.entries(HID_SPECIAL).map(([k, label]) => ({ code: parseInt(k, 10), label })),
+  ...Object.entries(HID_EXTRA).map(([k, label]) => ({ code: parseInt(k, 10), label })),
   ...Object.entries(HID_MODIFIER).map(([k, label]) => ({ code: parseInt(k, 10), label })),
 ];
 

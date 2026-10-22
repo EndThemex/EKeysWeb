@@ -56,6 +56,10 @@ export {
   hidWireName,
   hidWireCode,
   HID_KEY_CHOICES,
+  HID_SHIFTED_CHARS,
+  HID_SHIFTED_CHOICES,
+  decodeKeyChoice,
+  comboShiftedChar,
 } from "./keymap";
 export type {
   KeyAction,

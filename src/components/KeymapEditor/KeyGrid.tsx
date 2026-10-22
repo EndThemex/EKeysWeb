@@ -17,6 +17,7 @@
 import { useI18n } from "../../i18n/useI18n.tsx";
 import {
   BUILTIN_FUNCTIONS,
+  comboShiftedChar,
   hidLabel,
   LAYER_CUSTOM,
   MACRO_DEFAULT_MS,
@@ -162,9 +163,16 @@ function wireSummary(a: KeyAction): string {
     case "keyboard":
       raw = label(a.code);
       break;
-    case "combo":
+    case "combo": {
+      // Shift+单键 且有字符映射（如 Shift+` → "~"）压缩为单字符显示
+      const shifted = comboShiftedChar(a.codes);
+      if (shifted) {
+        raw = shifted;
+        break;
+      }
       raw = a.codes.slice(0, MAX_NORMAL_KEYS).map(label).join("+");
       break;
+    }
     case "macro":
       raw = a.steps
         .slice(0, MAX_MACRO_STEPS)
@@ -202,10 +210,13 @@ function describeAction(
       if (friendly) return friendly;
       return `0x${a.code.toString(16).padStart(2, "0")}`;
     }
-    case "combo":
+    case "combo": {
+      const shifted = comboShiftedChar(a.codes);
+      if (shifted) return shifted;
       return a.codes
         .map((c) => hidLabel(c) ?? `0x${c.toString(16).padStart(2, "0")}`)
         .join("+");
+    }
     case "text":
       return `“${a.text.slice(0, 8)}${a.text.length > 8 ? "…" : ""}”`;
     case "macro":
