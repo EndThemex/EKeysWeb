@@ -15,6 +15,7 @@
  * 冲突互斥与孤儿绑定清理在 useKeymap.setFunKey 内完成）。
  */
 
+import { useState } from "react";
 import { useI18n } from "../../i18n/useI18n.tsx";
 import { NumberRow, SelectRow, SwitchRow, TextRow } from "../settings/controls";
 import {
@@ -409,6 +410,18 @@ function TextFields({
   funKey2?: number;
 }) {
   const { t } = useI18n();
+  const [pasteError, setPasteError] = useState(false);
+
+  async function pasteFromClipboard() {
+    setPasteError(false);
+    try {
+      const text = await navigator.clipboard.readText();
+      onChange({ kind: "text", text });
+    } catch {
+      setPasteError(true);
+    }
+  }
+
   const nonAscii = /[^\x20-\x7e]/.test(action.text);
   // 溢出预览与 SET 编码共用 planTextSpill，保证所见即所发
   const plan =
@@ -428,10 +441,22 @@ function TextFields({
         value={action.text}
         onChange={(v) => onChange({ kind: "text", text: v })}
         disabled={disabled}
+        trailing={
+          <button
+            type="button"
+            className="settings-row__text-action"
+            onClick={pasteFromClipboard}
+            disabled={disabled}
+            title={t("keymap.text.pasteHint")}
+          >
+            {t("keymap.text.paste")}
+          </button>
+        }
       />
       <p className="hint">
         {t("keymap.text.hint")} ({action.text.length}/{MAX_TEXT_LEN})
       </p>
+      {pasteError && <p className="hint hint--warn">{t("keymap.text.pasteFail")}</p>}
       {plan && spillSlots && (
         <p className="hint">
           {t("keymap.text.spill")

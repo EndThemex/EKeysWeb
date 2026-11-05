@@ -298,6 +298,7 @@ export function TextRow({
   maxLength,
   monospace,
   hint,
+  trailing,
 }: {
   label: string;
   value: string;
@@ -308,6 +309,8 @@ export function TextRow({
   maxLength?: number;
   monospace?: boolean;
   hint?: string;
+  /** 输入框右侧附加操作（如粘贴按钮）。 */
+  trailing?: ReactNode;
 }) {
   const [revealed, setRevealed] = useState(false);
   // 只有当设备返回的 "***" 且用户未显式揭示时，按钮才让用户切到明文显示
@@ -327,6 +330,7 @@ export function TextRow({
           className={monospace ? "mono" : undefined}
           onChange={(e) => onChange(e.target.value)}
         />
+        {trailing}
         {sensitive && (
           <button
             type="button"
