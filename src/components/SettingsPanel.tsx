@@ -144,10 +144,6 @@ export function SettingsPanel() {
     () => WORK_MODE_KEYS.map((k, i) => ({ value: i, label: t(k) })),
     [t],
   );
-  const powerModeOptions = useMemo(
-    () => POWER_MODE_KEYS.map((k, i) => ({ value: i, label: t(k) })),
-    [t],
-  );
   const tftThemeOptions = useMemo(
     () => TFT_THEME_KEYS.map((k, i) => ({ value: i, label: t(k) })),
     [t],
@@ -362,12 +358,46 @@ export function SettingsPanel() {
         {/* 电源 */}
         <section className="settings-card card">
           <h2 className="settings-card__title">{t("settings.section.power")}</h2>
-          <SelectRow
-            label={t("settings.field.powerMode")}
-            value={draftSafe.power_mode}
-            options={powerModeOptions}
-            onChange={(v) => patch("power_mode", v as number)}
-          />
+          <div className="settings-field">
+            <span className="settings-row__label">
+              {t("settings.field.powerMode")}
+            </span>
+            <div
+              className="settings-power-modes"
+              role="radiogroup"
+              aria-label={t("settings.field.powerMode")}
+            >
+              {POWER_MODE_KEYS.map((key, index) => {
+                const active = index === draftSafe.power_mode;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    className={
+                      active
+                        ? "settings-power-modes__item is-active"
+                        : "settings-power-modes__item"
+                    }
+                    onClick={() => patch("power_mode", index)}
+                  >
+                    <span
+                      className="settings-power-modes__radio"
+                      aria-hidden="true"
+                    />
+                    <span className="settings-power-modes__name">{t(key)}</span>
+                    <span className="settings-power-modes__desc">
+                      {t(`${key}.desc`)}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <span className="settings-row__hint">
+              {t("settings.field.powerModeHint")}
+            </span>
+          </div>
         </section>
 
         {/* Profile */}

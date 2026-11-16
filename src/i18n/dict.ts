@@ -681,9 +681,17 @@ export const DICT: Record<Lang, Dict> = {
     "settings.field.audioEnable": "Audio output",
 
     "settings.field.powerMode": "Power mode",
+    "settings.field.powerModeHint":
+      "Triggers after 30s without input; serial/App traffic does not count. Any knob or key press restores the screen.",
     "settings.field.powerMode.0": "performance",
+    "settings.field.powerMode.0.desc":
+      "Screen stays at the configured brightness.",
     "settings.field.powerMode.1": "balanced",
+    "settings.field.powerMode.1.desc":
+      "After 30s idle, dim the backlight to 10% to save power.",
     "settings.field.powerMode.2": "low-power",
+    "settings.field.powerMode.2.desc":
+      "After 30s idle, turn the screen backlight off completely.",
 
     "settings.field.voiceEnable": "Voice-to-text",
     "settings.field.voiceTriggerKey": "Trigger key",
@@ -892,6 +900,9 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.hintFooter":
       "Apply sends layers Base/FUN1/FUN2 plus fun keys via 0x06 KEYMAP_SET. Renaming the active profile goes through 0x15 PROFILE_NAME_SET; custom icons are uploaded via 0x11 PROFILE_ICON_SET (≤ 32 KB).",
 
+    /* ---------------- Common UI ---------------- */
+    "common.cancel": "Cancel",
+
     /* ---------------- Audio Pad Tab (M4) ---------------- */
     "audio.eyebrow": "// sound board",
     "audio.title": "Audio pad",
@@ -905,6 +916,7 @@ export const DICT: Record<Lang, Dict> = {
     "audio.button.cancel": "Cancel",
     "audio.button.tryPlay": "Try-play",
     "audio.button.delete": "Delete",
+    "audio.deleteTitle": "Delete clip",
     "audio.button.playByKey": "Play by key",
     "audio.button.bind": "Bind",
     "audio.hintUpload": "Single file ≤ {max}; mp3 or wav; letters / digits / underscore only.",
@@ -924,8 +936,9 @@ export const DICT: Record<Lang, Dict> = {
     "ota.eyebrow": "// firmware",
     "ota.title": "OTA update",
     "ota.lede":
-      "Read-only firmware info for now. The actual .bin download flow will land in a follow-up — it depends on the device's ROM bootloader behavior.",
+      "Read the current firmware build, or reset the device into USB download mode and flash it with esptool / idf.py. In-browser .bin flashing is still planned.",
     "ota.card.info": "current firmware",
+    "ota.card.download": "flash mode",
     "ota.card.update": "future update flow",
     "ota.field.version": "version",
     "ota.field.buildDate": "build date",
@@ -934,11 +947,23 @@ export const DICT: Record<Lang, Dict> = {
     "ota.button.refresh": "Refresh",
     "ota.refreshing": "Refreshing…",
     "ota.errorFetch": "Failed to fetch firmware info",
+    "ota.download.desc":
+      "Reset the device into the USB-Serial-JTAG download mode so esptool / idf.py can flash it — no BOOT button needed. The current connection drops.",
+    "ota.download.enter": "Enter flash mode",
+    "ota.download.title": "Enter flash mode",
+    "ota.download.entering": "Waiting for device…",
+    "ota.download.confirm":
+      "The device will reset into flash (download) mode and this connection will drop. Flash it with esptool / idf.py, then reconnect. Continue?",
+    "ota.download.done":
+      "Device confirmed and rebooted into flash mode; the connection is closed. Flash with esptool / idf.py, then reconnect.",
+    "ota.download.noConfirm":
+      "No confirmation received (the reply may be lost during reset). The device most likely entered flash mode — try flashing; if that fails, reconnect and retry.",
+    "ota.download.fail": "Failed to enter flash mode: {error}",
     "ota.updateHint":
       "Planned pipeline: Web Crypto MD5 → 0x0b notify → 0x14 reset into ROM download → Web Serial write .bin.",
     "ota.roadmap.deviceInfo": "✓ Read 0x0b FIRMWARE_INFO (current build)",
     "ota.roadmap.md5": "○ Compute MD5 via SubtleCrypto",
-    "ota.roadmap.reset": "○ Send 0x14 to enter ROM download",
+    "ota.roadmap.reset": "✓ Send 0x14 to enter ROM download (flash mode card)",
     "ota.roadmap.flash": "○ Stream .bin to the bootloader",
     "ota.updateWarn":
       "Until the ROM download channel is verified end-to-end, please run OTA through the desktop app.",
@@ -1615,9 +1640,14 @@ export const DICT: Record<Lang, Dict> = {
     "settings.field.audioEnable": "音频输出",
 
     "settings.field.powerMode": "电源模式",
+    "settings.field.powerModeHint":
+      "无操作 30 秒后触发；串口/App 通信不计为操作，旋钮或按键操作立即恢复。",
     "settings.field.powerMode.0": "性能",
+    "settings.field.powerMode.0.desc": "屏幕始终保持配置亮度，不做省电处理。",
     "settings.field.powerMode.1": "均衡",
+    "settings.field.powerMode.1.desc": "无操作 30 秒后，背光降至 10% 以省电。",
     "settings.field.powerMode.2": "低功耗",
+    "settings.field.powerMode.2.desc": "无操作 30 秒后，完全关闭屏幕背光。",
 
     "settings.field.voiceEnable": "语音转文字",
     "settings.field.voiceTriggerKey": "触发键",
@@ -1823,6 +1853,9 @@ export const DICT: Record<Lang, Dict> = {
     "keymap.hintFooter":
       "「应用」会把 Base / Fun 1 / Fun 2 三层及 FUN 键位整表下发（0x06 KEYMAP_SET）。重命名当前 Profile 走 0x15；自定义图标通过 0x11 上传（≤ 32 KB）。",
 
+    /* ---------------- Common UI ---------------- */
+    "common.cancel": "取消",
+
     /* ---------------- Audio Pad Tab (M4) ---------------- */
     "audio.eyebrow": "// 音效板",
     "audio.title": "音效板",
@@ -1836,6 +1869,7 @@ export const DICT: Record<Lang, Dict> = {
     "audio.button.cancel": "取消",
     "audio.button.tryPlay": "试播",
     "audio.button.delete": "删除",
+    "audio.deleteTitle": "删除音频",
     "audio.button.playByKey": "按键播放",
     "audio.button.bind": "绑定",
     "audio.hintUpload": "单文件 ≤ {max}；格式 mp3 或 wav；文件名仅允许字母 / 数字 / 下划线。",
@@ -1853,8 +1887,9 @@ export const DICT: Record<Lang, Dict> = {
     "ota.eyebrow": "// 固件",
     "ota.title": "OTA 升级",
     "ota.lede":
-      "本期仅展示 0x0b 固件信息。真正的 .bin 下载流程等固件 ROM 下载通道确认后再接入。",
+      "查看当前固件构建信息，或将设备复位进入 USB 烧录（下载）模式，交给 esptool / idf.py 烧录。浏览器内直接刷写 .bin 仍在规划中。",
     "ota.card.info": "当前固件",
+    "ota.card.download": "烧录模式",
     "ota.card.update": "升级流程（规划）",
     "ota.field.version": "版本",
     "ota.field.buildDate": "构建日期",
@@ -1863,11 +1898,23 @@ export const DICT: Record<Lang, Dict> = {
     "ota.button.refresh": "刷新",
     "ota.refreshing": "刷新中…",
     "ota.errorFetch": "读取固件信息失败",
+    "ota.download.desc":
+      "让设备复位进入 USB-Serial-JTAG 下载模式，交给 esptool / idf.py 烧录，无需按住 BOOT 键。当前串口连接会断开。",
+    "ota.download.enter": "进入烧录模式",
+    "ota.download.title": "进入烧录模式",
+    "ota.download.entering": "等待设备确认…",
+    "ota.download.confirm":
+      "设备将立即复位进入烧录（下载）模式，当前连接会断开。之后请用 esptool / idf.py 烧录，完成后再重新连接。是否继续？",
+    "ota.download.done":
+      "设备已确认并重启进入烧录模式，连接已断开。请用 esptool / idf.py 烧录，完成后重新连接。",
+    "ota.download.noConfirm":
+      "未收到设备确认（响应可能在复位过程中丢失）。设备大概率已进入烧录模式，可直接尝试烧录；若失败，请重新连接后重试。",
+    "ota.download.fail": "进入烧录模式失败：{error}",
     "ota.updateHint":
       "规划链路：Web Crypto MD5 → 0x0b 通知 → 0x14 复位进 ROM 下载模式 → Web Serial 写 .bin。",
     "ota.roadmap.deviceInfo": "✓ 已读取 0x0b FIRMWARE_INFO（当前构建）",
     "ota.roadmap.md5": "○ 通过 SubtleCrypto 计算 MD5",
-    "ota.roadmap.reset": "○ 发 0x14 进入 ROM 下载",
+    "ota.roadmap.reset": "✓ 发 0x14 进入 ROM 下载（见「烧录模式」卡片）",
     "ota.roadmap.flash": "○ 把 .bin 流式写入 bootloader",
     "ota.updateWarn":
       "ROM 下载通道尚未端到端验证前，请继续用桌面端完成 OTA。",

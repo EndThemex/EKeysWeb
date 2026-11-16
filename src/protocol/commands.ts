@@ -62,7 +62,7 @@ export const TOP_LEVEL_CMDS: ReadonlySet<number> = new Set<number>([
  * 当前 Web 端已实现的命令 ID 集合。
  *
  * - AUDIO_FILE / AUDIO_PAD 由 AudioPadPanel + useAudioUploader 实现；
- * - FIRMWARE_DOWNLOAD（0x14）尚未实现：OtaPanel 目前是占位，仅发 0x0b；
+ * - FIRMWARE_DOWNLOAD（0x14）由 OtaPanel「进入烧录模式」实现（设备复位进下载模式）；
  * - PC_STATUS（0x0d）是主机 → 设备的单向推送，浏览器沙箱拿不到
  *   CPU / 内存 / GPU 等细节，Web 端不实现（设计文档 §1.2）。
  */
@@ -81,6 +81,7 @@ export const IMPLEMENTED_CMDS: ReadonlySet<number> = new Set<number>([
   CMD.PROFILE_STATE,
   CMD.PROFILE_ICON_SET,
   CMD.TIME_SET,
+  CMD.FIRMWARE_DOWNLOAD,
   CMD.PROFILE_NAME_SET,
   CMD.MUSIC_STATUS,
   CMD.MUSIC_CONTROL,

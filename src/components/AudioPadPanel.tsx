@@ -31,6 +31,7 @@ import {
   PanelHead,
   StatusPill,
 } from "./settings/controls";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 export function AudioPadPanel() {
   const { t } = useI18n();
@@ -49,6 +50,8 @@ export function AudioPadPanel() {
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [bindKey, setBindKey] = useState<number | null>(null);
+  /** 待删除的文件名（非 null 时弹出确认模态框）。 */
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const usagePct = useMemo(() => {
     if (audio.usage.total <= 0) return 0;
@@ -304,15 +307,7 @@ export function AudioPadPanel() {
                   file={f}
                   disabled={audio.uploading}
                   onPlay={() => onPlay(f.file)}
-                  onDelete={() => {
-                    if (
-                      window.confirm(
-                        formatI18n(t("audio.confirmDelete"), { name: f.file }),
-                      )
-                    ) {
-                      void onDelete(f.file);
-                    }
-                  }}
+                  onDelete={() => setDeleteTarget(f.file)}
                 />
               ))
             )}
@@ -343,6 +338,25 @@ export function AudioPadPanel() {
       </div>
 
       <p className="hint">{t("audio.hintFooter")}</p>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={t("audio.deleteTitle")}
+        message={
+          deleteTarget
+            ? formatI18n(t("audio.confirmDelete"), { name: deleteTarget })
+            : ""
+        }
+        confirmLabel={t("audio.button.delete")}
+        cancelLabel={t("common.cancel")}
+        tone="danger"
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          const name = deleteTarget;
+          setDeleteTarget(null);
+          if (name) void onDelete(name);
+        }}
+      />
     </section>
   );
 }
