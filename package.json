@@ -1,7 +1,7 @@
 {
   "name": "ekeysweb",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.6.0",
   "type": "module",
   "description": "EKeys — open-source 11-key ESP32-S3 macropad website (React + Vite + Bun).",
   "scripts": {

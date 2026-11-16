@@ -303,7 +303,7 @@ export const DICT: Record<Lang, Dict> = {
     "footer.resources": "Learn",
     "footer.community": "Community",
     "footer.copy": "© 2026 the EKeys project",
-    "footer.build": "v0.1.0 · static web",
+    "footer.build": "v0.6.0 · static web",
 
     "brand.tagline": "// 11-key macropad",
 
@@ -1266,7 +1266,7 @@ export const DICT: Record<Lang, Dict> = {
     "footer.resources": "学习",
     "footer.community": "社区",
     "footer.copy": "© 2026 EKeys 项目",
-    "footer.build": "v0.1.0 · 静态网页",
+    "footer.build": "v0.6.0 · 静态网页",
 
     "brand.tagline": "// 11 键宏键盘",
 
