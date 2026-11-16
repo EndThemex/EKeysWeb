@@ -2,12 +2,13 @@
  * AboutPanel — M2: 设备信息 / 协议版本 / 固件 / 统计。
  *
  * 只读面板，对应桌面端 panel_about。不下发任何命令，只读 snapshot。
- * 当 PROTOCOL_VERSION 与设备 version 不一致时显示警告 banner。
+ * 当设备上报的协议 MAJOR 与本端不一致时显示警告 banner；
+ * config_version 仅作为配置结构版本展示，不参与兼容判定。
  */
 
 import { useI18n } from "../i18n/useI18n.tsx";
 import { useDeviceSession } from "../hooks/DeviceSessionContext";
-import { PROTOCOL_VERSION } from "../protocol";
+import { PROTOCOL_MINOR, PROTOCOL_VERSION } from "../protocol";
 import {
   ConnectButton,
   ErrorBanner,
@@ -32,7 +33,13 @@ export function AboutPanel() {
   const profile = snapshot.profile;
   const fw = snapshot.firmwareInfo;
 
-  const protocolMatch = version !== null && version === PROTOCOL_VERSION;
+  /*
+   * 兼容性只看协议 MAJOR；旧固件未上报 protocol_version 时按当前版本兜底。
+   * config_version 是配置结构版本，不参与协议兼容判定。
+   */
+  const deviceProtocolMajor = info?.protocol_version ?? PROTOCOL_VERSION;
+  const deviceProtocolMinor = info?.protocol_minor ?? 0;
+  const protocolMatch = deviceProtocolMajor === PROTOCOL_VERSION;
 
   async function onConnectClick() {
     try {
@@ -74,12 +81,12 @@ export function AboutPanel() {
 
       {!connected && <p className="hint">{t("settings.empty")}</p>}
 
-      {connected && version !== null && !protocolMatch && (
+      {connected && !protocolMatch && (
         <div className="about-banner" role="alert">
           <span aria-hidden="true">⚠</span>
           <span>
-            {t("about.protocolMismatch")}（device v{version} / app v
-            {PROTOCOL_VERSION}）
+            {t("about.protocolMismatch")}（device v{deviceProtocolMajor}.
+            {deviceProtocolMinor} / app v{PROTOCOL_VERSION}.{PROTOCOL_MINOR}）
           </span>
         </div>
       )}
@@ -112,9 +119,9 @@ export function AboutPanel() {
             <span className="eyebrow">{t("about.card.protocol")}</span>
             <dl className="about-card__list">
               <div>
-                <dt>{t("config.field.configVersion")}</dt>
+                <dt>{t("about.deviceProtocol")}</dt>
                 <dd className="mono">
-                  v{version ?? "—"}
+                  v{deviceProtocolMajor}.{deviceProtocolMinor}
                   <span
                     className={`about-card__badge about-card__badge--${protocolMatch ? "ok" : "warn"}`}
                   >
@@ -124,7 +131,13 @@ export function AboutPanel() {
               </div>
               <div>
                 <dt>{t("about.appVersion")}</dt>
-                <dd className="mono">v{PROTOCOL_VERSION}</dd>
+                <dd className="mono">
+                  v{PROTOCOL_VERSION}.{PROTOCOL_MINOR}
+                </dd>
+              </div>
+              <div>
+                <dt>{t("config.field.configVersion")}</dt>
+                <dd className="mono">v{version ?? "—"}</dd>
               </div>
             </dl>
           </section>

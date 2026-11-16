@@ -122,5 +122,6 @@ export type {
   AudioPadStopReq,
 } from "./audio";
 
-/** 当前 Web 端实现的协议版本。 */
+/** 当前 Web 端实现的协议版本（MAJOR.MINOR，MAJOR 不同即不兼容）。 */
 export const PROTOCOL_VERSION = 1;
+export const PROTOCOL_MINOR = 0;

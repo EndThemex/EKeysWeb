@@ -41,6 +41,12 @@ export interface DeviceInfo {
   device_name: string;
   device_id: string;
   firmware_version: string;
+  /** 协议主版本；旧固件缺省时按当前版本兜底。 */
+  protocol_version?: number;
+  /** 协议次版本；仅用于展示/能力判断，不参与兼容性门禁。 */
+  protocol_minor?: number;
+  /** 配置结构版本（与协议版本独立）。 */
+  config_version?: number;
 }
 
 /** Profile 状态（0x10 响应 / 推送）。 */
@@ -67,6 +73,8 @@ export interface DeviceSnapshot {
 /** 0x0b 固件信息（M2 新增）。 */
 export interface FirmwareInfo {
   version: string;
+  protocol_version?: number;
+  protocol_minor?: number;
   build_date?: string;
   build_time?: string;
   [k: string]: unknown;
