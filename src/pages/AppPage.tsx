@@ -66,7 +66,7 @@ export default function AppPage() {
               </div>
               <div className="appwindow__body">
                 <div className="appwindow__sidebar">
-                  <div className="appwindow__nav is-active">● 设备设置</div>
+                  <div className="appwindow__nav is-active">● 设备</div>
                   <div className="appwindow__nav">键盘</div>
                   <div className="appwindow__nav">灯效</div>
                   <div className="appwindow__nav">Wi-Fi</div>

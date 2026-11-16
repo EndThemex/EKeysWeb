@@ -627,8 +627,7 @@ export const DICT: Record<Lang, Dict> = {
     /* ---------------- Settings Tab ---------------- */
     "settings.eyebrow": "// edit & apply",
     "settings.title": "Device settings",
-    "settings.lede":
-      "Every change stays local until you press Apply. The diff at the bottom shows exactly which fields will be written to the device.",
+    "settings.lede": "Changes stay local until you press Apply.",
     "settings.empty":
       "Connect the keyboard to edit settings. The draft model keeps your edits even if the device pushes a snapshot mid-edit.",
     "settings.section.connection": "connection",
@@ -1376,7 +1375,7 @@ export const DICT: Record<Lang, Dict> = {
       "经过过滤的端口列表（仅显示 EKeys 标识）\nUSB 热插拔时自动重连\n记住上次端口 + 自动连接开关\n状态区显示最近一次握手、心跳和错误",
     "app.panel.connect.tags": ["USB CDC", "自动重连", "持久化"],
 
-    "app.panel.settings.title": "设备设置",
+    "app.panel.settings.title": "设备",
     "app.panel.settings.desc":
       "6 个选项卡：显示、键盘、音频、电源、PC 状态、固件。每个字段独立管理脏状态，面板底部的 diff 条显示 Apply 时会写哪些字段。",
     "app.panel.settings.bullets":
@@ -1440,7 +1439,7 @@ export const DICT: Record<Lang, Dict> = {
     "app.shortcut.ctrlEnter": "应用当前改动",
     "app.shortcut.esc": "放弃当前改动",
     "app.shortcut.ctrlL": "打开日志面板",
-    "app.shortcut.ctrl1": "打开「设备设置」",
+    "app.shortcut.ctrl1": "打开「设备」",
     "app.shortcut.ctrl2": "打开「键映射编辑器」",
     "app.shortcut.ctrl3": "打开「灯效」",
     "app.shortcut.ctrl4": "打开「Wi-Fi 与时间」",
@@ -1587,9 +1586,8 @@ export const DICT: Record<Lang, Dict> = {
 
     /* ---------------- Settings Tab ---------------- */
     "settings.eyebrow": "// 编辑并下发",
-    "settings.title": "设备设置",
-    "settings.lede":
-      "所有改动先存在本地，按「应用」才下发到底层。底部的 diff 会告诉你将写入哪些字段。",
+    "settings.title": "设备",
+    "settings.lede": "改动先存在本地，点「应用」才会写入键盘。",
     "settings.empty": "请先连接键盘。草稿模型会保留你正在编辑的字段，即使设备中途推快照也不会被覆盖。",
     "settings.section.connection": "连接",
     "settings.section.display": "显示",
@@ -1692,7 +1690,7 @@ export const DICT: Record<Lang, Dict> = {
 
     /* ---------------- ConfigLayout tabs ---------------- */
     "config.tab.label": "配置分区",
-    "config.tab.settings": "设备设置",
+    "config.tab.settings": "设备",
     "config.tab.keymap": "键位",
     "config.tab.lighting": "灯效",
     "config.tab.voice": "语音",

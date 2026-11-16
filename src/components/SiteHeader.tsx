@@ -72,9 +72,14 @@ export default function SiteHeader() {
           >
             {theme === "dark" ? "☀" : "☾"}
           </button>
-          <NavLink to="/docs" className="btn btn--ghost site-header__cta">
+          <a
+            href="https://github.com/EndThemex/EKeys"
+            className="btn btn--ghost site-header__cta"
+            target="_blank"
+            rel="noreferrer"
+          >
             {t("nav.github")}
-          </NavLink>
+          </a>
           <button
             type="button"
             className="nav-toggle"

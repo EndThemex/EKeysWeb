@@ -109,6 +109,14 @@
   place-items: center;
   font-size: 14px;
 }
+/* Header 内的 GitHub 入口与语言/主题图标按钮同高同宽 */
+.toolbar .site-header__cta {
+  height: 36px;
+  padding: 0 14px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  background: var(--bg);
+}
 
 /* ---- Header responsive -------------------------------------------- */
 @media (max-width: 960px) {

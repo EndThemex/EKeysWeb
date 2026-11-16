@@ -61,12 +61,54 @@
   --bg-invert: #0a0a0a;
   --fg: #0a0a0a;
   --fg-muted: #5b5b58;
-  --fg-faint: #8c8c88;
+  /* 10–11px 的编号 / 标签也用它，浅色底上必须比 --fg-muted 更暗一点才看得清
+     （#8c8c88 在白底上对比度仅 ~2.7:1）。 */
+  --fg-faint: #6b6b66;
   --border: #0a0a0a;
   --border-soft: #d8d6cf;
   --accent: #ff3b00;
   --accent-soft: #ffece5;
+  /* 品牌橙 #ff3b00 在白底上只有 ~3.5:1，只适合大字号或图形；
+     10–13px 的文字改用加深版本，保证可读性。 */
+  --accent-text: #cf2f00;
   --grid: rgba(10, 10, 10, 0.06);
+
+  /* ---- App / 配置页语义色（浅色）------------------------------------
+     配置页的面板同时支持明暗两套主题，这里给出浅色主题的语义 token：
+     浅底 + 深字。不要沿用暗色主题的 rgba(255,255,255,…) 叠层或
+     #9aa3b2/#fcd34d/#6ee7b7 这类暗底专用色，否则在白底上几乎不可读。 */
+  --surface-1: #ffffff;
+  --surface-2: #f6f5f0;
+  --surface-3: #ecebe4;
+  --border-1: rgba(10, 10, 10, 0.16);
+  --border-2: rgba(10, 10, 10, 0.3);
+  --divider: rgba(10, 10, 10, 0.08);
+  --hover-bg: rgba(10, 10, 10, 0.05);
+  --text-muted: #57574f;
+
+  /* 连接状态：idle / busy / ok / error */
+  --status-idle-fg: #4b5058;
+  --status-idle-bg: rgba(75, 80, 88, 0.08);
+  --status-idle-border: rgba(75, 80, 88, 0.28);
+  --status-busy-fg: #8a5300;
+  --status-busy-bg: rgba(217, 119, 6, 0.12);
+  --status-busy-border: rgba(217, 119, 6, 0.38);
+  --status-ok-fg: #14663b;
+  --status-ok-bg: rgba(22, 163, 74, 0.1);
+  --status-ok-border: rgba(22, 163, 74, 0.34);
+  --status-err-fg: #9b1c1c;
+  --status-err-title: #7f1d1d;
+  --status-err-bg: rgba(220, 38, 38, 0.08);
+  --status-err-border: rgba(220, 38, 38, 0.3);
+  --status-err-icon-bg: rgba(220, 38, 38, 0.12);
+  --warn-fg: #8a5300;
+  --ok-fg: #14663b;
+
+  /* 日志通道 */
+  --log-tx: #1d4ed8;
+  --log-rx: #15803d;
+  --log-firmware: #4b5563;
+  --log-app: #b45309;
 
   /* terminal-style code block (light theme = dark terminal) */
   --code-bg: #0a0a0a;
@@ -104,7 +146,40 @@
   --border-soft: #2a2a2a;
   --accent: #ff5722;
   --accent-soft: #2a1407;
+  --accent-text: var(--accent);
   --grid: rgba(244, 243, 238, 0.05);
+
+  /* ---- App / 配置页语义色（暗色）：保持原有暗底配色不变 ---- */
+  --surface-1: rgba(255, 255, 255, 0.04);
+  --surface-2: rgba(255, 255, 255, 0.02);
+  --surface-3: rgba(255, 255, 255, 0.06);
+  --border-1: rgba(255, 255, 255, 0.08);
+  --border-2: rgba(255, 255, 255, 0.24);
+  --divider: rgba(255, 255, 255, 0.05);
+  --hover-bg: rgba(255, 255, 255, 0.04);
+  --text-muted: #9aa3b2;
+
+  --status-idle-fg: #9aa3b2;
+  --status-idle-bg: rgba(154, 163, 178, 0.08);
+  --status-idle-border: rgba(154, 163, 178, 0.24);
+  --status-busy-fg: #fcd34d;
+  --status-busy-bg: rgba(252, 211, 77, 0.1);
+  --status-busy-border: rgba(252, 211, 77, 0.36);
+  --status-ok-fg: #6ee7b7;
+  --status-ok-bg: rgba(110, 231, 183, 0.1);
+  --status-ok-border: rgba(110, 231, 183, 0.4);
+  --status-err-fg: #fecaca;
+  --status-err-title: #fee2e2;
+  --status-err-bg: rgba(248, 113, 113, 0.12);
+  --status-err-border: rgba(248, 113, 113, 0.4);
+  --status-err-icon-bg: rgba(248, 113, 113, 0.22);
+  --warn-fg: #fcd34d;
+  --ok-fg: #6ee7b7;
+
+  --log-tx: #60a5fa;
+  --log-rx: #4ade80;
+  --log-firmware: #d1d5db;
+  --log-app: #fcd34d;
 
   /* terminal-style code block (dark theme keeps a dark terminal —
      slightly lifted from --bg so it reads as a distinct surface) */

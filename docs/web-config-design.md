@@ -497,7 +497,7 @@ export interface DeviceSnapshot {
 
 ```tsx
 <Route path="/config" element={<ConfigLayout />}>
-  <Route index element={<SettingsTab />} /> {/* 默认：设备设置（READ+WRITE） */}
+  <Route index element={<SettingsTab />} /> {/* 默认：设备（READ+WRITE） */}
   <Route path="keymap" element={<KeymapTab />} />
   <Route path="lighting" element={<LightingTab />} />
   <Route path="wifi" element={<WifiTab />} />
