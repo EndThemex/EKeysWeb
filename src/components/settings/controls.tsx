@@ -8,6 +8,47 @@
 
 import { useState, type ReactNode } from "react";
 import type { DeviceError, Phase } from "../../hooks/useEKeysDevice";
+import { useI18n } from "../../i18n/useI18n.tsx";
+import type { DeviceSettings, FieldName } from "../../protocol";
+
+/* FieldName → i18n 标签（DiffBar「将下发」明细用）。 */
+const FIELD_LABEL_KEYS: Record<FieldName, string> = {
+  wifi_switch: "settings.field.wifiSwitch",
+  connect_host: "settings.field.connectHost",
+  wifi_ssid: "settings.field.wifiSsid",
+  wifi_password: "settings.field.wifiPassword",
+  work_mode: "settings.field.workMode",
+  rgb_mode: "settings.field.rgbMode",
+  rgb_single_color: "settings.field.rgbSingleColor",
+  rgb_click_mode: "settings.field.rgbClickMode",
+  rgb_brightness: "settings.field.rgbBrightness",
+  tft_theme: "settings.field.tftTheme",
+  tft_brightness: "settings.field.tftBrightness",
+  device_volume: "settings.field.deviceVolume",
+  audio_enable: "settings.field.audioEnable",
+  power_mode: "settings.field.powerMode",
+  voice_enable: "settings.field.voiceEnable",
+  voice_trigger_key: "settings.field.voiceTriggerKey",
+  voice_max_record_ms: "settings.field.voiceMaxRecordMs",
+  voice_auto_enter: "settings.field.voiceAutoEnter",
+  voice_cuid: "settings.field.voiceCuid",
+  voice_tencent_secret_id: "settings.field.voiceSecretId",
+  voice_tencent_secret_key: "settings.field.voiceSecretKey",
+  pc_status_mask: "settings.field.pcStatusMask",
+  active_keymap_profile: "settings.field.activeProfile",
+  active_profile_name: "settings.field.profileName",
+  active_profile_has_custom_icon: "settings.field.hasCustomIcon",
+};
+
+/** 把待下发 delta 的字段名映射为本地化标签列表（顺序与下发位序一致）。 */
+export function dirtyFieldLabels(
+  delta: Partial<DeviceSettings>,
+  t: (k: string) => string,
+): string[] {
+  return (Object.keys(delta) as FieldName[])
+    .filter((k) => k in FIELD_LABEL_KEYS)
+    .map((k) => t(FIELD_LABEL_KEYS[k as FieldName]));
+}
 
 /* ============================================================
  * ErrorBanner — 通用错误条
@@ -354,6 +395,7 @@ export function TextRow({
 
 export function DiffBar({
   dirtyCount,
+  dirtyLabels,
   applying,
   applyError,
   saved,
@@ -362,6 +404,8 @@ export function DiffBar({
   labels,
 }: {
   dirtyCount: number;
+  /** 待下发字段标签列表（settings 类面板传入；keymap 等可省略）。 */
+  dirtyLabels?: string[];
   applying: boolean;
   applyError: string | null;
   saved: boolean;
@@ -378,7 +422,12 @@ export function DiffBar({
     errorWrite: string;
   };
 }) {
+  const { lang } = useI18n();
   const isDirty = dirtyCount > 0;
+  const colon = lang === "zh" ? "：" : ": ";
+  const joiner = lang === "zh" ? "、" : ", ";
+  const fieldList = dirtyLabels?.join(joiner) ?? "";
+  const countText = labels.diffCount.replace("{count}", String(dirtyCount));
   return (
     <div
       className={`settings-diff ${isDirty ? "settings-diff--active" : ""}`}
@@ -395,8 +444,17 @@ export function DiffBar({
           <>
             <span className="settings-diff__dot" aria-hidden="true" />
             <span>{labels.dirty}</span>
-            <span className="settings-diff__hint">
-              {labels.diffCount} ({dirtyCount})
+            <span
+              className="settings-diff__hint"
+              title={fieldList || String(dirtyCount)}
+            >
+              {countText}
+              {fieldList && (
+                <span className="settings-diff__fields">
+                  {colon}
+                  {fieldList}
+                </span>
+              )}
             </span>
           </>
         ) : saved ? (

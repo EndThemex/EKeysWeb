@@ -52,12 +52,12 @@
 
 .settings-panel__head,
 .config-panel__head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 24px;
+  display: grid;
+  /* 左列可收缩（minmax(0,1fr)），按钮列固定在右上角，任何 Tab / 任何宽度都不会被挤到下一行 */
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px 24px;
   margin-bottom: 24px;
-  flex-wrap: wrap;
 }
 
 .settings-panel__head h1,
@@ -72,9 +72,8 @@
   color: var(--text-muted, #9aa3b2);
   margin: 0;
   line-height: 1.55;
-  width: fit-content;
   max-width: 100%;
-  white-space: nowrap;
+  /* 不用 nowrap：长 lede 会把头部左块撑满整行，把连接按钮挤到下一行 */
 }
 
 .settings-panel .card,
@@ -470,6 +469,11 @@
 }
 @keyframes settings-diff__spin { to { transform: rotate(360deg); } }
 .settings-diff__hint { color: var(--text-muted, #9aa3b2); font-size: 12px; }
+.settings-diff__fields {
+  display: inline-block; max-width: 420px; overflow: hidden;
+  text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom;
+  color: var(--text-dim, #c9cfda);
+}
 .settings-diff__error {
   flex: 1 1 100%; margin-top: 6px; padding: 8px 10px;
   background: var(--status-err-bg, rgba(248, 113, 113, 0.12)); border-radius: 8px;

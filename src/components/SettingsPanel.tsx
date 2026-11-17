@@ -17,6 +17,7 @@ import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useDeviceDraft } from "../hooks/useDeviceDraft";
 import {
   FieldMask,
+  diff,
   maskSensitive,
   type DeviceSettings,
   type FieldName,
@@ -25,6 +26,7 @@ import {
 import {
   ConnectButton,
   DiffBar,
+  dirtyFieldLabels,
   ErrorBanner,
   PanelHead,
   SelectRow,
@@ -162,6 +164,13 @@ export function SettingsPanel() {
   }
 
   const dirtyCount = draftHook.dirtyMask.size();
+
+  /* 待下发字段明细（基于 snapshot → draft 的真实 diff，与 consume() 一致） */
+  const dirtyLabels = useMemo(() => {
+    if (!draft || !snapshot.config) return [];
+    const { delta } = diff(snapshot.config, draft);
+    return dirtyFieldLabels(delta, t);
+  }, [draft, snapshot.config, t]);
 
   /* 未连接 */
   if (!connected) {
@@ -451,6 +460,7 @@ export function SettingsPanel() {
 
       <DiffBar
         dirtyCount={dirtyCount}
+        dirtyLabels={dirtyLabels}
         applying={applying}
         applyError={applyError}
         saved={savedTick > 0}

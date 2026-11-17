@@ -10,6 +10,7 @@ import { useI18n } from "../i18n/useI18n.tsx";
 import {
   ConnectButton,
   DiffBar,
+  dirtyFieldLabels,
   ErrorBanner,
   PanelHead,
   SelectRow,
@@ -20,6 +21,7 @@ import { useDeviceSession } from "../hooks/DeviceSessionContext";
 import { useDeviceDraft } from "../hooks/useDeviceDraft";
 import {
   FieldMask,
+  diff,
   maskSensitive,
   type DeviceSettings,
   type FieldName,
@@ -123,6 +125,14 @@ export function LightingPanel() {
   }
 
   const dirtyCount = draftHook.dirtyMask.size();
+
+  /* 待下发字段明细（基于 snapshot → draft 的真实 diff，与 consume() 一致） */
+  const dirtyLabels = useMemo(() => {
+    const draft = draftHook.draft;
+    if (!draft || !snapshot.config) return [];
+    const { delta } = diff(snapshot.config, draft);
+    return dirtyFieldLabels(delta, t);
+  }, [draftHook, snapshot.config, t]);
 
   async function onApply() {
     if (!draftHook.draft || !snapshot.config) return;
@@ -265,6 +275,7 @@ export function LightingPanel() {
 
       <DiffBar
         dirtyCount={dirtyCount}
+        dirtyLabels={dirtyLabels}
         applying={applying}
         applyError={applyError}
         saved={savedTick > 0}
