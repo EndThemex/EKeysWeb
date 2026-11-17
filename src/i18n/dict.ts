@@ -746,7 +746,7 @@ export const DICT: Record<Lang, Dict> = {
     /* ---------------- Lighting Tab ---------------- */
     "lighting.title": "RGB lighting",
     "lighting.lede":
-      "Per-key SK6812 LEDs under each cap. Five built-in modes + 24 discrete hues; click feedback can flash or ripple.",
+      "Per-key SK6812 LEDs under each cap. Multiple built-in modes + a 24-color palette (index 0 = white); click feedback can flash or ripple.",
     "lighting.card.mode": "mode & click",
     "lighting.card.palette": "single color",
     "lighting.paletteHint": "Selected swatch",
@@ -1702,7 +1702,7 @@ export const DICT: Record<Lang, Dict> = {
     /* ---------------- Lighting Tab ---------------- */
     "lighting.title": "RGB 灯效",
     "lighting.lede":
-      "每颗键帽下放一颗 SK6812 LED。内置 5+ 模式 + 24 色离散调色板；点击反馈可设为闪烁或波纹。",
+      "每颗键帽下放一颗 SK6812 LED。内置多种模式 + 24 色调色板（0 号 = 白）；点击反馈可设为闪烁或波纹。",
     "lighting.card.mode": "模式与反馈",
     "lighting.card.palette": "单色",
     "lighting.paletteHint": "当前选中",

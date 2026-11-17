@@ -2,7 +2,7 @@
  * LightingPanel — M2: RGB 灯效（rgb_mode / rgb_brightness / rgb_single_color / rgb_click_mode）。
  *
  * 4 个字段走 useDeviceDraft + DiffBar 下发 0x08，模式字段是 Select；
- * SingleColor 提供 24 格调色板（按 H/2π 离散），亮度为 Slider。
+ * SingleColor 提供 24 格调色板（与固件 kPalette24 严格 1:1，0 = 白），亮度为 Slider。
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -45,14 +45,36 @@ const RGB_CLICK_MODE_KEYS = [
   "settings.field.rgbClickMode.2",
 ] as const;
 
-/** 24 色相离散调色板（HSL → CSS color）。 */
-const PALETTE_24 = Array.from({ length: 24 }, (_, i) => {
-  const hue = Math.round((i * 360) / 24);
-  return {
-    index: i,
-    css: `hsl(${hue} 78% 52%)`,
-  };
-});
+/**
+ * 24 色调色板（与固件 src/rgb/RGBLightControl.h 的 kPalette24 严格 1:1）。
+ * 注意 0 号是白色，不是红色——不要再用 HSL 平均分色相生成。
+ */
+const PALETTE_24: { index: number; hex: string }[] = [
+  { index: 0, hex: "#FFFFFF" },
+  { index: 1, hex: "#FF0000" },
+  { index: 2, hex: "#FF4000" },
+  { index: 3, hex: "#FF8000" },
+  { index: 4, hex: "#FFC000" },
+  { index: 5, hex: "#FFFF00" },
+  { index: 6, hex: "#C0FF00" },
+  { index: 7, hex: "#80FF00" },
+  { index: 8, hex: "#40FF00" },
+  { index: 9, hex: "#00FF00" },
+  { index: 10, hex: "#00FF40" },
+  { index: 11, hex: "#00FF80" },
+  { index: 12, hex: "#00FFC0" },
+  { index: 13, hex: "#00FFFF" },
+  { index: 14, hex: "#00C0FF" },
+  { index: 15, hex: "#0080FF" },
+  { index: 16, hex: "#0040FF" },
+  { index: 17, hex: "#0000FF" },
+  { index: 18, hex: "#4000FF" },
+  { index: 19, hex: "#8000FF" },
+  { index: 20, hex: "#C000FF" },
+  { index: 21, hex: "#FF00FF" },
+  { index: 22, hex: "#FF00C0" },
+  { index: 23, hex: "#FF0080" },
+];
 
 export function LightingPanel() {
   const { t } = useI18n();
@@ -164,6 +186,8 @@ export function LightingPanel() {
   }
 
   const draftSafe = draftHook.draft;
+  const selectedColor =
+    PALETTE_24[draftSafe.rgb_single_color] ?? PALETTE_24[0];
 
   return (
     <section className="settings-panel">
@@ -213,23 +237,25 @@ export function LightingPanel() {
         <section className="settings-card card">
           <h2 className="settings-card__title">{t("lighting.card.palette")}</h2>
           <p className="settings-card__hint">
-            {t("lighting.paletteHint")} = #{draftSafe.rgb_single_color}
+            {t("lighting.paletteHint")} = {selectedColor.index} ·{" "}
+            {selectedColor.hex}
           </p>
           <div className="lighting-palette" role="radiogroup" aria-label={t("settings.field.rgbSingleColor")}>
-            {PALETTE_24.map(({ index, css }) => {
+            {PALETTE_24.map(({ index, hex }) => {
               const checked = draftSafe.rgb_single_color === index;
               return (
                 <button
                   type="button"
                   key={index}
                   className={`lighting-swatch ${checked ? "is-active" : ""}`}
-                  style={{ background: css }}
+                  style={{ background: hex }}
                   aria-checked={checked}
                   role="radio"
+                  aria-label={`${index} · ${hex}`}
                   onClick={() => patch("rgb_single_color", index)}
-                  title={`#${index}`}
+                  title={`${index} · ${hex}`}
                 >
-                  <span className="lighting-swatch__index">#{index}</span>
+                  <span className="lighting-swatch__index">{index}</span>
                 </button>
               );
             })}
