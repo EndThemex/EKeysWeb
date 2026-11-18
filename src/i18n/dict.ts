@@ -578,6 +578,8 @@ export const DICT: Record<Lang, Dict> = {
       "Lost the device heartbeat. Reconnect and try again.",
     "config.error.deviceLost":
       "The device disconnected. Check the USB-C cable and reconnect.",
+    "config.error.aiStreaming":
+      "AI streaming is active. Configuration commands are paused until you stop streaming.",
     "config.busyDisconnect": "Disconnecting…",
 
     "status.idle": "Not connected",
@@ -739,9 +741,86 @@ export const DICT: Record<Lang, Dict> = {
     "config.tab.lighting": "Lighting",
     "config.tab.voice": "Voice",
     "config.tab.audio": "Audio Pad",
+    "config.tab.ai": "AI Stream",
     "config.tab.ota": "OTA",
     "config.tab.log": "Log",
     "config.tab.about": "About",
+
+    /* ---------------- AI Stream Tab ---------------- */
+    "ai.title": "AI Mode image streaming",
+    "ai.eyebrow": "AI MODE · USB CDC",
+    "ai.lede":
+      "Push a local image, a text panel or a screen capture straight to the 428×142 display over USB. The device must be sitting on the AI MODE page.",
+    "ai.state.idle": "Idle",
+    "ai.state.handshake": "Handshaking…",
+    "ai.state.ready": "Ready",
+    "ai.state.streaming": "Streaming",
+    "ai.state.failed": "Failed",
+    "ai.hint.connectFirst":
+      "Connect the device over USB first, then run the AI handshake.",
+    "ai.hint.serialPaused":
+      "Configuration commands are paused while streaming.",
+    "ai.hint.wifi":
+      "Wi-Fi TCP streaming is not available in the browser. Use the desktop EKeysApp for the Wi-Fi channel.",
+    "ai.source.label": "Content source",
+    "ai.source.file": "Image",
+    "ai.source.text": "Text",
+    "ai.source.screen": "Screen",
+    "ai.source.pick": "Choose image",
+    "ai.source.replace": "Replace image",
+    "ai.source.none": "No image selected",
+    "ai.source.fileHint":
+      "PNG / JPEG / WebP. The image is center-cropped to cover 428×142.",
+    "ai.source.imageError": "Could not decode that image. Try another file.",
+    "ai.source.screenStart": "Start capture",
+    "ai.source.screenStop": "Stop capture",
+    "ai.source.screenOn": "Capturing display",
+    "ai.source.screenOff": "Not capturing",
+    "ai.source.screenHint":
+      "Screen capture needs HTTPS and a fresh permission grant. Choose the window or tab to mirror.",
+    "ai.source.screenDenied": "Screen capture permission was denied.",
+    "ai.source.screenUnsupported":
+      "This browser does not support getDisplayMedia.",
+    "ai.source.screenFailed": "Could not start screen capture.",
+    "ai.text.placeholder": "Type the text to show on the device…",
+    "ai.text.bg": "Background",
+    "ai.text.fg": "Text color",
+    "ai.text.size": "Font size",
+    "ai.text.align": "Alignment",
+    "ai.text.align.left": "Left",
+    "ai.text.align.center": "Center",
+    "ai.text.align.right": "Right",
+    "ai.action.label": "Push & stream",
+    "ai.action.pushOnce": "Push once",
+    "ai.action.start": "Start streaming",
+    "ai.action.stop": "Stop streaming",
+    "ai.action.handshake": "AI handshake",
+    "ai.action.close": "End AI session",
+    "ai.field.fps": "Frame rate",
+    "ai.field.highQuality": "High quality (856×284, 1/2 scale on device)",
+    "ai.preview.title": "Preview",
+    "ai.preview.note": "1:1 with the device display",
+    "ai.stats.title": "Device telemetry",
+    "ai.stats.fps": "FPS",
+    "ai.stats.bandwidth": "Bandwidth",
+    "ai.stats.inflight": "In flight",
+    "ai.stats.sent": "Frames sent",
+    "ai.stats.dropped": "Dropped",
+    "ai.stats.slots": "Free slots",
+    "ai.error.disconnected": "The serial port is not connected.",
+    "ai.error.notOnAiPage":
+      "No hello received. Rotate the knob to the AI MODE page on the device, then retry the handshake.",
+    "ai.error.unsupported":
+      "The device hello does not advertise JPEG / a supported display size. Update the firmware and retry.",
+    "ai.error.sizeMismatch":
+      "The device rejected the frame size. Check the high-quality switch; default frames are 428×142.",
+    "ai.error.busy":
+      "Two frames are still waiting for ACK. Wait a moment and try again.",
+    "ai.error.deviceLost":
+      "The device disconnected during streaming. Reconnect and run the handshake again.",
+    "ai.error.encode":
+      "Could not encode the frame, or the device rejected its CRC.",
+    "ai.error.unknown": "AI streaming failed. See the raw message below.",
 
     /* ---------------- Lighting Tab ---------------- */
     "lighting.title": "RGB lighting",
@@ -1538,6 +1617,8 @@ export const DICT: Record<Lang, Dict> = {
     "config.error.detail": "详细信息",
     "config.error.heartbeatLost": "心跳丢失，请重新连接后再试。",
     "config.error.deviceLost": "设备已断开，请检查 USB-C 数据线后重连。",
+    "config.error.aiStreaming":
+      "AI 推流进行中，配置命令已暂停；停止推流后恢复。",
     "config.busyDisconnect": "断开中…",
 
     "status.idle": "未连接",
@@ -1695,9 +1776,81 @@ export const DICT: Record<Lang, Dict> = {
     "config.tab.lighting": "灯效",
     "config.tab.voice": "语音",
     "config.tab.audio": "音效板",
+    "config.tab.ai": "AI 推流",
     "config.tab.ota": "OTA",
     "config.tab.log": "日志",
     "config.tab.about": "关于",
+
+    /* ---------------- AI Stream Tab ---------------- */
+    "ai.title": "AI Mode 图像推流",
+    "ai.eyebrow": "AI MODE · USB CDC",
+    "ai.lede":
+      "把本地图片、文字面板或屏幕捕获直接推到 428×142 屏幕。推流前请先把设备旋钮切到 AI MODE 页。",
+    "ai.state.idle": "空闲",
+    "ai.state.handshake": "握手中…",
+    "ai.state.ready": "就绪",
+    "ai.state.streaming": "推流中",
+    "ai.state.failed": "失败",
+    "ai.hint.connectFirst":
+      "请先通过 USB 连接设备，再执行 AI 握手。",
+    "ai.hint.serialPaused": "推流期间配置命令已暂停。",
+    "ai.hint.wifi":
+      "浏览器无法建立 WiFi TCP 通道，WiFi 推流请使用桌面端 EKeysApp。",
+    "ai.source.label": "内容源",
+    "ai.source.file": "图片",
+    "ai.source.text": "文字",
+    "ai.source.screen": "屏幕",
+    "ai.source.pick": "选择图片",
+    "ai.source.replace": "更换图片",
+    "ai.source.none": "未选择图片",
+    "ai.source.fileHint":
+      "支持 PNG / JPEG / WebP，图片会按 cover 居中裁剪到 428×142。",
+    "ai.source.imageError": "图片解码失败，请换一个文件。",
+    "ai.source.screenStart": "开始捕获",
+    "ai.source.screenStop": "停止捕获",
+    "ai.source.screenOn": "正在捕获屏幕",
+    "ai.source.screenOff": "未捕获",
+    "ai.source.screenHint":
+      "屏幕捕获需要 HTTPS，并且每次都需要重新授权。请选择要镜像的窗口或标签页。",
+    "ai.source.screenDenied": "屏幕捕获权限被拒绝。",
+    "ai.source.screenUnsupported": "当前浏览器不支持 getDisplayMedia。",
+    "ai.source.screenFailed": "屏幕捕获启动失败。",
+    "ai.text.placeholder": "输入要上屏的文字…",
+    "ai.text.bg": "背景色",
+    "ai.text.fg": "文字颜色",
+    "ai.text.size": "字号",
+    "ai.text.align": "对齐",
+    "ai.text.align.left": "左对齐",
+    "ai.text.align.center": "居中",
+    "ai.text.align.right": "右对齐",
+    "ai.action.label": "推送与推流",
+    "ai.action.pushOnce": "推送一次",
+    "ai.action.start": "开始推流",
+    "ai.action.stop": "停止推流",
+    "ai.action.handshake": "AI 握手",
+    "ai.action.close": "结束 AI 会话",
+    "ai.field.fps": "帧率",
+    "ai.field.highQuality": "高画质（856×284，设备端 1/2 缩放）",
+    "ai.preview.title": "预览",
+    "ai.preview.note": "与设备显示 1:1",
+    "ai.stats.title": "设备统计",
+    "ai.stats.fps": "FPS",
+    "ai.stats.bandwidth": "带宽",
+    "ai.stats.inflight": "在途帧",
+    "ai.stats.sent": "已发送",
+    "ai.stats.dropped": "丢帧",
+    "ai.stats.slots": "空闲槽位",
+    "ai.error.disconnected": "串口未连接。",
+    "ai.error.notOnAiPage":
+      "未收到 hello。请旋转旋钮把设备切到 AI MODE 页，然后重试握手。",
+    "ai.error.unsupported":
+      "设备 hello 未声明支持 JPEG 或屏幕尺寸不受支持。请升级固件后重试。",
+    "ai.error.sizeMismatch":
+      "设备拒绝了帧尺寸。请检查高画质开关；默认帧为 428×142。",
+    "ai.error.busy": "仍有 2 帧在途未 ACK，请稍后再试。",
+    "ai.error.deviceLost": "推流期间设备断开，请重新连接并再次握手。",
+    "ai.error.encode": "帧编码失败，或设备拒绝了帧 CRC。",
+    "ai.error.unknown": "AI 推流失败，详见下方原始信息。",
 
     /* ---------------- Lighting Tab ---------------- */
     "lighting.title": "RGB 灯效",

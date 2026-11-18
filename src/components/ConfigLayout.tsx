@@ -20,6 +20,7 @@ const TABS = [
   { to: "/config/lighting", label: "config.tab.lighting" },
   { to: "/config/voice", label: "config.tab.voice" },
   { to: "/config/audio", label: "config.tab.audio" },
+  { to: "/config/ai", label: "config.tab.ai" },
   { to: "/config/ota", label: "config.tab.ota" },
   { to: "/config/log", label: "config.tab.log" },
   { to: "/config/about", label: "config.tab.about" },

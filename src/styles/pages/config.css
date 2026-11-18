@@ -1602,3 +1602,356 @@
     animation: none;
   }
 }
+
+/* ============================================================
+   AI Stream Tab（/config/ai）
+   参考 docs/ai-image-streaming.md §7.2
+   ============================================================ */
+
+.ai-panel {
+  gap: 18px;
+}
+
+.ai-panel .mono {
+  font-family: var(--font-mono);
+}
+
+.ai-statebar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  border: 1px solid var(--border-1);
+  background: var(--surface-2);
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.ai-statebar__dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-idle-fg);
+  box-shadow: 0 0 0 3px var(--status-idle-bg);
+}
+
+.ai-statebar--handshake .ai-statebar__dot {
+  background: var(--status-busy-fg);
+  box-shadow: 0 0 0 3px var(--status-busy-bg);
+  animation: ai-pulse 1.2s ease-in-out infinite;
+}
+
+.ai-statebar--ready .ai-statebar__dot,
+.ai-statebar--streaming .ai-statebar__dot {
+  background: var(--status-ok-fg);
+  box-shadow: 0 0 0 3px var(--status-ok-bg);
+}
+
+.ai-statebar--streaming .ai-statebar__dot {
+  animation: ai-pulse 1.2s ease-in-out infinite;
+}
+
+.ai-statebar--failed .ai-statebar__dot {
+  background: var(--status-err-fg);
+  box-shadow: 0 0 0 3px var(--status-err-bg);
+}
+
+.ai-statebar__label {
+  letter-spacing: 0.02em;
+}
+
+.ai-statebar__hint {
+  padding-left: 10px;
+  border-left: 1px solid var(--divider);
+  color: var(--text-muted);
+}
+
+.ai-statebar__meta {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.ai-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .ai-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ai-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.ai-card,
+.ai-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  border: 1px solid var(--border-1);
+  background: var(--surface-1);
+}
+
+.ai-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ai-preview__note {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-preview__frame {
+  padding: 6px;
+  border: 1px solid var(--border-2);
+  background: #0a0a0a;
+}
+
+.ai-preview__canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 428 / 142;
+}
+
+.ai-tabs {
+  display: flex;
+  border: 1px solid var(--border-1);
+}
+
+.ai-tabs__item {
+  flex: 1;
+  padding: 8px 10px;
+  border: 0;
+  border-right: 1px solid var(--border-1);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 12px;
+}
+
+.ai-tabs__item:last-child {
+  border-right: 0;
+}
+
+.ai-tabs__item.is-active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.ai-tabs__item:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.ai-source {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.ai-source__file-input {
+  display: none;
+}
+
+.ai-source__file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.ai-source__file {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-source__error {
+  margin: 0;
+  color: var(--status-err-fg);
+  font-size: 12px;
+}
+
+.ai-source__video {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ai-textarea {
+  width: 100%;
+  min-height: 84px;
+  padding: 10px;
+  border: 1px solid var(--border-1);
+  background: var(--surface-2);
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.ai-textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.ai-text-grid {
+  display: grid;
+  grid-template-columns: auto auto minmax(120px, 1fr);
+  gap: 12px;
+  align-items: end;
+}
+
+@media (max-width: 560px) {
+  .ai-text-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.ai-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-field__label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ai-field input[type="color"] {
+  width: 100%;
+  height: 30px;
+  padding: 2px;
+  border: 1px solid var(--border-1);
+  background: var(--surface-2);
+}
+
+.ai-field--range {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.ai-field--range input[type="range"] {
+  flex: 1;
+  accent-color: var(--accent);
+}
+
+.ai-field__value {
+  min-width: 2ch;
+  text-align: right;
+  color: var(--fg);
+}
+
+.ai-segment {
+  display: inline-flex;
+  align-self: flex-start;
+  border: 1px solid var(--border-1);
+}
+
+.ai-segment__item {
+  padding: 6px 12px;
+  border: 0;
+  border-right: 1px solid var(--border-1);
+  background: transparent;
+  color: var(--fg-muted);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+.ai-segment__item:last-child {
+  border-right: 0;
+}
+
+.ai-segment__item.is-active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+.ai-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ai-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.ai-toggle input {
+  accent-color: var(--accent);
+}
+
+.ai-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  margin: 0;
+}
+
+.ai-stats__row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--divider);
+}
+
+.ai-stats dt {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.ai-stats dd {
+  margin: 0;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.ai-error__detail {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--status-err-fg);
+}

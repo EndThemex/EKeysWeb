@@ -9,6 +9,27 @@ export type { CmdId } from "./commands";
 export { encodeLine, tryParseLine, isRespFor, isPush, isTopLevelCmd } from "./frame";
 export type { Frame } from "./frame";
 
+export {
+  AI_MAGIC,
+  AI_VERSION,
+  AI_TYPE_JPEG,
+  AI_TYPE_RGB565,
+  AI_TYPE_RLE565,
+  AI_TYPE_CONTROL,
+  AI_CHUNK_USB,
+  AI_DISPLAY_W,
+  AI_DISPLAY_H,
+  AI_CONTROL_KIND_PING,
+  AI_RESULT,
+  crc16,
+  crc32,
+  encodeFrame,
+  encodeControlFrame,
+  parseAiCtlLine,
+  isAiCtlLine,
+} from "./aiFrame";
+export type { AiCtlMsg } from "./aiFrame";
+
 export { FieldMask, F, FIELD_COUNT } from "./mask";
 export type { FieldName } from "./mask";
 

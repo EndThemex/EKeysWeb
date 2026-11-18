@@ -23,10 +23,12 @@ import {
 import {
   CMD,
   encodeLine,
+  isAiCtlLine,
   isRespFor,
   maskSensitive,
   responseCmd,
   TOP_LEVEL_CMDS,
+  type AiCtlMsg,
   type DeviceSettings,
 } from "../protocol";
 
@@ -106,6 +108,7 @@ export type ErrorKind =
   | "protocol"
   | "heartbeatLost"
   | "deviceLost"
+  | "aiStreaming"
   | "unknown";
 
 export interface DeviceError {
@@ -196,6 +199,11 @@ export function useEKeysDevice() {
   // 心跳相关
   const heartbeatTimer = useRef<number | null>(null);
   const heartbeatMissed = useRef(0);
+  /** 推流期间暂停心跳，避免 0x0a 被固件二进制解析器吞掉造成假超时。 */
+  const heartbeatPaused = useRef(false);
+  const phaseRef = useRef<Phase>("idle");
+  /** 推流期间屏蔽 JSON sendCmd，避免污染二进制帧流。 */
+  const aiStreamingRef = useRef(false);
 
   // 推送订阅者
   const pushSubs = useRef<Set<(frame: SerialFrame) => void>>(new Set());
@@ -205,11 +213,20 @@ export function useEKeysDevice() {
   );
   // TX 订阅者：每条 sendCmd 写出去后回调 (cmd, data) → 给 LogPanel 做记录
   const txSubs = useRef<Set<(cmd: number, data?: object) => void>>(new Set());
+  // ai_ctl 订阅者：AI 推流的 hello / ACK / 统计
+  const aiCtlSubs = useRef<Set<(msg: AiCtlMsg) => void>>(new Set());
 
   /* ---------- 帧分发 ---------- */
   useEffect(() => {
     if (!serial) return;
     const offFrame = serial.onFrame((frame) => {
+      // 0) AI 控制行：没有 cmd / seq，不进 pending 配对与推送通道
+      if (isAiCtlLine(frame)) {
+        const msg = frame.ai_ctl as AiCtlMsg;
+        aiCtlSubs.current.forEach((cb) => cb(msg));
+        return;
+      }
+
       const cmd = frame.cmd as number | undefined;
       const seq = (frame.seq as number) ?? 0;
 
@@ -329,7 +346,12 @@ export function useEKeysDevice() {
   }, [handlePush]);
 
   /* ---------- 心跳 ---------- */
+  useEffect(() => {
+    phaseRef.current = phase;
+  }, [phase]);
+
   const startHeartbeat = useCallback(() => {
+    if (heartbeatPaused.current) return;
     if (heartbeatTimer.current !== null) return;
     heartbeatMissed.current = 0;
     heartbeatTimer.current = window.setInterval(() => {
@@ -359,6 +381,23 @@ export function useEKeysDevice() {
     heartbeatMissed.current = 0;
   }, []);
 
+  /** AI 推流开始：暂停心跳（避免 0x0a 被固件二进制解析器吞掉）。 */
+  const pauseHeartbeat = useCallback(() => {
+    heartbeatPaused.current = true;
+    stopHeartbeat();
+  }, [stopHeartbeat]);
+
+  /** AI 推流结束：恢复心跳（仅在串口仍 connected 时）。 */
+  const resumeHeartbeat = useCallback(() => {
+    heartbeatPaused.current = false;
+    if (phaseRef.current === "connected") startHeartbeat();
+  }, [startHeartbeat]);
+
+  /** 推流期间置位，使 sendCmd 直接 reject { kind: "aiStreaming" }。 */
+  const setAiStreaming = useCallback((active: boolean) => {
+    aiStreamingRef.current = active;
+  }, []);
+
   /* ---------- 内部 sendCmd（串行队列） ---------- */
   const serialRef = useRef<EKeysSerial | null>(null);
   useEffect(() => {
@@ -377,6 +416,12 @@ export function useEKeysDevice() {
       timeoutMs: number = REQUEST_TIMEOUT_MS,
     ): Promise<T> => {
       const op = async (): Promise<T> => {
+        if (aiStreamingRef.current) {
+          throw rejectError({
+            kind: "aiStreaming",
+            message: "AI streaming in progress",
+          });
+        }
         const s = serialRef.current;
         if (!s || s.closed) {
           throw rejectError(classify(new Error("disconnecting"), "portBusy"));
@@ -479,8 +524,18 @@ export function useEKeysDevice() {
   );
   sendCmdRef.current = sendCmd;
 
+  /** 写入原始字节（AI 二进制帧分片）。 */
+  const writeRaw = useCallback(async (data: Uint8Array): Promise<void> => {
+    const s = serialRef.current;
+    if (!s || s.closed) {
+      throw rejectError({ kind: "deviceLost", message: "serial closed" });
+    }
+    await s.writeRaw(data);
+  }, []);
+
   /* ---------- 设备错误 → session 终止 ---------- */
   const emitSessionError = useCallback((err: DeviceError) => {
+    aiStreamingRef.current = false;
     setError(err);
     setPhase("idle");
     setSerial(null);
@@ -519,6 +574,8 @@ export function useEKeysDevice() {
     const handler = () => {
       if (document.visibilityState !== "visible") return;
       if (phase !== "connected") return;
+      // 推流期间心跳被主动暂停；切回前台也不补发
+      if (heartbeatPaused.current) return;
       // 立刻补发：走 sendCmd 串行队列
       void sendCmd(CMD.HEARTBEAT, undefined, 1500).catch(() => {
         /* 心跳无响应不致命；下一周期会再补 */
@@ -667,6 +724,7 @@ export function useEKeysDevice() {
     const mySession = ++sessionRef.current;
     setPhase("disconnecting");
     setError(null);
+    aiStreamingRef.current = false;
 
     const current = serial;
     // 立刻清空 ref，避免 sendQueue 中已在等待的旧句柄被使用。
@@ -721,6 +779,17 @@ export function useEKeysDevice() {
     [],
   );
 
+  /** 订阅设备回传的 `ai_ctl` JSON 行（hello / ACK / 统计）。 */
+  const onAiCtl = useCallback(
+    (handler: (msg: AiCtlMsg) => void): (() => void) => {
+      aiCtlSubs.current.add(handler);
+      return () => {
+        aiCtlSubs.current.delete(handler);
+      };
+    },
+    [],
+  );
+
   const onLogLine = useCallback(
     (handler: (line: string) => void): (() => void) => {
       // 已绑定的转发链在 useEffect 中通过 serial.onLogLine 完成；
@@ -770,10 +839,15 @@ export function useEKeysDevice() {
     connect,
     disconnect,
     sendCmd,
+    writeRaw,
     onPush,
     onTx,
+    onAiCtl,
     onLogLine,
     onError,
+    pauseHeartbeat,
+    resumeHeartbeat,
+    setAiStreaming,
   };
 }
 

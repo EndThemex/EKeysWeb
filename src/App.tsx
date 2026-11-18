@@ -41,6 +41,11 @@ const VoicePanel = lazy(() =>
 const AudioPadPanel = lazy(() =>
   import("./components/AudioPadPanel").then((m) => ({ default: m.AudioPadPanel })),
 );
+const AiStreamPanel = lazy(() =>
+  import("./components/AiStreamPanel/AiStreamPanel").then((m) => ({
+    default: m.AiStreamPanel,
+  })),
+);
 const OtaPanel = lazy(() =>
   import("./components/OtaPanel").then((m) => ({ default: m.OtaPanel })),
 );
@@ -177,6 +182,7 @@ export default function App({ onMounted }: { onMounted?: () => void }) {
               <Route path="lighting" element={<LightingPanel />} />
               <Route path="voice" element={<VoicePanel />} />
               <Route path="audio" element={<AudioPadPanel />} />
+              <Route path="ai" element={<AiStreamPanel />} />
               <Route path="ota" element={<OtaPanel />} />
               <Route path="log" element={<LogPanel />} />
               <Route path="about" element={<AboutPanel />} />

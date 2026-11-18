@@ -16,6 +16,7 @@ import {
   type DeviceSnapshot,
   type Phase,
 } from "./useEKeysDevice";
+import type { AiCtlMsg } from "../protocol/aiFrame";
 
 export interface DeviceSession {
   supported: boolean;
@@ -30,10 +31,16 @@ export interface DeviceSession {
     data?: object,
     timeoutMs?: number,
   ) => Promise<T>;
+  /** 写入原始字节（AI 二进制帧分片）。 */
+  writeRaw: (data: Uint8Array) => Promise<void>;
   onPush: (handler: (frame: import("./useSerial").SerialFrame) => void) => () => void;
   onTx: (handler: (cmd: number, data?: object) => void) => () => void;
+  onAiCtl: (handler: (msg: AiCtlMsg) => void) => () => void;
   onLogLine: (handler: (line: string) => void) => () => void;
   onError: (handler: (err: DeviceError) => void) => () => void;
+  pauseHeartbeat: () => void;
+  resumeHeartbeat: () => void;
+  setAiStreaming: (active: boolean) => void;
 }
 
 const DeviceSessionContext = createContext<DeviceSession | null>(null);

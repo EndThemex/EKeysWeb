@@ -22,6 +22,11 @@ export type ErrorCallback = (err: { kind: string; message: string }) => void;
 export interface EKeysSerial {
   /** 写入一行 JSON 协议帧（自动追加 `\n`）。 */
   write: (line: string) => Promise<void>;
+  /**
+   * 写入原始字节（AI 二进制帧分片）。不追加任何分隔符。
+   * 与 write() 共用同一串行队列，避免并发占用 writer 锁。
+   */
+  writeRaw: (data: Uint8Array) => Promise<void>;
   /** 订阅解析出的协议帧，返回取消订阅函数。 */
   onFrame: (cb: FrameCallback) => () => void;
   /** 订阅串口日志行（非 JSON 行）。 */
@@ -67,6 +72,17 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
   let buffer = "";
   let closed = false;
   let fatalEmitted = false;
+  /** 所有写操作串行化：Web Serial 的 writer 是独占锁，两处同时 write 会抛错。 */
+  let writeChain: Promise<void> = Promise.resolve();
+
+  function enqueueWrite(task: () => Promise<void>): Promise<void> {
+    const next = writeChain.then(task, task);
+    writeChain = next.then(
+      () => undefined,
+      () => undefined,
+    );
+    return next;
+  }
 
   // 必须保留 reader / writer 引用，关闭时释放锁
   const reader = port.readable!.getReader();
@@ -161,7 +177,12 @@ export async function connectEKeysSerial(): Promise<EKeysSerial> {
   return {
     async write(line: string) {
       if (closed) throw new Error("serial closed");
-      await writer.write(encoder.encode(line));
+      const bytes = encoder.encode(line);
+      await enqueueWrite(() => writer.write(bytes));
+    },
+    async writeRaw(data: Uint8Array) {
+      if (closed) throw new Error("serial closed");
+      await enqueueWrite(() => writer.write(data));
     },
     onFrame(cb) {
       frameCallbacks.push(cb);
