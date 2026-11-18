@@ -777,7 +777,7 @@ export const DICT: Record<Lang, Dict> = {
     "ai.source.screenOn": "Capturing display",
     "ai.source.screenOff": "Not capturing",
     "ai.source.screenHint":
-      "Screen capture needs HTTPS and a fresh permission grant. Choose the window or tab to mirror.",
+      "Screen capture needs HTTPS and a fresh permission grant. Mirror a single window or tab — sharing the whole screen that contains this page creates a mirror feedback loop and can freeze the browser.",
     "ai.source.screenDenied": "Screen capture permission was denied.",
     "ai.source.screenUnsupported":
       "This browser does not support getDisplayMedia.",
@@ -1811,7 +1811,7 @@ export const DICT: Record<Lang, Dict> = {
     "ai.source.screenOn": "正在捕获屏幕",
     "ai.source.screenOff": "未捕获",
     "ai.source.screenHint":
-      "屏幕捕获需要 HTTPS，并且每次都需要重新授权。请选择要镜像的窗口或标签页。",
+      "屏幕捕获需要 HTTPS，并且每次都需要重新授权。请选择要镜像的窗口或标签页；共享包含本页面的整个屏幕会形成自我镜像反馈，导致浏览器卡顿。",
     "ai.source.screenDenied": "屏幕捕获权限被拒绝。",
     "ai.source.screenUnsupported": "当前浏览器不支持 getDisplayMedia。",
     "ai.source.screenFailed": "屏幕捕获启动失败。",

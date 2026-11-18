@@ -79,6 +79,8 @@ export function AiStreamPanel() {
   const [highQuality, setHighQuality] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  /** 编码专用离屏画布：不复用可见的预览画布，见 makeJpeg。 */
+  const encodeCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
@@ -108,16 +110,19 @@ export function AiStreamPanel() {
 
   /* ---------- 内容 → JPEG（零新依赖） ---------- */
   const makeJpeg = useCallback(async (hq: boolean): Promise<Uint8Array> => {
-    const canvas = canvasRef.current;
-    if (!canvas) throw new Error("preview canvas unavailable");
-    drawPreview(
-      canvas,
-      hq ? 856 : 428,
-      hq ? 284 : 142,
-      drawStateRef.current,
-    );
+    // 编码走离屏画布，不借用可见的预览画布：
+    // 屏幕捕获时预览画布本身会出现在被捕获的画面里，若每帧都往预览画布上
+    // 重绘，就会形成「屏幕 → 预览 → 屏幕」的自我镜像反馈，采集管线永不空闲，
+    // 表现为整个浏览器卡死。离屏画布不参与合成，不会进入捕获画面。
+    let canvas = encodeCanvasRef.current;
+    if (!canvas) {
+      canvas = document.createElement("canvas");
+      encodeCanvasRef.current = canvas;
+    }
+    drawPreview(canvas, hq ? 856 : 428, hq ? 284 : 142, drawStateRef.current);
+    const target = canvas;
     const blob = await new Promise<Blob>((resolve, reject) => {
-      canvas.toBlob(
+      target.toBlob(
         (b) => (b ? resolve(b) : reject(new Error("JPEG encode failed"))),
         "image/jpeg",
         0.75,
@@ -154,12 +159,19 @@ export function AiStreamPanel() {
     screenActive,
   ]);
 
-  /* 屏幕捕获：非推流时用 rAF 保持预览实时 */
+  /* 屏幕捕获：预览按帧率上限刷新（不是每帧都重绘） */
   useEffect(() => {
-    if (!screenActive || ai.streaming) return;
+    if (!screenActive) return;
     let raf = 0;
-    const loop = () => {
-      redraw();
+    let last = 0;
+    // 推流时预览降到 1fps：预览画布也会出现在被捕获的画面里，
+    // 刷新越快越容易形成自我镜像并拖慢采集管线。
+    const minInterval = ai.streaming ? 1000 : 80;
+    const loop = (now: number) => {
+      if (now - last >= minInterval) {
+        last = now;
+        redraw();
+      }
       raf = window.requestAnimationFrame(loop);
     };
     raf = window.requestAnimationFrame(loop);
@@ -207,7 +219,12 @@ export function AiStreamPanel() {
     }
     try {
       const stream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
+        video: {
+          // 上屏最大只有 856×284，没必要按 4K/60fps 采集：
+          // 采集面越小，浏览器采集管线与每帧 drawImage 的代价越低。
+          height: { max: 1080 },
+          frameRate: { ideal: 20, max: 30 },
+        },
         audio: false,
       });
       screenStreamRef.current = stream;
